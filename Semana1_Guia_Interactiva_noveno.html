@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semana 1 — Guía interactiva de nivelación: MakeCode y Tinkercad</title>
+<style>
+  :root{
+    --accent:#1F5C99;
+    --accent-light:#EAF2FA;
+    --accent-dark:#123A61;
+    --ink:#22252A;
+    --ink-soft:#565B63;
+    --line:#E1E4E8;
+    --bg:#F7F9FB;
+    --card:#FFFFFF;
+    --ok:#1E8E5A;
+    --ok-bg:#E7F6EE;
+    --warn:#B5560B;
+    --warn-bg:#FBECDD;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.6;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{
+    background:linear-gradient(180deg,var(--accent-dark),var(--accent));
+    color:#fff;
+    padding:44px 20px 60px;
+    text-align:center;
+  }
+  header.hero .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    font-size:13px;
+    opacity:.85;
+    margin-bottom:10px;
+  }
+  header.hero h1{font-size:30px;margin:0 0 10px;font-weight:700;}
+  header.hero p{max-width:620px;margin:0 auto;opacity:.92;font-size:16px;}
+  .badge-row{
+    display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px;
+  }
+  .badge{
+    background:rgba(255,255,255,.16);
+    border:1px solid rgba(255,255,255,.35);
+    padding:6px 14px;border-radius:999px;font-size:13px;
+  }
+
+  .notice{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:5px solid var(--accent);
+    border-radius:var(--radius);
+    padding:18px 22px;
+    margin:-38px 0 32px;
+    box-shadow:0 6px 18px rgba(15,40,70,.08);
+  }
+  .notice strong{color:var(--accent-dark);}
+
+  .progress-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 22px;
+    margin-bottom:36px;
+    box-shadow:0 4px 12px rgba(15,40,70,.05);
+  }
+  .progress-card h3{margin:0 0 10px;font-size:15px;color:var(--ink-soft);font-weight:600;}
+  .bar-track{background:#EDF0F3;border-radius:999px;height:12px;overflow:hidden;}
+  .bar-fill{background:var(--accent);height:100%;width:0%;transition:width .35s ease;}
+  .progress-label{font-size:13px;color:var(--ink-soft);margin-top:8px;}
+
+  nav.steps{
+    display:flex;gap:8px;flex-wrap:wrap;margin-bottom:40px;
+  }
+  nav.steps a{
+    flex:1 1 140px;
+    text-align:center;
+    padding:10px 8px;
+    border-radius:10px;
+    background:var(--card);
+    border:1px solid var(--line);
+    text-decoration:none;
+    color:var(--ink-soft);
+    font-size:13px;
+    font-weight:600;
+  }
+  nav.steps a:hover{border-color:var(--accent);color:var(--accent);}
+
+  section.step{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:30px 30px 26px;
+    margin-bottom:28px;
+    box-shadow:0 4px 14px rgba(15,40,70,.05);
+    scroll-margin-top:20px;
+  }
+  .step-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+  .step-num{
+    flex:0 0 auto;
+    width:38px;height:38px;border-radius:50%;
+    background:var(--accent-light);color:var(--accent-dark);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:16px;
+  }
+  .step-head h2{margin:0;font-size:20px;}
+  .step-head p.sub{margin:2px 0 0;font-size:13px;color:var(--ink-soft);}
+
+  .video-frame{
+    position:relative;padding-top:56.25%;height:0;
+    border-radius:10px;overflow:hidden;margin:16px 0 20px;
+    background:#000;
+  }
+  .video-frame iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;}
+
+  ol.tasklist{margin:0;padding-left:0;list-style:none;}
+  ol.tasklist li{
+    display:flex;gap:12px;align-items:flex-start;
+    padding:10px 0;border-top:1px dashed var(--line);
+  }
+  ol.tasklist li:first-child{border-top:none;}
+  ol.tasklist input[type=checkbox]{
+    margin-top:3px;width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto;cursor:pointer;
+  }
+  ol.tasklist label{cursor:pointer;font-size:15px;}
+  ol.tasklist label b{display:block;font-size:15px;color:var(--ink);}
+  ol.tasklist label span{color:var(--ink-soft);font-size:13.5px;}
+
+  .link-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--accent);color:#fff;text-decoration:none;
+    padding:11px 18px;border-radius:9px;font-size:14px;font-weight:600;
+    margin:6px 8px 6px 0;
+  }
+  .link-btn.secondary{background:#fff;color:var(--accent);border:1.5px solid var(--accent);}
+  .link-btn:hover{opacity:.9;}
+
+  .tip{
+    background:var(--accent-light);border-radius:10px;padding:14px 16px;
+    font-size:14px;color:var(--accent-dark);margin-top:14px;
+  }
+  .tip b{display:block;margin-bottom:4px;}
+
+  .callout-warn{
+    background:var(--warn-bg);border-radius:10px;padding:14px 16px;
+    font-size:14px;color:var(--warn);margin-top:14px;
+  }
+  .callout-warn b{display:block;margin-bottom:4px;}
+
+  .block-example{
+    background:#0F1720;color:#E7ECF1;
+    border-radius:10px;padding:16px 18px;font-size:13.5px;
+    font-family:"SFMono-Regular",Consolas,Menlo,monospace;
+    line-height:1.7;margin:14px 0;
+    overflow-x:auto;
+  }
+  .block-example .comment{color:#8FA1B3;}
+  .block-example .kw{color:#7FC4FF;}
+
+  .upload-box{
+    border:2px dashed var(--line);border-radius:12px;
+    padding:22px;text-align:center;margin-top:16px;background:#FBFCFD;
+  }
+  .upload-box.done{border-color:var(--ok);background:var(--ok-bg);}
+  .upload-box p{margin:6px 0;font-size:14px;color:var(--ink-soft);}
+  .upload-box button{
+    background:var(--accent);color:#fff;border:none;border-radius:8px;
+    padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;
+  }
+  .upload-box.done button{background:var(--ok);}
+
+  footer.close{
+    text-align:center;margin-top:10px;padding:26px;color:var(--ink-soft);font-size:13px;
+  }
+
+  .quiz-card{
+    background:linear-gradient(135deg,var(--accent-light),#fff);
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:26px 30px;text-align:center;margin-bottom:28px;
+  }
+  .quiz-card h2{margin:0 0 8px;font-size:20px;color:var(--accent-dark);}
+  .quiz-card p{color:var(--ink-soft);font-size:14px;margin:0 0 16px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Plan de 10 semanas · Pensamiento computacional</div>
+  <h1>Semana 1 — Nivelación</h1>
+  <p>Guía interactiva autogestionada. Esta semana no hay video del profesor: tú avanzas a tu ritmo siguiendo estos pasos, con apoyo de video-tutoriales de referencia.</p>
+  <div class="badge-row">
+    <span class="badge">Nivel: básico</span>
+    <span class="badge">Duración estimada: 60-90 min</span>
+    <span class="badge">Trabajo autónomo</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="notice">
+    <strong>Antes de empezar:</strong> esta guía es autogestionada — no habrá video grabado por el profesor esta semana. Sigue los pasos en orden, marca cada tarea cuando la completes y al final encontrarás el cuestionario de cierre. Recuerda los espacios de consulta con el profesor los martes a las 11:00 AM y los viernes a las 7:00 A.M.
+  </div>
+
+  <div class="progress-card">
+    <h3>Tu progreso en la guía</h3>
+    <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+    <div class="progress-label" id="progressLabel">0 de 8 tareas completadas</div>
+  </div>
+
+  <nav class="steps">
+    <a href="#paso1">1. MakeCode</a>
+    <a href="#paso2">2. Tinkercad</a>
+    <a href="#paso3">3. Tu programa</a>
+    <a href="#paso4">4. Evidencia</a>
+    <a href="#paso5">5. Cuestionario</a>
+  </nav>
+
+  <!-- PASO 1 -->
+  <section class="step" id="paso1">
+    <div class="step-head">
+      <div class="step-num">1</div>
+      <div>
+        <h2>Ingresar a MakeCode</h2>
+        <p class="sub">Editor de bloques oficial para programar la micro:bit</p>
+      </div>
+    </div>
+
+    <p>MakeCode es el editor gratuito donde programaremos la micro:bit con bloques. No necesita instalación: funciona desde el navegador.</p>
+
+    <div class="video-frame">
+      <iframe src="https://www.youtube.com/embed/2uFkhmxxqcA" title="Programar la micro:bit con MakeCode" allowfullscreen></iframe>
+    </div>
+
+    <a class="link-btn" href="https://makecode.microbit.org/" target="_blank" rel="noopener">Abrir MakeCode ↗</a>
+
+    <ol class="tasklist">
+      <li>
+        <input type="checkbox" id="t1" onchange="toggleTask(this)">
+        <label for="t1"><b>Ingresa a makecode.microbit.org</b><span>Ábrelo en Chrome o Edge, de preferencia en una pestaña nueva.</span></label>
+      </li>
+      <li>
+        <input type="checkbox" id="t2" onchange="toggleTask(this)">
+        <label for="t2"><b>Crea un "Nuevo proyecto"</b><span>Dale un nombre reconocible, por ejemplo: "Semana1_TuNombre".</span></label>
+      </li>
+      <li>
+        <input type="checkbox" id="t3" onchange="toggleTask(this)">
+        <label for="t3"><b>Explora el editor</b><span>Ubica el simulador (izquierda), el menú de categorías de bloques (centro-izquierda) y el lienzo de trabajo (derecha).</span></label>
+      </li>
+    </ol>
+
+    <div class="tip"><b>Recuerda del documento de lectura</b>El simulador te permite ver el resultado de tu programa sin tener la micro:bit física conectada. Interactúa con él: haz clic en los botones A y B del simulador y observa qué pasa.</div>
+  </section>
+
+  <!-- PASO 2 -->
+  <section class="step" id="paso2">
+    <div class="step-head">
+      <div class="step-num">2</div>
+      <div>
+        <h2>Ingresar a Tinkercad</h2>
+        <p class="sub">Simulador de circuitos — crea tu cuenta con el correo institucional</p>
+      </div>
+    </div>
+
+    <p>Tinkercad nos servirá para simular circuitos electrónicos en las próximas semanas. Debes crear tu cuenta usando tu <b>correo institucional</b> (el que te asignó el colegio).</p>
+
+    <div class="video-frame">
+      <iframe src="https://www.youtube.com/embed/AE2YNpwxKSc" title="Cómo crear cuenta en Tinkercad" allowfullscreen></iframe>
+    </div>
+
+    <a class="link-btn" href="https://www.tinkercad.com/" target="_blank" rel="noopener">Abrir Tinkercad ↗</a>
+
+    <ol class="tasklist">
+      <li>
+        <input type="checkbox" id="t4" onchange="toggleTask(this)">
+        <label for="t4"><b>Ingresa a tinkercad.com</b><span>Haz clic en "Registrarse" o "Sign Up".</span></label>
+      </li>
+      <li>
+        <input type="checkbox" id="t5" onchange="toggleTask(this)">
+        <label for="t5"><b>Crea tu cuenta con el correo institucional</b><span>Si ya tienes una cuenta con otro correo, créala de nuevo con tu correo del colegio: el profesor la usará para verificar entregas.</span></label>
+      </li>
+      <li>
+        <input type="checkbox" id="t6" onchange="toggleTask(this)">
+        <label for="t6"><b>Confirma tu correo y completa el registro</b><span>Revisa tu bandeja de entrada (o de spam) para el enlace de confirmación.</span></label>
+      </li>
+    </ol>
+
+    <div class="callout-warn"><b>¿No tienes acceso a tu correo institucional?</b>Avísale a tu profesor antes de continuar; él te indicará cómo recuperarlo o activarlo.</div>
+  </section>
+
+  <!-- PASO 3 -->
+  <section class="step" id="paso3">
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <div>
+        <h2>Tu primer programa básico</h2>
+        <p class="sub">Vuelve a MakeCode y crea un programa sencillo</p>
+      </div>
+    </div>
+
+    <p>Ahora vas a crear tu primer programa: al presionar el botón A, la micro:bit mostrará tu nombre o inicial en la pantalla de LEDs.</p>
+
+    <div class="block-example"><span class="comment">// Estructura del programa a construir</span><br>
+<span class="kw">al presionar botón A</span><br>
+&nbsp;&nbsp;<span class="kw">mostrar cadena</span> "TU NOMBRE"<br>
+&nbsp;&nbsp;<span class="kw">mostrar ícono</span> ❤</div>
+
+    <ol class="tasklist">
+      <li>
+        <input type="checkbox" id="t7" onchange="toggleTask(this)">
+        <label for="t7"><b>Arrastra el bloque "al presionar botón A"</b><span>Está en la categoría "Entrada".</span></label>
+      </li>
+      <li>
+        <input type="checkbox" id="t8" onchange="toggleTask(this)">
+        <label for="t8"><b>Agrega "mostrar cadena" con tu nombre y "mostrar ícono"</b><span>Ambos bloques están en la categoría "Básico". Pruébalo en el simulador haciendo clic en el botón A virtual.</span></label>
+      </li>
+    </ol>
+
+    <div class="tip"><b>Reto opcional</b>Si terminas antes, agrega también un bloque "al presionar botón B" con un ícono o texto diferente.</div>
+  </section>
+
+  <!-- PASO 4 -->
+  <section class="step" id="paso4">
+    <div class="step-head">
+      <div class="step-num">4</div>
+      <div>
+        <h2>Evidencia de tu trabajo</h2>
+        <p class="sub">Debes enviar una fotografía de tu programa funcionando</p>
+      </div>
+    </div>
+
+    <p>Toma una fotografía o captura de pantalla de tu programa funcionando en el simulador de MakeCode (o de la micro:bit física, si tienes una en casa) y súbela en el espacio de entrega que indique tu profesor (classroom, plataforma institucional o correo).</p>
+
+    <div class="upload-box" id="uploadBox">
+      <p><b>Checklist antes de enviar tu evidencia:</b></p>
+      <p>✔ Se ve el nombre del proyecto en MakeCode<br>✔ Se ve el simulador (o la micro:bit) mostrando tu nombre o ícono<br>✔ La foto está clara y completa</p>
+      <button onclick="markEvidence()">Marcar evidencia como lista</button>
+    </div>
+  </section>
+
+  <!-- PASO 5 -->
+  <section class="quiz-card" id="paso5">
+    <h2>Cuestionario de cierre</h2>
+    <p>Cuando termines los pasos anteriores, resuelve el cuestionario corto que tu profesor compartirá en Clasroom (formulario en línea) para cerrar la nivelación de esta semana.</p>
+    <p>Recuerda que tambien debes realizar la actividad evaluativa de la semana 1</p>
+  </section>
+
+  <footer class="close">
+    Semana 1 · Plan de 10 semanas — Pensamiento Computacional, Electrónica, Mecatrónica y Programación Física · Grado 9°
+  </footer>
+
+</div>
+
+<script>
+  const totalTasks = 8;
+  function countChecked(){
+    let n = 0;
+    for (let i = 1; i <= 6; i++){
+      const el = document.getElementById('t'+i);
+      if (el && el.checked) n++;
+    }
+    const ev = document.getElementById('uploadBox').classList.contains('done');
+    return n + (ev ? 2 : 0);
+  }
+  function updateProgress(){
+    const done = countChecked();
+    const pct = Math.round((done/totalTasks)*100);
+    document.getElementById('barFill').style.width = pct + '%';
+    document.getElementById('progressLabel').textContent = done + ' de ' + totalTasks + ' tareas completadas';
+  }
+  function toggleTask(el){
+    updateProgress();
+  }
+  function markEvidence(){
+    const box = document.getElementById('uploadBox');
+    box.classList.add('done');
+    box.querySelector('button').textContent = 'Evidencia marcada ✔';
+    updateProgress();
+  }
+  updateProgress();
+</script>
+
+</body>
+</html>
