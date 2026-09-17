@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semana 2 — Pensamiento computacional y diagramas de flujo</title>
+<style>
+  :root{
+    --accent:#1F5C99;
+    --accent-light:#EAF2FA;
+    --accent-dark:#123A61;
+    --ink:#22252A;
+    --ink-soft:#565B63;
+    --line:#E1E4E8;
+    --bg:#F7F9FB;
+    --card:#FFFFFF;
+    --ok:#1E8E5A;
+    --ok-bg:#E7F6EE;
+    --bad:#B42318;
+    --bad-bg:#FDECEA;
+    --warn:#B5560B;
+    --warn-bg:#FBECDD;
+    --radius:14px;
+    /* colores de símbolos del diagrama de flujo */
+    --f-t:#1E8E5A;  --f-t-bg:#E7F6EE;
+    --f-p:#1F5C99;  --f-p-bg:#EAF2FA;
+    --f-io:#7B3FA8; --f-io-bg:#F3E8FB;
+    --f-d:#A8660F;  --f-d-bg:#FDF3DC;
+    /* colores de bloques MakeCode */
+    --b-basic:#1E90FF;
+    --b-input:#D400D4;
+    --b-logic:#00A4A6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;
+    padding-bottom:84px;
+  }
+  /* ---------- barra superior ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg,var(--accent-dark),var(--accent));
+    color:#fff;padding:10px 16px 12px;
+    box-shadow:0 2px 10px rgba(15,40,70,.18);
+  }
+  .topbar-inner{max-width:960px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;}
+  .topbar .t-title{font-weight:700;font-size:15px;flex:1 1 260px;}
+  .topbar .t-title small{display:block;font-weight:400;opacity:.85;font-size:12px;letter-spacing:.04em;}
+  .topbar .t-prog{flex:1 1 240px;min-width:200px;}
+  .bar-track{background:rgba(255,255,255,.25);border-radius:999px;height:10px;overflow:hidden;}
+  .bar-fill{background:#fff;height:100%;width:0%;transition:width .35s ease;}
+  .t-prog .lbl{font-size:12px;opacity:.92;margin-top:4px;display:flex;justify-content:space-between;gap:8px;}
+
+  .wrap{max-width:960px;margin:0 auto;padding:22px 16px 20px;}
+
+  /* ---------- diapositivas ---------- */
+  .slide{display:none;animation:fade .25s ease;}
+  .slide.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:28px 30px 24px;box-shadow:0 4px 14px rgba(15,40,70,.05);
+  }
+  .eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--accent);font-weight:700;margin-bottom:4px;}
+  h1{font-size:30px;line-height:1.2;margin:0 0 10px;color:var(--accent-dark);}
+  h2{font-size:24px;line-height:1.25;margin:0 0 12px;color:var(--accent-dark);}
+  h3{font-size:17px;margin:18px 0 8px;color:var(--ink);}
+  p{margin:0 0 12px;}
+  .lead{font-size:17px;color:var(--ink-soft);}
+  .muted{color:var(--ink-soft);font-size:14px;}
+
+  .hero{
+    background:linear-gradient(160deg,var(--accent-dark),var(--accent));
+    color:#fff;border-radius:var(--radius);padding:40px 30px;text-align:center;
+  }
+  .hero h1{color:#fff;font-size:32px;}
+  .hero p{opacity:.93;max-width:640px;margin:0 auto 12px;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px;}
+  .badge{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);padding:5px 13px;border-radius:999px;font-size:13px;}
+
+  .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media (max-width:760px){
+    .grid2{grid-template-columns:1fr;}
+    .grid4{grid-template-columns:1fr 1fr;}
+    .card{padding:22px 18px 20px;}
+    h1{font-size:26px;} h2{font-size:21px;}
+  }
+
+  .box{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:#FBFCFD;}
+  .box h3{margin-top:0;}
+  .tip{background:var(--accent-light);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--accent-dark);margin:14px 0;}
+  .tip b{display:block;margin-bottom:2px;}
+  .warn{background:var(--warn-bg);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--warn);margin:14px 0;}
+  .warn b{display:block;margin-bottom:2px;}
+  .men{border-left:5px solid var(--accent);background:var(--card);border-radius:10px;padding:14px 18px;margin:16px 0;font-size:14.5px;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+
+  ol.steps-list{padding-left:22px;margin:8px 0 12px;}
+  ol.steps-list li{margin:6px 0;}
+  ul.clean{padding-left:20px;margin:8px 0 12px;}
+  ul.clean li{margin:5px 0;}
+
+  .kbd{display:inline-block;background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:0 7px;font-size:13px;font-weight:600;color:var(--ink);}
+  .tag{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12.5px;font-weight:700;}
+
+  /* ---------- video ---------- */
+  .video-frame{position:relative;padding-top:56.25%;height:0;border-radius:10px;overflow:hidden;margin:12px 0 6px;background:#0F1720;}
+  .video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+  .video-frame.short{padding-top:0;height:420px;max-width:240px;margin-left:auto;margin-right:auto;}
+  .video-meta{font-size:13px;color:var(--ink-soft);margin-bottom:12px;}
+  .video-meta a{color:var(--accent);font-weight:600;}
+
+  /* ---------- botones ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;
+    background:var(--accent);color:#fff;text-decoration:none;
+    padding:10px 16px;border-radius:9px;font-size:14px;font-weight:600;font-family:inherit;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn:focus-visible{outline:3px solid #9CC3EA;outline-offset:2px;}
+  .btn.secondary{background:#fff;color:var(--accent);border:1.5px solid var(--accent);}
+  .btn.small{padding:6px 11px;font-size:13px;}
+  .btn.ghost{background:transparent;color:var(--accent);padding:6px 8px;}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;}
+  .btn-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+
+  /* ---------- tareas ---------- */
+  .tasks{margin:16px 0 4px;border:1px dashed #BFD3E8;border-radius:12px;padding:6px 14px;background:#FAFCFE;}
+  .tasks .t-head{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:700;margin:6px 0 2px;}
+  .task{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--line);}
+  .task:first-of-type{border-top:none;}
+  .task input{margin-top:4px;width:18px;height:18px;accent-color:var(--ok);flex:0 0 auto;cursor:pointer;}
+  .task label{cursor:pointer;font-size:14.5px;}
+  .task label span{display:block;color:var(--ink-soft);font-size:13px;}
+  .task.auto label::after{content:" (se marca sola al completar)";color:var(--ink-soft);font-size:12px;font-weight:400;}
+
+  /* ---------- tarjetas reveladoras ---------- */
+  .pillar{
+    border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff;cursor:pointer;text-align:left;
+    font-family:inherit;font-size:14px;color:var(--ink);transition:box-shadow .2s,border-color .2s;width:100%;
+  }
+  .pillar:hover,.pillar:focus-visible{border-color:var(--accent);box-shadow:0 4px 12px rgba(31,92,153,.12);outline:none;}
+  .pillar .ico{font-size:26px;line-height:1;}
+  .pillar b{display:block;font-size:15px;margin:6px 0 2px;color:var(--accent-dark);}
+  .pillar .more{display:none;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);color:var(--ink-soft);}
+  .pillar.open .more{display:block;}
+  .pillar .hint{font-size:12px;color:var(--accent);}
+  .pillar.open .hint{display:none;}
+
+  .tree{display:flex;flex-direction:column;align-items:center;gap:10px;margin:10px 0;}
+  .tree .root{background:var(--accent-dark);color:#fff;border-radius:10px;padding:10px 16px;font-weight:700;text-align:center;}
+  .tree .branches{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;}
+  @media (max-width:760px){.tree .branches{grid-template-columns:1fr;}}
+
+  /* ---------- preguntas rápidas ---------- */
+  .qq{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0;background:#fff;}
+  .qq .q{font-weight:600;margin-bottom:8px;}
+  .qq .opts{display:flex;flex-direction:column;gap:6px;}
+  .qq .opt{
+    text-align:left;border:1.5px solid var(--line);background:#FBFCFD;border-radius:9px;padding:9px 12px;
+    font-size:14.5px;cursor:pointer;font-family:inherit;color:var(--ink);
+  }
+  .qq .opt:hover{border-color:var(--accent);}
+  .qq .opt.right{border-color:var(--ok);background:var(--ok-bg);}
+  .qq .opt.wrong{border-color:var(--bad);background:var(--bad-bg);}
+  .qq .fb{display:none;margin-top:8px;font-size:14px;border-radius:8px;padding:9px 12px;}
+  .qq .fb.show{display:block;}
+  .qq .fb.ok{background:var(--ok-bg);color:#135C3B;}
+  .qq .fb.no{background:var(--bad-bg);color:#8A1C13;}
+
+  /* ---------- ordenar pasos ---------- */
+  .order-list{list-style:none;padding:0;margin:10px 0;counter-reset:ord;}
+  .order-item{
+    display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);
+    border-radius:10px;padding:8px 10px;margin:6px 0;cursor:grab;user-select:none;
+  }
+  .order-item::before{counter-increment:ord;content:counter(ord);flex:0 0 26px;height:26px;border-radius:50%;background:var(--accent-light);color:var(--accent-dark);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;}
+  .order-item .txt{flex:1;font-size:14.5px;}
+  .order-item .mv{display:flex;gap:4px;}
+  .order-item .mv button{border:1px solid var(--line);background:#F4F6F8;border-radius:6px;width:32px;height:30px;cursor:pointer;font-size:14px;}
+  .order-item .mv button:hover{background:var(--accent-light);}
+  .order-item.dragging{opacity:.5;}
+  .order-item.right{border-color:var(--ok);background:var(--ok-bg);}
+  .order-item.wrong{border-color:var(--bad);background:var(--bad-bg);}
+  .seg{display:inline-flex;border:1.5px solid var(--accent);border-radius:9px;overflow:hidden;margin-bottom:6px;flex-wrap:wrap;}
+  .seg button{border:none;background:#fff;color:var(--accent);padding:8px 14px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px;}
+  .seg button.on{background:var(--accent);color:#fff;}
+  .result{font-size:14.5px;border-radius:9px;padding:10px 14px;margin-top:8px;display:none;}
+  .result.show{display:block;}
+  .result.ok{background:var(--ok-bg);color:#135C3B;}
+  .result.no{background:var(--bad-bg);color:#8A1C13;}
+
+  /* ---------- símbolos ---------- */
+  .sym{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;border:1px solid var(--line);border-radius:12px;padding:12px 8px;background:#fff;}
+  .sym svg{width:110px;height:60px;}
+  .sym b{font-size:14px;}
+  .sym span{font-size:12.5px;color:var(--ink-soft);}
+
+  /* ---------- armar diagrama ---------- */
+  .build-row{display:grid;grid-template-columns:28px 1fr 255px 46px;gap:8px;align-items:center;padding:7px 0;border-top:1px dashed var(--line);}
+  .build-row:first-child{border-top:none;}
+  .build-row .n{font-weight:700;color:var(--accent-dark);text-align:center;}
+  .build-row select{font-family:inherit;font-size:14px;padding:7px 8px;border-radius:8px;border:1.5px solid var(--line);background:#fff;width:100%;}
+  .build-row select.right{border-color:var(--ok);background:var(--ok-bg);}
+  .build-row select.wrong{border-color:var(--bad);background:var(--bad-bg);}
+  .build-row .mini{width:46px;height:28px;}
+  @media (max-width:760px){.build-row{grid-template-columns:24px 1fr;}.build-row select{grid-column:2;}.build-row .mini{display:none;}}
+
+  /* ---------- diagramas de flujo (SVG) ---------- */
+  .flow-wrap{display:flex;justify-content:center;overflow-x:auto;padding:6px 0;}
+  svg.flow{max-width:100%;height:auto;font-family:inherit;}
+  svg.flow .n-t rect{fill:var(--f-t-bg);stroke:var(--f-t);}
+  svg.flow .n-p rect{fill:var(--f-p-bg);stroke:var(--f-p);}
+  svg.flow .n-io polygon{fill:var(--f-io-bg);stroke:var(--f-io);}
+  svg.flow .n-d polygon{fill:var(--f-d-bg);stroke:var(--f-d);}
+  svg.flow .node rect, svg.flow .node polygon{stroke-width:2;transition:stroke-width .2s, filter .2s;}
+  svg.flow .node text{font-size:13px;fill:var(--ink);text-anchor:middle;dominant-baseline:central;}
+  svg.flow .edge polyline{fill:none;stroke:#6B7280;stroke-width:2;}
+  svg.flow .edge text{font-size:12.5px;font-weight:700;fill:var(--ink);}
+  svg.flow .merge{fill:#6B7280;}
+  svg.flow .hid{opacity:0;}
+  svg.flow g{transition:opacity .35s ease;}
+  svg.flow .node.cur rect, svg.flow .node.cur polygon{stroke-width:4;filter:drop-shadow(0 0 6px rgba(255,170,0,.9));}
+  svg.flow .node.on rect, svg.flow .node.on polygon{stroke-width:3.5;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+  .legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:4px;border:2px solid;}
+
+  .reveal-box{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#FBFCFD;}
+  .reveal-exp{min-height:72px;font-size:14.5px;}
+  .reveal-exp b{color:var(--accent-dark);}
+
+  /* ---------- bloques MakeCode (imitación visual) ---------- */
+  .blocks{font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;color:#fff;line-height:1.3;}
+  .blk{border-radius:6px;padding:7px 10px;margin:3px 0;display:block;width:max-content;max-width:100%;}
+  .blk.basic{background:var(--b-basic);}
+  .blk.input{background:var(--b-input);}
+  .blk.logic{background:var(--b-logic);}
+  .blk .body{margin:6px 0 2px 14px;border-left:3px solid rgba(255,255,255,.35);padding-left:8px;}
+  .blk .pill{display:inline-block;background:#fff;color:#22252A;border-radius:999px;padding:1px 9px;margin-left:4px;}
+  .blk .hex{display:inline-block;background:var(--b-input);border:2px solid rgba(255,255,255,.6);border-radius:10px;padding:1px 8px;margin:0 4px;}
+  .blk .sub{font-weight:700;opacity:.95;display:block;margin-top:6px;}
+
+  /* ---------- micro:bit simulada ---------- */
+  .sim-area{display:grid;grid-template-columns:260px 1fr;gap:18px;align-items:start;}
+  @media (max-width:760px){.sim-area{grid-template-columns:1fr;}}
+  .mb{
+    background:#23262B;border-radius:18px;padding:18px 14px 14px;width:250px;margin:0 auto;
+    box-shadow:inset 0 0 0 3px #3A3F46,0 6px 16px rgba(0,0,0,.15);color:#fff;
+  }
+  .mb-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .mb-screen{display:grid;grid-template-columns:repeat(5,22px);grid-template-rows:repeat(5,22px);gap:6px;padding:8px;background:#15171A;border-radius:8px;}
+  .led{width:22px;height:22px;border-radius:4px;background:#3A1E1E;transition:background .08s, box-shadow .08s;}
+  .led.on{background:#FF3B30;box-shadow:0 0 8px #FF3B30;}
+  .mb-btn{
+    width:38px;height:38px;border-radius:50%;border:3px solid #9AA0A6;background:#111;color:#fff;
+    font-weight:700;cursor:pointer;font-family:inherit;font-size:14px;
+  }
+  .mb-btn:active{transform:scale(.94);background:#333;}
+  .mb-btn[disabled]{opacity:.35;cursor:not-allowed;}
+  .mb-pins{display:flex;justify-content:space-between;margin-top:12px;padding:6px 6px 0;border-top:2px solid #C9A227;font-size:11px;color:#C9A227;}
+  .sensor{margin-top:12px;background:#fff;color:var(--ink);border-radius:10px;padding:10px 12px;border:1px solid var(--line);font-size:13.5px;}
+  .sensor input{width:100%;accent-color:var(--f-d);}
+  .sensor .val{font-weight:700;color:var(--f-d);}
+  .sim-log{font-size:13.5px;color:var(--ink-soft);margin-top:8px;min-height:22px;}
+
+  /* ---------- navegación inferior ---------- */
+  .nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);
+    box-shadow:0 -4px 14px rgba(15,40,70,.06);padding:10px 16px;
+  }
+  .nav-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:10px;}
+  .nav select{flex:1;min-width:0;font-family:inherit;font-size:14px;padding:9px 10px;border-radius:9px;border:1.5px solid var(--line);background:#fff;}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:18px;}
+  .dots span{width:8px;height:8px;border-radius:50%;background:#D5DCE3;}
+  .dots span.seen{background:#9CC3EA;}
+  .dots span.cur{background:var(--accent);transform:scale(1.3);}
+
+  table.simple{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0;}
+  table.simple th, table.simple td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;}
+  table.simple th{background:var(--accent-light);color:var(--accent-dark);}
+  footer.close{text-align:center;padding:18px 10px 0;color:var(--ink-soft);font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="t-title"><small>SEMANA 2 · GRADO 9°</small>Pensamiento computacional y diagramas de flujo</div>
+    <div class="t-prog">
+      <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+      <div class="lbl"><span id="progressLabel">0 de 0 tareas</span><span id="slideLabel">Diapositiva 1</span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="deck">
+
+<!-- ===================== 1. PORTADA ===================== -->
+<section class="slide" data-title="Portada">
+  <div class="hero">
+    <div class="eyebrow" style="color:#fff;opacity:.85">Plan de 10 semanas · Pensamiento computacional</div>
+    <h1>Semana 2 — Pensar antes de programar</h1>
+    <p>Descomposición, patrones, abstracción y algoritmos. Aprenderás a dibujar tus ideas en <b>diagramas de flujo</b> y a convertirlas en programas para la micro:bit.</p>
+    <div class="badge-row">
+      <span class="badge">Nivel: básico</span>
+      <span class="badge">Duración estimada: 90–120 min</span>
+      <span class="badge">Trabajo autónomo</span>
+      <span class="badge">Solo simuladores</span>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3 style="margin-top:0">🎯 Objetivo de la semana</h3>
+    <p>Aplicar la descomposición de problemas y el reconocimiento de patrones <b>antes de programar</b>, representar algoritmos sencillos con diagramas de flujo (secuencias y una decisión simple) y llevarlos a MakeCode o Tinkercad.</p>
+    <div class="men"><b>Evidencia de aprendizaje (MEN, grados 8°–9°):</b><br><i>"Comprendo los principios y conocimientos tecnológicos e informáticos que hacen posible el funcionamiento de productos tecnológicos actuales."</i><br><span class="muted">Componentes: Naturaleza y Evolución de la T&amp;I · Uso y apropiación de la T&amp;I</span></div>
+    <p class="muted">Usa los botones <span class="kbd">Siguiente →</span> y <span class="kbd">← Anterior</span> de la parte de abajo, o las flechas del teclado.</p>
+  </div>
+</section>
+
+<!-- ===================== 2. RUTA ===================== -->
+<section class="slide" data-title="Tu ruta de la semana">
+  <div class="card">
+    <div class="eyebrow">Antes de empezar</div>
+    <h2>Tu ruta de la semana</h2>
+    <p>Esta presentación es tu guía principal. Avanza a tu ritmo: cada diapositiva tiene explicaciones cortas, videos, ejemplos y actividades para practicar.</p>
+    <div class="grid2">
+      <div class="box"><h3>1️⃣ Esta presentación</h3><p class="muted">Conceptos, ejemplos guiados, micro:bit simulada y preguntas rápidas (no tienen nota: son para practicar).</p></div>
+      <div class="box"><h3>2️⃣ Documento de lectura</h3><p class="muted">Amplía los temas, trae herramientas gratuitas para diagramas y explica cómo compartir tus proyectos.</p></div>
+      <div class="box"><h3>3️⃣ Cuestionario</h3><p class="muted">Formulario en línea que tu profesor comparte en Classroom.</p></div>
+      <div class="box"><h3>4️⃣ Actividad evaluativa: 3 retos</h3><p class="muted">Construyes 3 algoritmos: envías cada diagrama de flujo y el enlace de cada proyecto por Classroom.</p></div>
+    </div>
+    <div class="tip"><b>¿Cómo se usa la barra de progreso?</b>Arriba verás cuántas tareas llevas. Marca cada casilla <b>cuando termines la tarea de verdad</b>. Algunas casillas se marcan solas cuando resuelves bien una actividad.</div>
+    <div class="warn"><b>Importante</b>La barra de progreso no se guarda si cierras o recargas la página. Es solo una ayuda para organizarte, no una entrega.</div>
+  </div>
+</section>
+
+<!-- ===================== 3. QUÉ ES PC ===================== -->
+<section class="slide" data-title="¿Qué es el pensamiento computacional?">
+  <div class="card">
+    <div class="eyebrow">Tema 1 · Pensamiento computacional</div>
+    <h2>¿Qué es el pensamiento computacional?</h2>
+    <p class="lead">Es una forma de <b>pensar para resolver problemas</b>, organizando las ideas de manera que una persona o una computadora pueda seguirlas.</p>
+    <p>No se trata de "pensar como una máquina". Se trata de pensar <b>con orden</b>: entender el problema, partirlo en pedazos, encontrar lo que se repite, quedarse con lo importante y escribir los pasos exactos.</p>
+    <div class="video-frame">
+      <iframe src="https://www.youtube-nocookie.com/embed/ti315UlVtS4" title="¿Qué es el pensamiento computacional? — Educar Portal" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <div class="video-meta">Video: "Microaprendizaje: ¿Qué es el pensamiento computacional?" · Educar Portal · 2:25 min · <a href="https://www.youtube.com/watch?v=ti315UlVtS4" target="_blank" rel="noopener">Ver en YouTube ↗</a></div>
+    <div class="tasks">
+      <div class="t-head">Tus tareas</div>
+      <div class="task"><input type="checkbox" id="t-video1"><label for="t-video1"><b>Vi el video sobre pensamiento computacional</b><span>Si el video no carga aquí, usa el enlace "Ver en YouTube".</span></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 4. LOS 4 PILARES ===================== -->
+<section class="slide" data-title="Los 4 pilares">
+  <div class="card">
+    <div class="eyebrow">Tema 1 · Pensamiento computacional</div>
+    <h2>Los 4 pilares</h2>
+    <p>Haz clic en cada tarjeta para ver un ejemplo con algo de la vida diaria: <b>preparar un sándwich</b>.</p>
+    <div class="grid4">
+      <button class="pillar" type="button"><div class="ico">🧩</div><b>Descomposición</b>Dividir un problema grande en partes pequeñas.<div class="hint">Ver ejemplo ▾</div><div class="more">"Hacer un sándwich" se divide en: conseguir los ingredientes, armarlo y servirlo.</div></button>
+      <button class="pillar" type="button"><div class="ico">🔁</div><b>Patrones</b>Encontrar lo que se repite o se parece.<div class="hint">Ver ejemplo ▾</div><div class="more">Poner jamón y poner queso son el mismo tipo de paso: "tomar un ingrediente y ponerlo sobre el pan".</div></button>
+      <button class="pillar" type="button"><div class="ico">🔍</div><b>Abstracción</b>Quedarse con lo importante e ignorar los detalles que no cambian el resultado.<div class="hint">Ver ejemplo ▾</div><div class="more">No importa el color del plato ni la marca del pan. Importa el orden de las capas.</div></button>
+      <button class="pillar" type="button"><div class="ico">📋</div><b>Algoritmo</b>Escribir los pasos exactos, en orden, para resolver el problema.<div class="hint">Ver ejemplo ▾</div><div class="more">1. Sacar ingredientes → 2. Poner pan → 3. Poner jamón → 4. Poner queso → 5. Tapar → 6. Servir.</div></button>
+    </div>
+    <div class="tip"><b>Idea clave</b>Los cuatro pilares se usan juntos. Primero entiendes y organizas el problema, y <b>después</b> programas.</div>
+  </div>
+</section>
+
+<!-- ===================== 5. DESCOMPOSICIÓN ===================== -->
+<section class="slide" data-title="Descomposición: ejemplo guiado">
+  <div class="card">
+    <div class="eyebrow">Tema 1 · Ejemplo guiado</div>
+    <h2>Descomposición: dividir para vencer</h2>
+    <p>Un problema grande asusta. Varios problemas pequeños se resuelven uno por uno. Mira cómo se descompone un proyecto de micro:bit:</p>
+    <div class="tree">
+      <div class="root">🎲 Problema: "Quiero un dado electrónico con la micro:bit"</div>
+      <div class="branches">
+        <button class="pillar" type="button"><b>Parte 1: ¿Cuándo lanza?</b>¿Qué acción del usuario inicia el dado?<div class="hint">Ver respuesta ▾</div><div class="more">Cuando se agita la micro:bit (o se presiona un botón). Es una <b>entrada</b>.</div></button>
+        <button class="pillar" type="button"><b>Parte 2: ¿Qué número sale?</b>¿Cómo se elige el resultado?<div class="hint">Ver respuesta ▾</div><div class="more">Se elige un número al azar entre 1 y 6. Es un <b>proceso</b>.</div></button>
+        <button class="pillar" type="button"><b>Parte 3: ¿Cómo lo veo?</b>¿Dónde aparece el resultado?<div class="hint">Ver respuesta ▾</div><div class="more">Se muestra el número en la pantalla de LEDs. Es una <b>salida</b>.</div></button>
+      </div>
+    </div>
+    <div class="tip"><b>Truco para descomponer</b>Hazte tres preguntas: <b>¿Qué entra?</b> (lo que la micro:bit recibe), <b>¿Qué se procesa?</b> (lo que decide o calcula) y <b>¿Qué sale?</b> (lo que muestra o hace).</div>
+  </div>
+</section>
+
+<!-- ===================== 6. PATRONES Y ABSTRACCIÓN ===================== -->
+<section class="slide" data-title="Patrones y abstracción">
+  <div class="card">
+    <div class="eyebrow">Tema 1 · Pensamiento computacional</div>
+    <h2>Patrones y abstracción</h2>
+    <div class="grid2">
+      <div class="box">
+        <h3>🔁 Reconocer patrones</h3>
+        <p>Mira este programa de cuenta regresiva. ¿Qué se repite?</p>
+        <div class="blocks">
+          <div class="blk basic">al iniciar
+            <div class="body">
+              <div class="blk basic">mostrar número <span class="pill">3</span></div>
+              <div class="blk basic">pausa (ms) <span class="pill">1000</span></div>
+              <div class="blk basic">mostrar número <span class="pill">2</span></div>
+              <div class="blk basic">pausa (ms) <span class="pill">1000</span></div>
+              <div class="blk basic">mostrar número <span class="pill">1</span></div>
+              <div class="blk basic">pausa (ms) <span class="pill">1000</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="muted" style="margin-top:8px">El par <b>"mostrar número + pausa"</b> se repite 3 veces y solo cambia el número. Detectar ese patrón te servirá en la semana 3, cuando aprendas a usar repeticiones.</p>
+      </div>
+      <div class="box">
+        <h3>🔍 Abstracción</h3>
+        <p>Un mapa de rutas del transporte público no dibuja cada casa, árbol o semáforo. Solo muestra <b>estaciones y líneas</b>, porque eso es lo que necesitas para no perderte.</p>
+        <p>En programación pasa lo mismo: para un termómetro con micro:bit importa <b>la temperatura</b> y <b>el mensaje que se muestra</b>. No importa el color de la carcasa de la micro:bit.</p>
+      </div>
+    </div>
+    <h3>✅ Preguntas rápidas (sin nota)</h3>
+    <div class="qq-group" data-set="pilares" data-task="t-qq1"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-qq1"><label for="t-qq1"><b>Respondí bien las preguntas rápidas de los pilares</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 7. ALGORITMO + ORDENAR ===================== -->
+<section class="slide" data-title="Algoritmos: ordena los pasos">
+  <div class="card">
+    <div class="eyebrow">Tema 2 · Algoritmos · Actividad interactiva</div>
+    <h2>¿Qué es un algoritmo?</h2>
+    <p>Un <b>algoritmo</b> es una lista de pasos <b>ordenados</b>, <b>claros</b> y <b>finitos</b> (tienen un final) para resolver un problema. Si cambias el orden, el resultado puede salir mal.</p>
+    <div class="tip"><b>Actividad: ordena los pasos</b>Arrastra los pasos o usa las flechas ▲ ▼ para ponerlos en orden. Luego presiona <b>Comprobar</b>. Elige el algoritmo que quieras practicar; lo ideal es hacer los dos.</div>
+    <div class="seg" id="orderSeg">
+      <button type="button" class="on" data-set="sandwich">🥪 Hacer un sándwich</button>
+      <button type="button" data-set="saludo">💡 Programa de saludo micro:bit</button>
+    </div>
+    <ul class="order-list" id="orderList"></ul>
+    <div class="btn-row">
+      <button class="btn" type="button" id="orderCheck">Comprobar</button>
+      <button class="btn secondary" type="button" id="orderShuffle">Mezclar de nuevo</button>
+    </div>
+    <div class="result" id="orderResult"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-order1"><label for="t-order1"><b>Ordené correctamente el algoritmo del sándwich</b></label></div>
+      <div class="task auto"><input type="checkbox" id="t-order2"><label for="t-order2"><b>Ordené correctamente el programa de saludo</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 8. DIAGRAMAS: SÍMBOLOS ===================== -->
+<section class="slide" data-title="Diagramas de flujo: los símbolos">
+  <div class="card">
+    <div class="eyebrow">Tema 3 · Diagramas de flujo</div>
+    <h2>Diagramas de flujo: dibujar un algoritmo</h2>
+    <p>Un <b>diagrama de flujo</b> es el dibujo de un algoritmo. Cada tipo de paso tiene su propia forma y las flechas indican el orden. Esta semana usarás estos 5 símbolos:</p>
+    <div class="grid4" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+      <div class="sym"><svg viewBox="0 0 110 60" aria-hidden="true"><rect x="8" y="14" width="94" height="32" rx="16" fill="#E7F6EE" stroke="#1E8E5A" stroke-width="2.5"/></svg><b>Inicio / Fin</b><span>Óvalo. Todo diagrama tiene un solo inicio y un solo fin.</span></div>
+      <div class="sym"><svg viewBox="0 0 110 60" aria-hidden="true"><rect x="10" y="12" width="90" height="36" rx="3" fill="#EAF2FA" stroke="#1F5C99" stroke-width="2.5"/></svg><b>Proceso</b><span>Rectángulo. Una acción o cálculo: esperar, borrar, sumar.</span></div>
+      <div class="sym"><svg viewBox="0 0 110 60" aria-hidden="true"><polygon points="24,12 102,12 86,48 8,48" fill="#F3E8FB" stroke="#7B3FA8" stroke-width="2.5"/></svg><b>Entrada / Salida</b><span>Paralelogramo. Un dato que entra (botón, sensor) o que sale (mostrar en pantalla).</span></div>
+      <div class="sym"><svg viewBox="0 0 110 60" aria-hidden="true"><polygon points="55,4 104,30 55,56 6,30" fill="#FDF3DC" stroke="#A8660F" stroke-width="2.5"/></svg><b>Decisión</b><span>Rombo. Una pregunta con dos salidas: <b>Sí</b> o <b>No</b>.</span></div>
+      <div class="sym"><svg viewBox="0 0 110 60" aria-hidden="true"><defs><marker id="symArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6B7280"/></marker></defs><line x1="12" y1="30" x2="96" y2="30" stroke="#6B7280" stroke-width="2.5" marker-end="url(#symArrow)"/></svg><b>Flecha</b><span>Línea de flujo. Indica cuál es el siguiente paso.</span></div>
+    </div>
+    <div class="video-frame">
+      <iframe src="https://www.youtube-nocookie.com/embed/-b57GvPFjBM" title="Símbolos de un diagrama de flujo — LearnFree en Español" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <div class="video-meta">Video: "Símbolos de un diagrama de flujo" · LearnFree en Español (GCFGlobal) · 2:11 min · <a href="https://www.youtube.com/watch?v=-b57GvPFjBM" target="_blank" rel="noopener">Ver en YouTube ↗</a></div>
+    <div class="tip"><b>¿Botón o sensor = entrada? ¿Pantalla = salida?</b>Sí. Presionar un botón o leer la temperatura es un dato que <b>entra</b> a la micro:bit. Mostrar un texto o un ícono es un dato que <b>sale</b>. Ambos se dibujan con el paralelogramo.</div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-video2"><label for="t-video2"><b>Vi el video de los símbolos</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 9. REGLAS + VIDEO ===================== -->
+<section class="slide" data-title="Reglas para un buen diagrama">
+  <div class="card">
+    <div class="eyebrow">Tema 3 · Diagramas de flujo</div>
+    <h2>6 reglas para un buen diagrama</h2>
+    <table class="simple">
+      <tr><th style="width:34px">#</th><th>Regla</th><th>Ejemplo</th></tr>
+      <tr><td>1</td><td>Empieza con <b>Inicio</b> y termina con <b>Fin</b> (uno de cada uno).</td><td>Óvalo verde arriba y óvalo verde abajo.</td></tr>
+      <tr><td>2</td><td>El flujo va de <b>arriba hacia abajo</b> (o de izquierda a derecha).</td><td>Así se lee como un texto.</td></tr>
+      <tr><td>3</td><td>Cada símbolo lleva un <b>texto corto</b> que empieza con un verbo.</td><td>"Mostrar HOLA", "Esperar 1 segundo".</td></tr>
+      <tr><td>4</td><td>Todas las flechas tienen <b>punta</b> y ninguna queda "suelta".</td><td>Cada paso está conectado con el siguiente.</td></tr>
+      <tr><td>5</td><td>Una decisión es una <b>pregunta</b> con dos salidas marcadas <b>Sí</b> y <b>No</b>.</td><td>"¿La temperatura es mayor que 25 °C?"</td></tr>
+      <tr><td>6</td><td>Después de una decisión, los dos caminos <b>vuelven a unirse</b> antes del Fin.</td><td>Se juntan en un punto y siguen al Fin.</td></tr>
+    </table>
+    <div class="video-frame">
+      <iframe src="https://www.youtube-nocookie.com/embed/Kucgc6NpGwc" title="¿Qué es un diagrama de flujo? — Jorge Cogollo" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <div class="video-meta">Video: "¿Qué es un diagrama de flujo? Cómo hacer diagramas de flujo paso a paso + ejemplos" · Jorge Cogollo · 5:51 min · <a href="https://www.youtube.com/watch?v=Kucgc6NpGwc" target="_blank" rel="noopener">Ver en YouTube ↗</a></div>
+    <h3>✅ Preguntas rápidas (sin nota)</h3>
+    <div class="qq-group" data-set="simbolos" data-task="t-qq2"></div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-video3"><label for="t-video3"><b>Vi el video de cómo hacer diagramas de flujo</b></label></div>
+      <div class="task auto"><input type="checkbox" id="t-qq2"><label for="t-qq2"><b>Respondí bien las preguntas rápidas de los símbolos</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 10. EJEMPLO GUIADO 1 (SECUENCIA) ===================== -->
+<section class="slide" data-title="Ejemplo guiado 1: una secuencia">
+  <div class="card">
+    <div class="eyebrow">Tema 3 · Ejemplo guiado paso a paso</div>
+    <h2>Ejemplo guiado 1: un saludo en la micro:bit</h2>
+    <p><b>Problema:</b> "Quiero que la micro:bit, al encenderse, muestre la palabra HOLA, luego un corazón, espere un segundo y borre la pantalla".</p>
+    <div class="grid2">
+      <div class="reveal-box">
+        <div class="reveal-exp" id="rev1Exp"></div>
+        <div class="btn-row">
+          <button class="btn secondary small" type="button" id="rev1Prev">← Paso anterior</button>
+          <button class="btn small" type="button" id="rev1Next">Siguiente paso →</button>
+        </div>
+        <p class="muted" id="rev1Count"></p>
+      </div>
+      <div class="flow-wrap" id="rev1Flow"></div>
+    </div>
+    <div class="tip"><b>Esto es una secuencia</b>Los pasos se ejecutan uno tras otro, siempre en el mismo orden y sin preguntas. Es la estructura más sencilla.</div>
+  </div>
+</section>
+
+<!-- ===================== 11. DECISIÓN SIMPLE ===================== -->
+<section class="slide" data-title="La decisión simple (Sí / No)">
+  <div class="card">
+    <div class="eyebrow">Tema 3 · Ejemplo guiado paso a paso</div>
+    <h2>Ejemplo guiado 2: una decisión simple</h2>
+    <p>A veces el algoritmo debe <b>elegir un camino</b>. Para eso usamos el rombo. <b>Problema:</b> "Antes de salir de casa quiero saber si debo llevar paraguas".</p>
+    <div class="grid2">
+      <div class="reveal-box">
+        <div class="reveal-exp" id="rev2Exp"></div>
+        <div class="btn-row">
+          <button class="btn secondary small" type="button" id="rev2Prev">← Paso anterior</button>
+          <button class="btn small" type="button" id="rev2Next">Siguiente paso →</button>
+        </div>
+        <p class="muted" id="rev2Count"></p>
+      </div>
+      <div class="flow-wrap" id="rev2Flow"></div>
+    </div>
+    <div class="warn"><b>Solo UNA pregunta y dos caminos</b>Esta semana trabajamos con una decisión simple: una pregunta, un camino para el Sí, otro para el No, y después se unen. En la semana 3 verás más estructuras.</div>
+    <h3>✅ Preguntas rápidas (sin nota)</h3>
+    <div class="qq-group" data-set="decision" data-task="t-qq3"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-qq3"><label for="t-qq3"><b>Respondí bien las preguntas rápidas de la decisión</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 12. ARMAR DIAGRAMA ===================== -->
+<section class="slide" data-title="Actividad: arma el diagrama">
+  <div class="card">
+    <div class="eyebrow">Tema 3 · Actividad interactiva</div>
+    <h2>Arma el diagrama: elige el símbolo correcto</h2>
+    <p><b>Problema:</b> "Al presionar el botón A, la micro:bit revisa la temperatura. Si hace frío (menos de 18 °C), muestra CHAQUETA. Si no, muestra una carita feliz. Después espera 2 segundos y borra la pantalla".</p>
+    <p class="muted">Para cada paso, escoge el símbolo que le corresponde. Luego presiona <b>Comprobar</b> y verás el diagrama completo.</p>
+    <div id="buildRows"></div>
+    <div class="btn-row">
+      <button class="btn" type="button" id="buildCheck">Comprobar</button>
+      <button class="btn secondary" type="button" id="buildReset">Reiniciar</button>
+    </div>
+    <div class="result" id="buildResult"></div>
+    <div class="flow-wrap" id="buildFlow" style="display:none"></div>
+    <div class="legend" id="buildLegend" style="display:none">
+      <span><i style="background:var(--f-t-bg);border-color:var(--f-t)"></i>Inicio/Fin</span>
+      <span><i style="background:var(--f-p-bg);border-color:var(--f-p)"></i>Proceso</span>
+      <span><i style="background:var(--f-io-bg);border-color:var(--f-io)"></i>Entrada/Salida</span>
+      <span><i style="background:var(--f-d-bg);border-color:var(--f-d)"></i>Decisión</span>
+    </div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-build"><label for="t-build"><b>Armé el diagrama con todos los símbolos correctos</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 13. DEL DIAGRAMA AL PROGRAMA (SIMULADOR) ===================== -->
+<section class="slide" data-title="Del diagrama al programa: micro:bit simulada">
+  <div class="card">
+    <div class="eyebrow">Tema 4 · Del diagrama al programa · Actividad interactiva</div>
+    <h2>Del diagrama al programa</h2>
+    <p>Cada símbolo del diagrama se convierte en uno o más bloques de MakeCode. Prueba los 3 ejemplos en esta <b>micro:bit simulada</b>. Mientras el programa corre, el paso activo se ilumina en el diagrama.</p>
+    <div class="seg" id="exSeg">
+      <button type="button" class="on" data-ex="0">1 · Secuencia</button>
+      <button type="button" data-ex="1">2 · Eventos (botones)</button>
+      <button type="button" data-ex="2">3 · Decisión simple</button>
+    </div>
+    <p id="exDesc" style="margin-top:6px"></p>
+    <div class="sim-area">
+      <div>
+        <div class="mb" aria-label="micro:bit simulada">
+          <div class="mb-row">
+            <button class="mb-btn" type="button" id="btnA" aria-label="Botón A">A</button>
+            <div class="mb-screen" id="mbScreen"></div>
+            <button class="mb-btn" type="button" id="btnB" aria-label="Botón B">B</button>
+          </div>
+          <div class="mb-pins"><span>0</span><span>1</span><span>2</span><span>3V</span><span>GND</span></div>
+        </div>
+        <div class="sensor" id="tempBox" style="display:none">
+          🌡️ Temperatura: <span class="val" id="tempVal">21</span> °C
+          <input type="range" min="-5" max="50" value="21" id="tempRange" aria-label="Temperatura simulada">
+          <span class="muted">Mueve la barra y presiona el botón A.</span>
+        </div>
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn small secondary" type="button" id="exRestart">↻ Reiniciar simulación</button>
+        </div>
+        <div class="sim-log" id="simLog"></div>
+      </div>
+      <div style="min-width:0">
+        <h3 style="margin-top:0">Diagrama de flujo</h3>
+        <div class="flow-wrap" id="exFlow" style="gap:16px"></div>
+        <h3>Bloques en MakeCode</h3>
+        <div class="blocks" id="exBlocks" style="overflow-x:auto"></div>
+      </div>
+    </div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-ex1"><label for="t-ex1"><b>Probé el ejemplo 1 (secuencia)</b></label></div>
+      <div class="task auto"><input type="checkbox" id="t-ex2"><label for="t-ex2"><b>Probé el ejemplo 2 con los botones A y B</b></label></div>
+      <div class="task auto"><input type="checkbox" id="t-ex3"><label for="t-ex3"><b>Probé el ejemplo 3 con temperatura alta y con temperatura baja</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 14. TABLA DE EQUIVALENCIAS ===================== -->
+<section class="slide" data-title="Cada símbolo, su bloque">
+  <div class="card">
+    <div class="eyebrow">Tema 4 · Del diagrama al programa</div>
+    <h2>Cada símbolo, su bloque</h2>
+    <p>Usa esta tabla como "diccionario" para pasar de tu diagrama a MakeCode (o a los bloques de micro:bit en Tinkercad).</p>
+    <table class="simple">
+      <tr><th>Símbolo</th><th>En el diagrama dice…</th><th>Bloque de MakeCode</th><th>Categoría</th></tr>
+      <tr><td><span class="tag" style="background:var(--f-t-bg);color:var(--f-t)">Inicio</span></td><td>Inicio (al encender)</td><td><code>al iniciar</code></td><td>Básico</td></tr>
+      <tr><td><span class="tag" style="background:var(--f-io-bg);color:var(--f-io)">Entrada</span></td><td>Se presiona el botón A</td><td><code>al presionarse el botón A</code></td><td>Entrada</td></tr>
+      <tr><td><span class="tag" style="background:var(--f-io-bg);color:var(--f-io)">Entrada</span></td><td>Leer la temperatura</td><td><code>temperatura (°C)</code></td><td>Entrada</td></tr>
+      <tr><td><span class="tag" style="background:var(--f-io-bg);color:var(--f-io)">Salida</span></td><td>Mostrar "HOLA"</td><td><code>mostrar cadena "HOLA"</code></td><td>Básico</td></tr>
+      <tr><td><span class="tag" style="background:var(--f-io-bg);color:var(--f-io)">Salida</span></td><td>Mostrar corazón</td><td><code>mostrar icono</code></td><td>Básico</td></tr>
+      <tr><td><span class="tag" style="background:var(--f-p-bg);color:var(--f-p)">Proceso</span></td><td>Esperar 1 segundo</td><td><code>pausa (ms) 1000</code></td><td>Básico</td></tr>
+      <tr><td><span class="tag" style="background:var(--f-p-bg);color:var(--f-p)">Proceso</span></td><td>Borrar la pantalla</td><td><code>borrar la pantalla</code></td><td>Básico</td></tr>
+      <tr><td><span class="tag" style="background:var(--f-d-bg);color:var(--f-d)">Decisión</span></td><td>¿Temperatura &gt; 25 °C?</td><td><code>si … entonces … si no</code> + comparación <code>0 &gt; 0</code></td><td>Lógica</td></tr>
+    </table>
+    <div class="tip"><b>Recuerda</b>1 segundo = 1000 milisegundos (ms). En el bloque <code>pausa</code> siempre escribes milisegundos.</div>
+  </div>
+</section>
+
+<!-- ===================== 15. PASO A PASO MAKECODE / TINKERCAD ===================== -->
+<section class="slide" data-title="Construye el ejemplo 3 en MakeCode o Tinkercad">
+  <div class="card">
+    <div class="eyebrow">Tema 4 · Práctica guiada</div>
+    <h2>Construye el ejemplo 3 tú mismo</h2>
+    <p>Ahora arma el programa de la decisión simple ("¿Hace calor?") en el simulador que prefieras. Sigue los pasos en orden.</p>
+    <div class="seg" id="platSeg">
+      <button type="button" class="on" data-plat="mc">MakeCode</button>
+      <button type="button" data-plat="tk">Tinkercad</button>
+    </div>
+    <div id="plat-mc">
+      <ol class="steps-list">
+        <li>Abre <a href="https://makecode.microbit.org/" target="_blank" rel="noopener"><b>makecode.microbit.org</b></a> y crea un <b>Nuevo proyecto</b> llamado <code>S2_Practica_TusIniciales</code>.</li>
+        <li>Borra o deja vacíos los bloques <code>al iniciar</code> y <code>para siempre</code> (no los usaremos).</li>
+        <li>En <b>Entrada</b>, arrastra <code>al presionarse el botón A</code>.</li>
+        <li>En <b>Lógica</b>, arrastra el bloque <code>si verdadero entonces … si no</code> y encájalo dentro del bloque del botón.</li>
+        <li>En <b>Lógica</b> (sección Comparación), toma <code>0 &lt; 0</code>, ponlo en el espacio de <code>verdadero</code> y cambia el signo a <b>&gt;</b>.</li>
+        <li>En <b>Entrada</b>, arrastra <code>temperatura (°C)</code> al primer espacio de la comparación. En el segundo escribe <b>25</b>.</li>
+        <li>En <b>Básico</b>, pon <code>mostrar cadena "CALOR"</code> en la parte de <b>entonces</b>, y <code>mostrar cadena "FRESCO"</code> en la parte de <b>si no</b>.</li>
+        <li>Prueba en el simulador: aparecerá un <b>termómetro</b> junto a la micro:bit. Súbelo o bájalo y presiona <b>A</b>.</li>
+      </ol>
+    </div>
+    <div id="plat-tk" style="display:none">
+      <ol class="steps-list">
+        <li>Entra a <a href="https://www.tinkercad.com/" target="_blank" rel="noopener"><b>tinkercad.com</b></a> con tu cuenta institucional.</li>
+        <li>Haz clic en <b>Crear</b> → <b>Circuito</b>. Cambia el nombre del diseño (arriba a la izquierda) por <code>S2_Practica_TusIniciales</code>.</li>
+        <li>En el panel de componentes, busca <b>micro:bit</b> y arrástrala al área de trabajo.</li>
+        <li>Haz clic en el botón <b>Código</b> (arriba a la derecha) y verifica que esté en modo <b>Bloques</b>.</li>
+        <li>Arma los mismos bloques del ejemplo 3: evento del botón A, bloque <code>si … entonces … si no</code>, comparación con la temperatura mayor que 25 y los dos mensajes.</li>
+        <li>Presiona <b>Iniciar simulación</b>. Haz clic sobre la micro:bit para ver sus controles (botones y sensores), cambia la temperatura y presiona A.</li>
+      </ol>
+      <div class="warn"><b>Los nombres de los bloques pueden variar un poco</b>Tinkercad tiene su propio editor de bloques para micro:bit. Si un bloque no se llama exactamente igual, búscalo en la misma categoría (Entrada, Lógica, Básico).</div>
+    </div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-build-mc"><label for="t-build-mc"><b>Construí y probé el ejemplo 3 en MakeCode o en Tinkercad</b><span>Debe mostrar CALOR con temperatura alta y FRESCO con temperatura baja.</span></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 16. DIAGRAMS.NET ===================== -->
+<section class="slide" data-title="Dibuja tu diagrama en diagrams.net">
+  <div class="card">
+    <div class="eyebrow">Tema 5 · Herramienta digital</div>
+    <h2>Dibuja tu diagrama en diagrams.net (draw.io)</h2>
+    <p><b>diagrams.net</b> es gratuito, funciona en el navegador y <b>no necesitas crear cuenta</b>. En el documento de lectura encontrarás otras herramientas gratuitas.</p>
+    <div class="video-frame">
+      <iframe src="https://www.youtube-nocookie.com/embed/-t5TOY3nY_M" title="Tutorial de Draw.io para principiantes" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <div class="video-meta">Video: "Tutorial de Draw.io para principiantes: cómo usar Draw.io (Diagrams.net)" · TutorialsbyManizhandRyan-Español · 8:12 min · <a href="https://www.youtube.com/watch?v=-t5TOY3nY_M" target="_blank" rel="noopener">Ver en YouTube ↗</a></div>
+    <h3>Paso a paso</h3>
+    <ol class="steps-list">
+      <li>Abre <a href="https://app.diagrams.net/" target="_blank" rel="noopener"><b>app.diagrams.net</b></a>. Si te pregunta dónde guardar, elige <b>Dispositivo</b> (tu computador) o <b>Google Drive</b> con tu correo institucional.</li>
+      <li>Crea un diagrama en blanco.</li>
+      <li>Abre las formas de <b>Diagrama de flujo</b> (en el panel de formas de la izquierda o con el botón de formas ◯▢).</li>
+      <li>Arrastra los símbolos: óvalo (Inicio/Fin), rectángulo (Proceso), paralelogramo (Entrada/Salida) y rombo (Decisión).</li>
+      <li>Haz <b>doble clic</b> sobre cada forma para escribir su texto.</li>
+      <li>Para unir, pasa el mouse sobre una forma, arrastra una de las <b>flechas azules</b> que aparecen y suéltala sobre la siguiente forma.</li>
+      <li>En las flechas que salen del rombo, haz doble clic sobre la flecha y escribe <b>Sí</b> o <b>No</b>.</li>
+      <li>Guarda la imagen con <b>Archivo → Exportar como → PNG</b>. En la vista compacta, este menú está en el botón <b>⋯</b>.</li>
+    </ol>
+    <div class="tip"><b>Nombra bien tu archivo</b>Ejemplo: <code>S2_Reto1_Diagrama_Perez_Ana.png</code>. Así tu profesor sabe de quién es y a qué reto corresponde.</div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-drawio"><label for="t-drawio"><b>Hice y exporté en PNG un diagrama de prueba</b><span>Sugerencia: dibuja el diagrama del ejemplo 3 ("¿Hace calor?").</span></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 17. COMPARTIR ===================== -->
+<section class="slide" data-title="Comparte tu proyecto (enlace)">
+  <div class="card">
+    <div class="eyebrow">Tema 5 · Entregas</div>
+    <h2>Comparte tu proyecto con un enlace</h2>
+    <p>En la actividad evaluativa debes enviar el <b>enlace</b> de cada proyecto. Aprende a obtenerlo en la plataforma que uses.</p>
+    <div class="grid2">
+      <div class="box">
+        <h3 style="margin-top:0">MakeCode</h3>
+        <div class="video-frame short">
+          <iframe src="https://www.youtube-nocookie.com/embed/QYOh-CKnCzU" title="Cómo compartir tu proyecto de micro:bit en MakeCode" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="video-meta">Video corto · MakeABots · 0:30 min · <a href="https://www.youtube.com/shorts/QYOh-CKnCzU" target="_blank" rel="noopener">Ver en YouTube ↗</a></div>
+        <ol class="steps-list">
+          <li>Con tu proyecto abierto, haz clic en <b>Compartir</b>. Según el tamaño de la pantalla, está arriba o dentro del menú ⚙.</li>
+          <li>Escribe el nombre del proyecto y presiona <b>Compartir Proyecto</b>.</li>
+          <li>Copia el enlace que aparece (empieza por <code>https://makecode.microbit.org/</code>).</li>
+        </ol>
+        <div class="warn"><b>Si cambias el programa, vuelve a compartir</b>Si no inicias sesión, cada vez que compartes se crea un enlace nuevo con la versión de ese momento. Envía el <b>último</b> enlace.</div>
+      </div>
+      <div class="box">
+        <h3 style="margin-top:0">Tinkercad</h3>
+        <div class="video-frame">
+          <iframe src="https://www.youtube-nocookie.com/embed/484jikuhTeA" title="Cómo compartir un proyecto en Tinkercad" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="video-meta">Video · El Rincón de Primaria · 0:55 min · <a href="https://www.youtube.com/watch?v=484jikuhTeA" target="_blank" rel="noopener">Ver en YouTube ↗</a></div>
+        <ol class="steps-list">
+          <li>En tu panel de Tinkercad, pasa el mouse sobre el diseño, haz clic en el <b>engranaje ⚙</b> → <b>Propiedades</b> y cambia la privacidad a <b>Público</b>. Guarda.</li>
+          <li>Abre el diseño y haz clic en <b>Compartir</b> → <b>Invitar a personas</b>.</li>
+          <li>Presiona <b>Copiar</b> para copiar el enlace.</li>
+        </ol>
+        <div class="warn"><b>¿Por qué "Público"?</b>Si el diseño no es público, el enlace de invitación puede vencer después de un tiempo y tu profesor no podría abrirlo al calificar.</div>
+      </div>
+    </div>
+    <div class="tip"><b>Prueba tu enlace antes de enviarlo</b>Pégalo en una <b>ventana de incógnito</b> del navegador. Si ahí se abre tu proyecto, también le funcionará a tu profesor.</div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-share"><label for="t-share"><b>Compartí mi proyecto de práctica y probé el enlace en una ventana de incógnito</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 18. REPASO FINAL ===================== -->
+<section class="slide" data-title="Repaso final">
+  <div class="card">
+    <div class="eyebrow">Cierre · Preguntas rápidas</div>
+    <h2>Repaso final</h2>
+    <p>Comprueba lo que aprendiste antes de hacer el cuestionario y los retos. No tiene nota: si te equivocas, lee la explicación e inténtalo otra vez.</p>
+    <div class="qq-group" data-set="final" data-task="t-qq4"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-qq4"><label for="t-qq4"><b>Respondí bien todo el repaso final</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 19. CIERRE ===================== -->
+<section class="slide" data-title="¿Y ahora qué sigue?">
+  <div class="card">
+    <div class="eyebrow">Cierre de la semana</div>
+    <h2>¿Y ahora qué sigue?</h2>
+    <p id="finalSummary" class="lead"></p>
+    <div class="grid2">
+      <div class="box"><h3>📖 1. Documento de lectura</h3><p class="muted">Profundiza en los temas. Ahí están las <b>herramientas gratuitas para diagramas</b> y la guía completa para <b>compartir en MakeCode y Tinkercad</b>.</p></div>
+      <div class="box"><h3>📝 2. Cuestionario</h3><p class="muted">Resuelve el formulario en línea que tu profesor comparte en Classroom.</p></div>
+      <div class="box" style="grid-column:1/-1;border-color:var(--accent);background:var(--accent-light)">
+        <h3>🏆 3. Actividad evaluativa: 3 retos (100 puntos)</h3>
+        <p style="margin-bottom:6px">Lee el documento de la actividad evaluativa en Classroom. En resumen:</p>
+        <ul class="clean">
+          <li><b>Reto 1 · Secuencia</b> (30 pts)</li>
+          <li><b>Reto 2 · Eventos con botones</b> (30 pts)</li>
+          <li><b>Reto 3 · Decisión simple</b> (40 pts)</li>
+        </ul>
+        <p style="margin:0">Por cada reto entregas en Classroom: el <b>diagrama de flujo en PNG</b> y el <b>enlace del proyecto</b> de MakeCode o Tinkercad. El trabajo es <b>individual</b>.</p>
+      </div>
+    </div>
+    <div class="tip"><b>Recuerda la idea más importante</b>No hay una única solución perfecta: dos diagramas distintos pueden resolver bien el mismo problema, siempre que sus pasos sean claros, ordenados y coincidan con el programa.</div>
+    <div class="dots" id="dots"></div>
+  </div>
+  <footer class="close">Semana 2 · Plan de 10 semanas — Pensamiento Computacional, Electrónica, Mecatrónica y Programación Física · Grado 9°</footer>
+</section>
+
+</main>
+
+<nav class="nav" aria-label="Navegación de diapositivas">
+  <div class="nav-inner">
+    <button class="btn secondary" type="button" id="prevBtn">← Anterior</button>
+    <select id="jump" aria-label="Ir a la diapositiva"></select>
+    <button class="btn" type="button" id="nextBtn">Siguiente →</button>
+  </div>
+</nav>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   NAVEGACIÓN Y PROGRESO
+   ========================================================= */
+const slides = Array.from(document.querySelectorAll('.slide'));
+const jump = document.getElementById('jump');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const seen = new Set();
+let current = 0;
+
+slides.forEach((s,i)=>{
+  const o = document.createElement('option');
+  o.value = i; o.textContent = (i+1) + '. ' + s.dataset.title;
+  jump.appendChild(o);
+});
+
+function go(i){
+  if(i<0 || i>=slides.length) return;
+  slides[current].classList.remove('active');
+  current = i;
+  slides[current].classList.add('active');
+  seen.add(i);
+  jump.value = i;
+  prevBtn.disabled = i===0;
+  nextBtn.disabled = i===slides.length-1;
+  document.getElementById('slideLabel').textContent = 'Diapositiva ' + (i+1) + ' de ' + slides.length;
+  window.scrollTo({top:0, behavior:'smooth'});
+  if(slides[current].dataset.title.indexOf('micro:bit simulada')>-1){ loadExample(exIndex); } else { sim.stop(); }
+  renderDots(); updateProgress();
+}
+prevBtn.addEventListener('click',()=>go(current-1));
+nextBtn.addEventListener('click',()=>go(current+1));
+jump.addEventListener('change',()=>go(+jump.value));
+document.addEventListener('keydown',e=>{
+  const tag = (e.target.tagName||'').toLowerCase();
+  if(['input','select','textarea'].includes(tag)) return;
+  if(e.key==='ArrowRight') go(current+1);
+  if(e.key==='ArrowLeft') go(current-1);
+});
+
+function renderDots(){
+  const d = document.getElementById('dots'); d.innerHTML='';
+  slides.forEach((_,i)=>{ const s=document.createElement('span'); if(seen.has(i)) s.className='seen'; if(i===current) s.className='cur'; d.appendChild(s); });
+}
+
+const taskBoxes = Array.from(document.querySelectorAll('.task input[type=checkbox]'));
+taskBoxes.forEach(cb=>cb.addEventListener('change',updateProgress));
+function updateProgress(){
+  const done = taskBoxes.filter(c=>c.checked).length;
+  const total = taskBoxes.length;
+  document.getElementById('barFill').style.width = Math.round(done/total*100) + '%';
+  document.getElementById('progressLabel').textContent = done + ' de ' + total + ' tareas completadas';
+  const fs = document.getElementById('finalSummary');
+  if(fs){
+    fs.textContent = done===total
+      ? '¡Excelente! Completaste las ' + total + ' tareas de la presentación. Ya estás listo para la lectura, el cuestionario y los retos.'
+      : 'Llevas ' + done + ' de ' + total + ' tareas de la presentación. Puedes volver a cualquier diapositiva con el menú de abajo antes de continuar.';
+  }
+}
+function autoCheck(id){ const c=document.getElementById(id); if(c && !c.checked){ c.checked=true; updateProgress(); } }
+
+/* =========================================================
+   TARJETAS QUE SE ABREN
+   ========================================================= */
+document.querySelectorAll('.pillar').forEach(p=>p.addEventListener('click',()=>p.classList.toggle('open')));
+
+/* =========================================================
+   PREGUNTAS RÁPIDAS
+   ========================================================= */
+const QUIZ = {
+  pilares: [
+    {q:'Para crear un videojuego, lo divides en: personajes, escenarios, reglas y puntaje. ¿Qué pilar usaste?', o:['Abstracción','Descomposición','Algoritmo'], a:1, fb:'Dividir un problema grande en partes pequeñas es descomposición.'},
+    {q:'Notas que en tu programa "mostrar número + pausa" aparece varias veces y solo cambia el número. ¿Qué pilar es?', o:['Reconocimiento de patrones','Descomposición','Abstracción'], a:0, fb:'Encontrar lo que se repite o se parece es reconocer patrones.'},
+    {q:'Para un termómetro con micro:bit decides no tener en cuenta el color de la carcasa. ¿Qué pilar aplicaste?', o:['Algoritmo','Reconocimiento de patrones','Abstracción'], a:2, fb:'Quedarse con lo importante e ignorar detalles que no cambian el resultado es abstracción.'}
+  ],
+  simbolos: [
+    {q:'¿Con qué símbolo dibujas "Mostrar HOLA en la pantalla"?', o:['Rombo','Paralelogramo (Entrada/Salida)','Óvalo'], a:1, fb:'Mostrar algo en pantalla es una salida: se dibuja con el paralelogramo.'},
+    {q:'¿Con qué símbolo dibujas "Esperar 2 segundos"?', o:['Rectángulo (Proceso)','Rombo (Decisión)','Paralelogramo'], a:0, fb:'Esperar es una acción que hace la micro:bit: es un proceso (rectángulo).'}
+  ],
+  decision: [
+    {q:'¿Cuál de estos textos sirve para un rombo de decisión?', o:['Mostrar CALOR','¿La temperatura es mayor que 25 °C?','Leer la temperatura'], a:1, fb:'Una decisión siempre es una pregunta que se responde con Sí o No.'},
+    {q:'¿Cuántas salidas tiene un rombo de decisión simple?', o:['Una','Dos: Sí y No','Tres'], a:1, fb:'Una decisión simple tiene exactamente dos caminos: Sí y No.'}
+  ],
+  final: [
+    {q:'Un algoritmo es…', o:['Un programa que solo funciona en la micro:bit','Una lista de pasos ordenados, claros y finitos para resolver un problema','Un dibujo sin reglas'], a:1, fb:'Un algoritmo no depende del dispositivo: son pasos ordenados, claros y con final.'},
+    {q:'En MakeCode, ¿en qué categoría está el bloque "si … entonces … si no"?', o:['Básico','Entrada','Lógica'], a:2, fb:'Las decisiones están en la categoría Lógica.'},
+    {q:'Presionar el botón A de la micro:bit, en un diagrama de flujo, es…', o:['Una entrada','Un proceso','El fin'], a:0, fb:'Es un dato que entra a la micro:bit: se dibuja con el paralelogramo.'},
+    {q:'Antes de enviar el enlace de tu proyecto a tu profesor, lo mejor es…', o:['Enviarlo sin abrirlo','Probarlo en una ventana de incógnito','Enviar solo una captura de pantalla'], a:1, fb:'Si se abre en incógnito, también le funcionará a tu profesor.'}
+  ]
+};
+document.querySelectorAll('.qq-group').forEach(g=>{
+  const set = QUIZ[g.dataset.set]; const solved = new Set();
+  set.forEach((item,qi)=>{
+    const box = document.createElement('div'); box.className='qq';
+    const q = document.createElement('div'); q.className='q'; q.textContent=(qi+1)+'. '+item.q; box.appendChild(q);
+    const opts = document.createElement('div'); opts.className='opts'; box.appendChild(opts);
+    const fb = document.createElement('div'); fb.className='fb';
+    item.o.forEach((txt,oi)=>{
+      const b = document.createElement('button'); b.type='button'; b.className='opt'; b.textContent=txt;
+      b.addEventListener('click',()=>{
+        opts.querySelectorAll('.opt').forEach(x=>x.classList.remove('right','wrong'));
+        if(oi===item.a){
+          b.classList.add('right'); fb.className='fb show ok'; fb.textContent='✔ ¡Correcto! '+item.fb;
+          solved.add(qi); if(solved.size===set.length) autoCheck(g.dataset.task);
+        } else {
+          b.classList.add('wrong'); fb.className='fb show no'; fb.textContent='✘ Todavía no. Vuelve a leer la explicación de esta diapositiva e inténtalo otra vez.';
+        }
+      });
+      opts.appendChild(b);
+    });
+    box.appendChild(fb); g.appendChild(box);
+  });
+});
+
+/* =========================================================
+   ORDENAR PASOS
+   ========================================================= */
+const ORDER = {
+  sandwich:{task:'t-order1', note:'Poner el jamón y poner el queso pueden ir en cualquier orden: ¡hay más de una solución correcta!',
+    items:[
+      {t:'Sacar el pan, el jamón y el queso', r:1},
+      {t:'Poner una tajada de pan sobre el plato', r:2},
+      {t:'Poner el jamón sobre el pan', r:3},
+      {t:'Poner el queso sobre el pan', r:3},
+      {t:'Tapar con la otra tajada de pan', r:5},
+      {t:'Servir el sándwich', r:6}
+    ]},
+  saludo:{task:'t-order2', note:'Así se lee el programa en el diagrama de flujo: de arriba hacia abajo, desde el Inicio hasta el Fin.',
+    items:[
+      {t:'Inicio', r:1},
+      {t:'Se presiona el botón A', r:2},
+      {t:'Mostrar la palabra HOLA', r:3},
+      {t:'Mostrar un corazón', r:4},
+      {t:'Esperar 1 segundo', r:5},
+      {t:'Borrar la pantalla', r:6},
+      {t:'Fin', r:7}
+    ]}
+};
+let orderSet = 'sandwich';
+const orderList = document.getElementById('orderList');
+const orderResult = document.getElementById('orderResult');
+function shuffle(a){ const b=a.slice(); for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]];} return b; }
+function renderOrder(){
+  const items = ORDER[orderSet].items;
+  let mixed; let guard=0;
+  do { mixed = shuffle(items); guard++; } while(guard<20 && mixed.every((it,i)=>it.r===items.map(x=>x.r).sort((a,b)=>a-b)[i]));
+  orderList.innerHTML=''; orderResult.className='result';
+  mixed.forEach(it=>{
+    const li=document.createElement('li'); li.className='order-item'; li.draggable=true; li.dataset.r=it.r;
+    const sp=document.createElement('span'); sp.className='txt'; sp.textContent=it.t; li.appendChild(sp);
+    const mv=document.createElement('span'); mv.className='mv';
+    const up=document.createElement('button'); up.type='button'; up.textContent='▲'; up.setAttribute('aria-label','Subir');
+    const dn=document.createElement('button'); dn.type='button'; dn.textContent='▼'; dn.setAttribute('aria-label','Bajar');
+    up.addEventListener('click',e=>{e.stopPropagation(); const p=li.previousElementSibling; if(p) orderList.insertBefore(li,p); clearMarks();});
+    dn.addEventListener('click',e=>{e.stopPropagation(); const n=li.nextElementSibling; if(n) orderList.insertBefore(n,li); clearMarks();});
+    mv.appendChild(up); mv.appendChild(dn); li.appendChild(mv);
+    li.addEventListener('dragstart',()=>li.classList.add('dragging'));
+    li.addEventListener('dragend',()=>{li.classList.remove('dragging'); clearMarks();});
+    orderList.appendChild(li);
+  });
+}
+orderList.addEventListener('dragover',e=>{
+  e.preventDefault();
+  const dragging = orderList.querySelector('.dragging'); if(!dragging) return;
+  const after = Array.from(orderList.querySelectorAll('.order-item:not(.dragging)')).find(el=>{
+    const box=el.getBoundingClientRect(); return e.clientY < box.top + box.height/2;
+  });
+  if(after) orderList.insertBefore(dragging, after); else orderList.appendChild(dragging);
+});
+function clearMarks(){ orderList.querySelectorAll('.order-item').forEach(x=>x.classList.remove('right','wrong')); orderResult.className='result'; }
+document.getElementById('orderCheck').addEventListener('click',()=>{
+  const lis = Array.from(orderList.children);
+  const expected = lis.map(li=>+li.dataset.r).sort((a,b)=>a-b);
+  let ok=0;
+  lis.forEach((li,i)=>{ const good = +li.dataset.r===expected[i]; li.classList.toggle('right',good); li.classList.toggle('wrong',!good); if(good) ok++; });
+  if(ok===lis.length){
+    orderResult.className='result show ok'; orderResult.textContent='✔ ¡Muy bien! Todos los pasos están en orden. '+ORDER[orderSet].note;
+    autoCheck(ORDER[orderSet].task);
+  } else {
+    orderResult.className='result show no'; orderResult.textContent='Tienes '+ok+' de '+lis.length+' pasos en su lugar. Los pasos en rojo están fuera de lugar: pregúntate "¿qué tiene que pasar antes de esto?".';
+  }
+});
+document.getElementById('orderShuffle').addEventListener('click',renderOrder);
+document.querySelectorAll('#orderSeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#orderSeg button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  orderSet=b.dataset.set; renderOrder();
+}));
+renderOrder();
+
+/* =========================================================
+   DIAGRAMAS DE FLUJO EN SVG
+   spec: [{k:'t'|'p'|'io'|'d', s:'texto', id:'x', yes:[...], no:[...]}]
+   ========================================================= */
+const NS='http://www.w3.org/2000/svg';
+function mk(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+const DIM={t:{w:150,h:38},p:{w:170,h:42},io:{w:180,h:44},d:{w:190,h:86}};
+let flowUid=0;
+function renderFlow(container, spec, opt){
+  opt = opt||{};
+  const dx = opt.dx||126, gap=28;
+  const nodes=[], edges=[], merges=[];
+  let step=0;
+  function place(items, cx, y, prev, narrow){
+    for(const it of items){
+      const d = Object.assign({}, DIM[it.k]); if(narrow && it.k!=='d'){ d.w = Math.min(d.w, 164); }
+      const s = step++;
+      nodes.push({it, cx, y, w:d.w, h:d.h, s});
+      if(prev){ edges.push({pts: prev.pts.concat([[cx, y]]), s, label:prev.label, lp:prev.lp, arrow:true}); }
+      if(it.k==='d'){
+        const midY = y + d.h/2, yb = y + d.h + gap;
+        const L = place(it.yes||[], cx-dx, yb, {pts:[[cx-d.w/2, midY],[cx-dx, midY]], label:'Sí', lp:[cx-d.w/2-14, midY-8]}, true);
+        const R = place(it.no||[],  cx+dx, yb, {pts:[[cx+d.w/2, midY],[cx+dx, midY]], label:'No', lp:[cx+d.w/2+14, midY-8]}, true);
+        const yM = Math.max(L.y, R.y) - gap + 16;
+        const sMax = step-1;
+        edges.push({pts: L.prev.pts.concat([[cx-dx, yM],[cx, yM]]), s:sMax, label:L.prev.label, lp:L.prev.lp, arrow:false});
+        edges.push({pts: R.prev.pts.concat([[cx+dx, yM],[cx, yM]]), s:sMax, label:R.prev.label, lp:R.prev.lp, arrow:false});
+        merges.push({x:cx, y:yM, s:sMax});
+        prev = {pts:[[cx, yM]]};
+        y = yM + gap;
+      } else {
+        prev = {pts:[[cx, y + d.h]]};
+        y = y + d.h + gap;
+      }
+    }
+    return {prev, y};
+  }
+  const hasDec = JSON.stringify(spec).indexOf('"k":"d"')>-1;
+  const W = hasDec ? 2*dx + 170 : 210;
+  const cx = W/2;
+  const res = place(spec, cx, 8, null, false);
+  const H = res.y - gap + 10;
+  const uid = 'arr'+(flowUid++);
+  const svg = mk('svg',{viewBox:'0 0 '+W+' '+H, width:W, class:'flow', role:'img', 'aria-label':opt.label||'Diagrama de flujo'});
+  const defs = mk('defs',{},svg);
+  const m = mk('marker',{id:uid, viewBox:'0 0 10 10', refX:'9', refY:'5', markerWidth:'7', markerHeight:'7', orient:'auto'},defs);
+  mk('path',{d:'M0,0 L10,5 L0,10 z', fill:'#6B7280'},m);
+  edges.forEach(e=>{
+    const g = mk('g',{class:'edge','data-s':e.s},svg);
+    const a = {points:e.pts.map(p=>p.join(',')).join(' ')}; if(e.arrow) a['marker-end']='url(#'+uid+')';
+    mk('polyline',a,g);
+    if(e.label){ const t=mk('text',{x:e.lp[0], y:e.lp[1], 'text-anchor':'middle'},g); t.textContent=e.label; }
+  });
+  merges.forEach(mg=>{ const g=mk('g',{'data-s':mg.s},svg); mk('circle',{cx:mg.x, cy:mg.y, r:4, class:'merge'},g); });
+  const byId = {};
+  nodes.forEach(n=>{
+    const g = mk('g',{class:'node n-'+n.it.k,'data-s':n.s},svg);
+    const x=n.cx-n.w/2, y=n.y, w=n.w, h=n.h;
+    if(n.it.k==='t') mk('rect',{x,y,width:w,height:h,rx:h/2},g);
+    if(n.it.k==='p') mk('rect',{x,y,width:w,height:h,rx:4},g);
+    if(n.it.k==='io'){ const k=14; mk('polygon',{points:[[x+k,y],[x+w,y],[x+w-k,y+h],[x,y+h]].map(p=>p.join(',')).join(' ')},g); }
+    if(n.it.k==='d') mk('polygon',{points:[[n.cx,y],[x+w,y+h/2],[n.cx,y+h],[x,y+h/2]].map(p=>p.join(',')).join(' ')},g);
+    const lines = n.it.s.split('\n');
+    lines.forEach((ln,i)=>{ const t=mk('text',{x:n.cx, y: y + h/2 + (i-(lines.length-1)/2)*15},g); t.textContent=ln; });
+    if(n.it.id) byId[n.it.id]=g;
+  });
+  container.innerHTML=''; container.appendChild(svg);
+  return {
+    svg, steps: step, byId,
+    show(upTo){ svg.querySelectorAll('[data-s]').forEach(el=>el.classList.toggle('hid', +el.dataset.s>upTo)); },
+    cur(id){ svg.querySelectorAll('.node').forEach(el=>el.classList.remove('cur')); if(id && byId[id]) byId[id].classList.add('cur'); },
+    clearCur(){ svg.querySelectorAll('.node').forEach(el=>el.classList.remove('cur')); }
+  };
+}
+
+/* ---------- Ejemplos guiados con revelado paso a paso ---------- */
+function setupReveal(prefix, spec, texts){
+  const f = renderFlow(document.getElementById(prefix+'Flow'), spec);
+  let s = 0;
+  const exp = document.getElementById(prefix+'Exp'), cnt=document.getElementById(prefix+'Count');
+  const prev=document.getElementById(prefix+'Prev'), next=document.getElementById(prefix+'Next');
+  function upd(){ f.show(s); exp.innerHTML = texts[s]; cnt.textContent='Paso '+(s+1)+' de '+f.steps; prev.disabled = s===0; next.disabled = s===f.steps-1; }
+  prev.addEventListener('click',()=>{ if(s>0){s--;upd();} });
+  next.addEventListener('click',()=>{ if(s<f.steps-1){s++;upd();} });
+  upd();
+}
+setupReveal('rev1',[
+  {k:'t', s:'Inicio'},
+  {k:'io', s:'Mostrar "HOLA"'},
+  {k:'io', s:'Mostrar corazón'},
+  {k:'p', s:'Esperar 1 segundo'},
+  {k:'p', s:'Borrar la pantalla'},
+  {k:'t', s:'Fin'}
+],[
+  '<b>Paso 1 · Inicio.</b> Todo diagrama empieza con un óvalo. En MakeCode equivale al bloque <code>al iniciar</code>: lo que pasa cuando se enciende la micro:bit.',
+  '<b>Paso 2 · Salida.</b> Mostrar la palabra HOLA es un dato que <b>sale</b> por la pantalla: usamos el paralelogramo. Fíjate en la flecha que viene del Inicio.',
+  '<b>Paso 3 · Salida.</b> Mostrar el corazón también es una salida. Va <b>después</b> de HOLA porque así lo pide el problema.',
+  '<b>Paso 4 · Proceso.</b> Esperar 1 segundo es una acción interna de la micro:bit: rectángulo. En MakeCode es <code>pausa (ms) 1000</code>.',
+  '<b>Paso 5 · Proceso.</b> Borrar la pantalla es otra acción: rectángulo. En MakeCode es <code>borrar la pantalla</code>.',
+  '<b>Paso 6 · Fin.</b> Terminamos con un óvalo. ¡Listo! Tienes 6 símbolos conectados en orden: eso es una <b>secuencia</b>.'
+]);
+setupReveal('rev2',[
+  {k:'t', s:'Inicio'},
+  {k:'io', s:'Mirar el cielo'},
+  {k:'d', s:'¿Está nublado\no lloviendo?', yes:[{k:'p', s:'Llevar paraguas'}], no:[{k:'p', s:'No llevar paraguas'}]},
+  {k:'p', s:'Salir de casa'},
+  {k:'t', s:'Fin'}
+],[
+  '<b>Paso 1 · Inicio.</b> Empezamos con el óvalo.',
+  '<b>Paso 2 · Entrada.</b> Mirar el cielo es obtener un dato (cómo está el clima). Por eso es un paralelogramo.',
+  '<b>Paso 3 · Decisión.</b> Aparece el rombo con una <b>pregunta</b>. Solo se puede responder <b>Sí</b> o <b>No</b>. De él salen dos flechas.',
+  '<b>Paso 4 · Camino del Sí.</b> Si la respuesta es Sí, seguimos por la izquierda: llevar paraguas.',
+  '<b>Paso 5 · Camino del No.</b> Si la respuesta es No, seguimos por la derecha: no llevar paraguas. Los dos caminos <b>se unen</b> en el punto de abajo.',
+  '<b>Paso 6 · Proceso común.</b> Pase lo que pase, salimos de casa. Por eso este paso está <b>después</b> de la unión.',
+  '<b>Paso 7 · Fin.</b> Un solo Fin para los dos caminos. ¡Así se dibuja una decisión simple!'
+]);
+
+/* =========================================================
+   ARMAR DIAGRAMA (elegir símbolos)
+   ========================================================= */
+const BUILD = [
+  {s:'Inicio', ok:['t']},
+  {s:'Se presiona el botón A', ok:['io']},
+  {s:'Leer la temperatura', ok:['io']},
+  {s:'¿La temperatura es menor que 18 °C?', ok:['d']},
+  {s:'Mostrar "CHAQUETA"', ok:['io']},
+  {s:'Mostrar carita feliz', ok:['io']},
+  {s:'Esperar 2 segundos', ok:['p']},
+  {s:'Borrar la pantalla', ok:['p','io']},
+  {s:'Fin', ok:['t']}
+];
+const SYM_OPTS = [['','Elige un símbolo…'],['t','Óvalo · Inicio/Fin'],['p','Rectángulo · Proceso'],['io','Paralelogramo · Entrada/Salida'],['d','Rombo · Decisión']];
+const buildRows = document.getElementById('buildRows');
+function miniShape(k){
+  const svg = mk('svg',{viewBox:'0 0 46 28', class:'mini','aria-hidden':'true'});
+  if(k==='t') mk('rect',{x:2,y:5,width:42,height:18,rx:9,fill:'#E7F6EE',stroke:'#1E8E5A','stroke-width':2},svg);
+  if(k==='p') mk('rect',{x:3,y:4,width:40,height:20,rx:2,fill:'#EAF2FA',stroke:'#1F5C99','stroke-width':2},svg);
+  if(k==='io') mk('polygon',{points:'10,4 44,4 36,24 2,24',fill:'#F3E8FB',stroke:'#7B3FA8','stroke-width':2},svg);
+  if(k==='d') mk('polygon',{points:'23,1 44,14 23,27 2,14',fill:'#FDF3DC',stroke:'#A8660F','stroke-width':2},svg);
+  return svg;
+}
+function renderBuild(){
+  buildRows.innerHTML='';
+  BUILD.forEach((b,i)=>{
+    const row=document.createElement('div'); row.className='build-row';
+    const n=document.createElement('div'); n.className='n'; n.textContent=i+1; row.appendChild(n);
+    const t=document.createElement('div'); t.textContent=b.s; row.appendChild(t);
+    const sel=document.createElement('select'); sel.setAttribute('aria-label','Símbolo para: '+b.s);
+    SYM_OPTS.forEach(([v,l])=>{ const o=document.createElement('option'); o.value=v; o.textContent=l; sel.appendChild(o); });
+    const holder=document.createElement('div');
+    sel.addEventListener('change',()=>{ sel.classList.remove('right','wrong'); holder.innerHTML=''; if(sel.value) holder.appendChild(miniShape(sel.value)); });
+    row.appendChild(sel); row.appendChild(holder);
+    buildRows.appendChild(row);
+  });
+  document.getElementById('buildResult').className='result';
+  document.getElementById('buildFlow').style.display='none';
+  document.getElementById('buildLegend').style.display='none';
+}
+document.getElementById('buildCheck').addEventListener('click',()=>{
+  const sels = Array.from(buildRows.querySelectorAll('select'));
+  let ok=0, empty=0;
+  sels.forEach((s,i)=>{ if(!s.value){empty++; s.classList.remove('right','wrong'); return;} const good=BUILD[i].ok.includes(s.value); s.classList.toggle('right',good); s.classList.toggle('wrong',!good); if(good) ok++; });
+  const r=document.getElementById('buildResult');
+  if(ok===BUILD.length){
+    r.className='result show ok';
+    r.textContent='✔ ¡Perfecto! Así queda el diagrama completo. Observa cómo los dos caminos de la decisión se unen antes de "Esperar 2 segundos".';
+    const f = renderFlow(document.getElementById('buildFlow'),[
+      {k:'t',s:'Inicio'},{k:'io',s:'Se presiona el botón A'},{k:'io',s:'Leer la temperatura'},
+      {k:'d',s:'¿Temperatura\nmenor que 18 °C?', yes:[{k:'io',s:'Mostrar "CHAQUETA"'}], no:[{k:'io',s:'Mostrar carita feliz'}]},
+      {k:'p',s:'Esperar 2 segundos'},{k:'p',s:'Borrar la pantalla'},{k:'t',s:'Fin'}
+    ]);
+    f.show(99);
+    document.getElementById('buildFlow').style.display='flex';
+    document.getElementById('buildLegend').style.display='flex';
+    autoCheck('t-build');
+  } else {
+    r.className='result show no';
+    r.textContent = empty ? ('Te faltan '+empty+' pasos por asignar. ') : '';
+    r.textContent += 'Llevas '+ok+' de '+BUILD.length+' correctos. Pistas: una pregunta va en rombo; lo que entra o sale de la micro:bit va en paralelogramo; las acciones internas van en rectángulo.';
+  }
+});
+document.getElementById('buildReset').addEventListener('click',renderBuild);
+renderBuild();
+
+/* =========================================================
+   MICRO:BIT SIMULADA
+   ========================================================= */
+const FONT = {
+ 'A':['.##..','#..#.','####.','#..#.','#..#.'],'B':['###..','#..#.','###..','#..#.','###..'],
+ 'C':['.###.','#....','#....','#....','.###.'],'D':['###..','#..#.','#..#.','#..#.','###..'],
+ 'E':['####.','#....','###..','#....','####.'],'F':['####.','#....','###..','#....','#....'],
+ 'G':['.###.','#....','#.##.','#..#.','.##..'],'H':['#..#.','#..#.','####.','#..#.','#..#.'],
+ 'I':['###..','.#...','.#...','.#...','###..'],'J':['####.','...#.','...#.','#..#.','.##..'],
+ 'K':['#..#.','#.#..','##...','#.#..','#..#.'],'L':['#....','#....','#....','#....','####.'],
+ 'M':['#...#','##.##','#.#.#','#...#','#...#'],'N':['#...#','##..#','#.#.#','#..##','#...#'],
+ 'O':['.##..','#..#.','#..#.','#..#.','.##..'],'P':['###..','#..#.','###..','#....','#....'],
+ 'Q':['.##..','#..#.','#..#.','.##..','...#.'],'R':['###..','#..#.','###..','#.#..','#..#.'],
+ 'S':['.###.','#....','.##..','...#.','###..'],'T':['#####','..#..','..#..','..#..','..#..'],
+ 'U':['#..#.','#..#.','#..#.','#..#.','.##..'],'V':['#...#','#...#','#...#','.#.#.','..#..'],
+ 'W':['#...#','#...#','#.#.#','##.##','#...#'],'X':['#..#.','#..#.','.##..','#..#.','#..#.'],
+ 'Y':['#...#','.#.#.','..#..','..#..','..#..'],'Z':['####.','..#..','.#...','#....','####.'],
+ '0':['.##..','#..#.','#..#.','#..#.','.##..'],'1':['.#...','##...','.#...','.#...','###..'],
+ '2':['###..','...#.','.##..','#....','####.'],'3':['####.','...#.','..#..','#..#.','.##..'],
+ '4':['..##.','.#.#.','#..#.','#####','...#.'],'5':['#####','#....','####.','....#','####.'],
+ '6':['...#.','..#..','.###.','#...#','.###.'],'7':['#####','...#.','..#..','.#...','#....'],
+ '8':['.###.','#...#','.###.','#...#','.###.'],'9':['.###.','#...#','.###.','..#..','.#...'],
+ ' ':['.....','.....','.....','.....','.....'],'!':['.#...','.#...','.#...','.....','.#...']
+};
+const ICONS = {
+  heart:['.#.#.','#####','#####','.###.','..#..'],
+  happy:['.....','.#.#.','.....','#...#','.###.'],
+  sad:['.....','.#.#.','.....','.###.','#...#']
+};
+function glyphCols(ch){
+  const g = FONT[ch] || FONT[' '];
+  let w=0; for(let r=0;r<5;r++) for(let c=0;c<5;c++) if(g[r][c]==='#') w=Math.max(w,c+1);
+  if(ch===' ') w=3;
+  const cols=[]; for(let c=0;c<w;c++) cols.push([0,1,2,3,4].map(r=>g[r][c]==='#'?1:0));
+  return cols;
+}
+const STOP = {stop:true};
+const sim = {
+  leds:[], token:0,
+  init(){
+    const scr=document.getElementById('mbScreen');
+    for(let i=0;i<25;i++){ const d=document.createElement('div'); d.className='led'; scr.appendChild(d); this.leds.push(d); }
+  },
+  setRows(rows){ for(let r=0;r<5;r++) for(let c=0;c<5;c++) this.leds[r*5+c].classList.toggle('on', rows[r][c]==='#'); },
+  setCols(cols, off){ for(let c=0;c<5;c++){ const col=cols[off+c]||[0,0,0,0,0]; for(let r=0;r<5;r++) this.leds[r*5+c].classList.toggle('on', !!col[r]); } },
+  clear(){ this.leds.forEach(l=>l.classList.remove('on')); },
+  check(tok){ if(tok!==this.token) throw STOP; },
+  wait(ms,tok){ return new Promise(res=>setTimeout(res,ms)).then(()=>this.check(tok)); },
+  async showIcon(name,tok){ this.check(tok); this.setRows(ICONS[name]); await this.wait(600,tok); },
+  async showString(str,tok){
+    this.check(tok); str = String(str).toUpperCase();
+    if(str.length===1){ const cols=glyphCols(str); const pad=Math.floor((5-cols.length)/2); this.setCols(Array(pad).fill([0,0,0,0,0]).concat(cols),0); await this.wait(600,tok); return; }
+    let cols = []; for(let i=0;i<5;i++) cols.push([0,0,0,0,0]);
+    for(const ch of str){ cols = cols.concat(glyphCols(ch)); cols.push([0,0,0,0,0]); }
+    for(let i=0;i<4;i++) cols.push([0,0,0,0,0]);
+    for(let off=0; off<=cols.length-5; off++){ this.setCols(cols,off); await this.wait(110,tok); }
+  },
+  run(fn){
+    const tok = ++this.token;
+    Promise.resolve().then(()=>fn(tok)).then(()=>{ if(tok===this.token && currentFlows) currentFlows.forEach(f=>f.clearCur()); }).catch(e=>{ if(e!==STOP) console.error(e); });
+  },
+  stop(){ this.token++; this.clear(); }
+};
+sim.init();
+
+const log = document.getElementById('simLog');
+const tempRange = document.getElementById('tempRange');
+const tempVal = document.getElementById('tempVal');
+tempRange.addEventListener('input',()=>{ tempVal.textContent=tempRange.value; });
+let currentFlows = null;
+let exIndex = 0;
+let ex3Seen = {hot:false, cold:false};
+
+const EXAMPLES = [
+  {
+    desc:'<b>Ejemplo 1 · Secuencia.</b> Al iniciar, la micro:bit muestra HOLA y luego un corazón. Presiona <b>↻ Reiniciar simulación</b> para verlo otra vez.',
+    flows:[[{k:'t',s:'Inicio',id:'s'},{k:'io',s:'Mostrar "HOLA"',id:'hola'},{k:'io',s:'Mostrar corazón',id:'cor'},{k:'t',s:'Fin',id:'f'}]],
+    blocks:'<div class="blk basic">al iniciar<div class="body"><div class="blk basic">mostrar cadena <span class="pill">"HOLA"</span></div><div class="blk basic">mostrar icono <span class="pill">♥</span></div></div></div>',
+    buttons:false, temp:false,
+    start(F){ sim.run(async tok=>{ F[0].cur('s'); log.textContent='▶ Programa iniciado.'; await sim.wait(500,tok); F[0].cur('hola'); await sim.showString('HOLA',tok); F[0].cur('cor'); await sim.showIcon('heart',tok); F[0].cur('f'); log.textContent='✔ Fin de la secuencia. El corazón queda en pantalla.'; autoCheck('t-ex1'); await sim.wait(700,tok); }); }
+  },
+  {
+    desc:'<b>Ejemplo 2 · Eventos.</b> Cada botón tiene su propio diagrama: presiona <b>A</b> y luego <b>B</b> en la micro:bit simulada.',
+    flows:[
+      [{k:'t',s:'Inicio',id:'a0'},{k:'io',s:'Se presiona\nel botón A',id:'a1'},{k:'io',s:'Mostrar feliz',id:'a2'},{k:'t',s:'Fin',id:'a3'}],
+      [{k:'t',s:'Inicio',id:'b0'},{k:'io',s:'Se presiona\nel botón B',id:'b1'},{k:'io',s:'Mostrar triste',id:'b2'},{k:'t',s:'Fin',id:'b3'}]
+    ],
+    blocks:'<div class="blk input">al presionarse el botón <span class="pill">A</span><div class="body"><div class="blk basic">mostrar icono <span class="pill">🙂</span></div></div></div><div class="blk input" style="margin-top:10px">al presionarse el botón <span class="pill">B</span><div class="body"><div class="blk basic">mostrar icono <span class="pill">🙁</span></div></div></div>',
+    buttons:true, temp:false, pressed:{A:false,B:false},
+    start(){ sim.stop(); log.textContent='Esperando que presiones A o B…'; this.pressed={A:false,B:false}; },
+    A(F){ const self=this; F[1].clearCur(); sim.run(async tok=>{ F[0].cur('a1'); log.textContent='Botón A presionado.'; await sim.wait(350,tok); F[0].cur('a2'); await sim.showIcon('happy',tok); F[0].cur('a3'); self.pressed.A=true; if(self.pressed.B) autoCheck('t-ex2'); await sim.wait(500,tok); }); },
+    B(F){ const self=this; F[0].clearCur(); sim.run(async tok=>{ F[1].cur('b1'); log.textContent='Botón B presionado.'; await sim.wait(350,tok); F[1].cur('b2'); await sim.showIcon('sad',tok); F[1].cur('b3'); self.pressed.B=true; if(self.pressed.A) autoCheck('t-ex2'); await sim.wait(500,tok); }); }
+  },
+  {
+    desc:'<b>Ejemplo 3 · Decisión simple.</b> Mueve la temperatura y presiona <b>A</b>. Pruébalo con más de 25 °C y con 25 °C o menos para recorrer los dos caminos.',
+    flows:[[
+      {k:'t',s:'Inicio',id:'i'},{k:'io',s:'Se presiona el botón A',id:'btn'},{k:'io',s:'Leer temperatura (°C)',id:'leer'},
+      {k:'d',s:'¿Temperatura\nmayor que 25 °C?',id:'dec', yes:[{k:'io',s:'Mostrar "CALOR"',id:'si'}], no:[{k:'io',s:'Mostrar "FRESCO"',id:'no'}]},
+      {k:'t',s:'Fin',id:'f'}
+    ]],
+    blocks:'<div class="blk input">al presionarse el botón <span class="pill">A</span><div class="body"><div class="blk logic">si <span class="hex" style="background:var(--b-logic)"><span class="hex">temperatura (°C)</span> &gt; <span class="pill">25</span></span> entonces<div class="body"><div class="blk basic">mostrar cadena <span class="pill">"CALOR"</span></div></div><span class="sub">si no</span><div class="body"><div class="blk basic">mostrar cadena <span class="pill">"FRESCO"</span></div></div></div></div></div>',
+    buttons:'A', temp:true,
+    start(){ sim.stop(); log.textContent='Ajusta la temperatura y presiona A.'; },
+    A(F){ sim.run(async tok=>{
+      const t = +tempRange.value;
+      F[0].cur('btn'); log.textContent='Botón A presionado.'; await sim.wait(400,tok);
+      F[0].cur('leer'); log.textContent='Temperatura leída: '+t+' °C'; await sim.wait(600,tok);
+      F[0].cur('dec'); log.textContent='¿'+t+' es mayor que 25? → '+(t>25?'Sí':'No'); await sim.wait(800,tok);
+      if(t>25){ F[0].cur('si'); ex3Seen.hot=true; await sim.showString('CALOR',tok); }
+      else { F[0].cur('no'); ex3Seen.cold=true; await sim.showString('FRESCO',tok); }
+      F[0].cur('f'); log.textContent = (t>25?'Se tomó el camino del Sí.':'Se tomó el camino del No.') + (ex3Seen.hot&&ex3Seen.cold?' ¡Ya probaste los dos caminos!':' Ahora prueba el otro camino.');
+      if(ex3Seen.hot && ex3Seen.cold) autoCheck('t-ex3');
+      await sim.wait(700,tok);
+    }); }
+  }
+];
+const btnA=document.getElementById('btnA'), btnB=document.getElementById('btnB');
+function loadExample(i){
+  exIndex=i; const ex=EXAMPLES[i];
+  sim.stop();
+  document.querySelectorAll('#exSeg button').forEach(b=>b.classList.toggle('on', +b.dataset.ex===i));
+  document.getElementById('exDesc').innerHTML=ex.desc;
+  document.getElementById('exBlocks').innerHTML=ex.blocks;
+  const holder=document.getElementById('exFlow'); holder.innerHTML='';
+  currentFlows = ex.flows.map(spec=>{ const d=document.createElement('div'); holder.appendChild(d); const f=renderFlow(d,spec); f.show(99); return f; });
+  btnA.disabled = !ex.buttons; btnB.disabled = !(ex.buttons===true);
+  document.getElementById('tempBox').style.display = ex.temp ? 'block' : 'none';
+  log.textContent='';
+  ex.start(currentFlows);
+}
+document.querySelectorAll('#exSeg button').forEach(b=>b.addEventListener('click',()=>loadExample(+b.dataset.ex)));
+btnA.addEventListener('click',()=>{ const ex=EXAMPLES[exIndex]; if(ex.A) ex.A(currentFlows); });
+btnB.addEventListener('click',()=>{ const ex=EXAMPLES[exIndex]; if(ex.B) ex.B(currentFlows); });
+document.getElementById('exRestart').addEventListener('click',()=>loadExample(exIndex));
+
+/* ---------- MakeCode / Tinkercad selector ---------- */
+document.querySelectorAll('#platSeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#platSeg button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  document.getElementById('plat-mc').style.display = b.dataset.plat==='mc'?'block':'none';
+  document.getElementById('plat-tk').style.display = b.dataset.plat==='tk'?'block':'none';
+}));
+
+/* ---------- inicio ---------- */
+slides[0].classList.add('active');
+go(0);
+})();
+</script>
+</body>
+</html>
