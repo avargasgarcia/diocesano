@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Nivelación en Protoboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2efe3;
+    --surface:#fffdf8;
+    --surface-2:#e8e1cd;
+    --grid-dot: rgba(31,42,38,0.14);
+    --ink:#1f2a26;
+    --ink-soft:#5b6b64;
+    --ink-faint:#8a978f;
+    --accent:#a84e1c;
+    --accent-ink:#fffaf3;
+    --accent-2:#2f6f5e;
+    --accent-2-ink:#f2fbf7;
+    --rail-pos:#a63a2c;
+    --rail-neg:#2a5c8f;
+    --line: rgba(31,42,38,0.16);
+    --shadow: 0 1px 0 rgba(31,42,38,0.05), 0 12px 28px -18px rgba(31,42,38,0.35);
+    --radius: 14px;
+    --danger:#a63a2c;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141f1b;
+      --surface:#1a2723;
+      --surface-2:#20322b;
+      --grid-dot: rgba(238,242,238,0.10);
+      --ink:#edf2ee;
+      --ink-soft:#a7b6ae;
+      --ink-faint:#748179;
+      --accent:#e3a066;
+      --accent-ink:#20140a;
+      --accent-2:#6fcaa6;
+      --accent-2-ink:#0a1f17;
+      --rail-pos:#e2776a;
+      --rail-neg:#7cb0e8;
+      --line: rgba(238,242,238,0.14);
+      --shadow: 0 1px 0 rgba(0,0,0,0.2), 0 12px 28px -18px rgba(0,0,0,0.6);
+      --danger:#e2776a;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141f1b;
+    --surface:#1a2723;
+    --surface-2:#20322b;
+    --grid-dot: rgba(238,242,238,0.10);
+    --ink:#edf2ee;
+    --ink-soft:#a7b6ae;
+    --ink-faint:#748179;
+    --accent:#e3a066;
+    --accent-ink:#20140a;
+    --accent-2:#6fcaa6;
+    --accent-2-ink:#0a1f17;
+    --rail-pos:#e2776a;
+    --rail-neg:#7cb0e8;
+    --line: rgba(238,242,238,0.14);
+    --shadow: 0 1px 0 rgba(0,0,0,0.2), 0 12px 28px -18px rgba(0,0,0,0.6);
+    --danger:#e2776a;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(var(--grid-dot) 1.3px, transparent 1.3px) 0 0/22px 22px,
+      var(--bg);
+    color:var(--ink);
+    font-family:'Archivo',system-ui,sans-serif;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+  h1,h2,h3,.mono{ font-family:'JetBrains Mono',ui-monospace,monospace; }
+  h2{ text-wrap:balance; }
+  a{ color:var(--accent); }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; gap:14px;
+    padding:14px 20px;
+    border-bottom:1px solid var(--line);
+    background:color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(6px);
+    position:sticky; top:0; z-index:20;
+  }
+  .brand{ display:flex; flex-direction:column; line-height:1.15; }
+  .brand .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); }
+  .brand .title{ font-weight:700; font-size:14px; }
+  .topbar .spacer{ flex:1; }
+  .progress-wrap{ display:flex; align-items:center; gap:10px; }
+  .progress-track{ width:min(34vw,220px); height:6px; border-radius:6px; background:var(--surface-2); overflow:hidden; border:1px solid var(--line); }
+  .progress-fill{ height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); width:6.25%; transition:width .25s ease; }
+  .progress-label{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink-soft); white-space:nowrap; }
+
+  /* ---------- stage ---------- */
+  .stage{ flex:1; display:flex; align-items:flex-start; justify-content:center; padding:28px 18px 12px; }
+  .slide{
+    width:100%; max-width:760px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:34px clamp(20px,4vw,46px) 30px;
+    animation: rise .32s ease;
+  }
+  @keyframes rise{ from{ opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){ .slide{animation:none;} }
+
+  .kicker{ display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .tag{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    padding:4px 9px; border-radius:20px; border:1px solid var(--line); color:var(--ink-soft);
+  }
+  .tag.time{ color:var(--accent); border-color:color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .slide h2{ font-size:clamp(21px,3.2vw,27px); margin:0 0 6px; }
+  .slide .sub{ color:var(--ink-soft); font-size:15px; margin:0 0 22px; max-width:56ch; }
+  .body-text{ font-size:15.5px; line-height:1.65; color:var(--ink); }
+  .body-text p{ margin:0 0 12px; }
+  .body-text strong{ color:var(--ink); }
+
+  ol.steps, ul.list{ margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:10px;}
+  ol.steps li{ display:flex; gap:12px; align-items:flex-start; font-size:15px; line-height:1.55; }
+  ol.steps li .num{
+    flex:none; width:26px; height:26px; border-radius:7px; background:var(--surface-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--accent); font-weight:700;
+  }
+  ul.list li{ display:flex; gap:10px; align-items:flex-start; font-size:15px; line-height:1.55; }
+  ul.list li::before{ content:"▸"; color:var(--accent); flex:none; }
+
+  .callout{
+    border:1px solid var(--line); border-left:3px solid var(--accent);
+    background:var(--surface-2); border-radius:10px; padding:13px 15px; font-size:14.5px; line-height:1.55; margin-top:16px;
+  }
+  .callout.warn{ border-left-color: var(--danger); }
+  .callout .callout-label{ font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); display:block; margin-bottom:4px; }
+  .callout.warn .callout-label{ color:var(--danger); }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
+
+  .btn{
+    font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; letter-spacing:.02em;
+    border:1px solid var(--line); background:var(--surface-2); color:var(--ink);
+    padding:10px 16px; border-radius:9px; cursor:pointer; display:inline-flex; align-items:center; gap:8px;
+    text-decoration:none;
+  }
+  .btn:hover{ border-color:var(--accent); }
+  .btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .btn:focus-visible, [tabindex]:focus-visible, button:focus-visible, a:focus-visible, select:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+
+  /* ---------- footer / nav ---------- */
+  .navbar{
+    display:flex; align-items:center; justify-content:center; gap:16px;
+    padding:16px 18px 22px;
+  }
+  .dots{ display:flex; gap:6px; flex-wrap:wrap; max-width:420px; justify-content:center; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:var(--surface-2); border:1px solid var(--line); cursor:pointer; padding:0; }
+  .dot.active{ background:var(--accent); border-color:var(--accent); width:20px; border-radius:5px; }
+  .dot.done{ background:var(--accent-2); border-color:var(--accent-2); }
+
+  /* ---------- reusable widgets ---------- */
+  .agenda-row{
+    display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2);
+  }
+  .agenda-row + .agenda-row{ margin-top:8px; }
+  .agenda-row .t{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent); flex:none; width:56px; }
+  .agenda-row .n{ font-size:14.5px; }
+
+  /* diagnostic quiz */
+  .qcard{ border:1px solid var(--line); border-radius:12px; padding:16px; background:var(--surface-2); margin-bottom:14px; }
+  .qcard p.q{ font-weight:600; margin:0 0 10px; font-size:15px; }
+  .opts{ display:flex; flex-direction:column; gap:8px; }
+  .opt{
+    text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+    padding:9px 12px; border-radius:8px; cursor:pointer; font-size:14.5px; font-family:'Archivo',sans-serif;
+  }
+  .opt:hover{ border-color:var(--accent); }
+  .opt.correct{ border-color:var(--accent-2); background:color-mix(in srgb, var(--accent-2) 16%, var(--surface)); }
+  .opt.incorrect{ border-color:var(--danger); background:color-mix(in srgb, var(--danger) 14%, var(--surface)); }
+  .feedback{ margin-top:8px; font-size:13.5px; padding:8px 10px; border-radius:8px; display:none; }
+  .feedback.show{ display:block; }
+  .feedback.ok{ background:color-mix(in srgb, var(--accent-2) 18%, var(--surface)); color:var(--ink); }
+  .feedback.bad{ background:color-mix(in srgb, var(--danger) 16%, var(--surface)); color:var(--ink); }
+
+  /* resistor decoder */
+  .resistor-wrap{ display:flex; flex-direction:column; align-items:center; gap:16px; padding:8px 0 4px; }
+  .swatches{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
+  .swatch-group{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .swatch-group .label{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); }
+  .swatch-row{ display:flex; gap:4px; }
+  .sw{ width:20px; height:20px; border-radius:5px; border:2px solid transparent; cursor:pointer; padding:0; }
+  .sw.sel{ border-color:var(--ink); }
+  .readout{ font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:var(--accent); }
+
+  /* LED */
+  .led-wrap{ display:flex; gap:26px; align-items:center; justify-content:center; flex-wrap:wrap; padding:6px 0; }
+  .led-leg{ background:none; border:1px dashed var(--line); border-radius:8px; padding:8px 10px; cursor:pointer; font-family:'Archivo',sans-serif; color:var(--ink); font-size:13.5px; }
+  .led-leg:hover{ border-color:var(--accent); }
+  .led-note{ min-height:20px; font-size:13.5px; color:var(--accent-2); font-weight:600; }
+
+  /* breadboard */
+  .bb-wrap{ display:flex; flex-direction:column; gap:10px; }
+  .bb-hint{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink-faint); text-align:center; }
+  .bb-explain{ min-height:44px; font-size:14px; border:1px solid var(--line); border-radius:9px; padding:9px 11px; background:var(--surface-2); }
+
+  /* video card */
+  .video-card{ display:flex; gap:14px; align-items:center; border:1px solid var(--line); border-radius:12px; padding:14px; background:var(--surface-2); flex-wrap:wrap; }
+  .play-badge{ flex:none; width:52px; height:52px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; }
+  .video-card .vt{ flex:1; min-width:180px; }
+  .video-card .vt .name{ font-weight:700; font-size:14.5px; }
+  .video-card .vt .meta{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink-soft); }
+
+  /* checklist */
+  .check-item{ display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--line); }
+  .check-item:last-child{ border-bottom:none; }
+  .check-item input{ margin-top:3px; width:16px; height:16px; accent-color:var(--accent-2); flex:none; }
+  .check-item label{ font-size:14.5px; line-height:1.5; }
+
+  code, .kbd{ font-family:'JetBrains Mono',monospace; background:var(--surface-2); border:1px solid var(--line); padding:1px 6px; border-radius:5px; font-size:.92em; }
+
+  footer.hint{ text-align:center; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-faint); padding-bottom:16px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="eyebrow">Electrónica · Grado octavo</span>
+    <span class="title">Semana 1 — Nivelación: protoboard y componentes</span>
+  </div>
+  <div class="spacer"></div>
+  <div class="progress-wrap">
+    <span class="progress-label mono" id="slideCounter">1 / 16</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+</div>
+
+<div class="stage">
+  <div class="slide" id="slideHost"></div>
+</div>
+
+<div class="navbar">
+  <button class="btn" id="prevBtn" aria-label="Diapositiva anterior">← Anterior</button>
+  <div class="dots" id="dots"></div>
+  <button class="btn primary" id="nextBtn" aria-label="Siguiente diapositiva">Siguiente →</button>
+</div>
+<footer class="hint">Usa las flechas ← → del teclado, o haz clic en los puntos, para moverte entre diapositivas.</footer>
+
+<script>
+/* ====================== DATA ====================== */
+const RESISTOR_COLORS = [
+  {name:"Negro", hex:"#2b2b2b", digit:0, mult:1},
+  {name:"Marrón", hex:"#7a4a26", digit:1, mult:10},
+  {name:"Rojo", hex:"#b3372c", digit:2, mult:100},
+  {name:"Naranja", hex:"#d9772f", digit:3, mult:1000},
+  {name:"Amarillo", hex:"#e0b32a", digit:4, mult:10000},
+  {name:"Verde", hex:"#3f8f5c", digit:5, mult:100000},
+  {name:"Azul", hex:"#2e5fa3", digit:6, mult:1000000},
+  {name:"Violeta", hex:"#6a4a9e", digit:7, mult:10000000},
+];
+
+/* ====================== SLIDES ====================== */
+let slideDefs = []; // filled below with {time, render()}
+
+function fmtOhms(v){
+  if(v>=1000000) return (v/1000000).toString().replace(/\.0$/,'')+" MΩ";
+  if(v>=1000) return (v/1000).toString().replace(/\.0$/,'')+" kΩ";
+  return v+" Ω";
+}
+
+function kicker(tagText, minutes){
+  return `<div class="kicker"><span class="tag">${tagText}</span><span class="tag time">⏱ ${minutes} min sugeridos</span></div>`;
+}
+
+/* ---- 1. Portada ---- */
+slideDefs.push({time:2, render:()=>`
+  ${kicker("Portada", 2)}
+  <h2>Bienvenido a la nivelación de electrónica</h2>
+  <p class="sub">Grado octavo · Periodo 3 · Semana 1 de 10</p>
+  <div class="body-text">
+    <p>Esta semana no hay video explicado por tu docente: <strong>toda la actividad es autoformativa</strong>. Eso significa que esta presentación, sola, te debe alcanzar para entender los temas, practicar en el simulador y responder la actividad de evaluación, sin necesidad de que alguien te lo explique en vivo.</p>
+    <p>Ve avanzando diapositiva por diapositiva, sin saltarte pasos. Si algo no te queda claro, vuelve a leerlo con calma antes de seguir.</p>
+  </div>
+  <div class="callout">
+    <span class="callout-label">Necesitas</span>
+    Un computador o tablet con internet, tu <strong>correo institucional</strong> (@colpopulardiocesano.edu.co), tu cuaderno de electrónica y un lápiz.
+  </div>
+`});
+
+/* ---- 2. Agenda ---- */
+slideDefs.push({time:5, render:()=>`
+  ${kicker("Cómo funciona esta sesión", 5)}
+  <h2>Agenda de las 2 horas</h2>
+  <p class="sub">Los tiempos son una guía, no una regla exacta. Lo importante es que completes todo.</p>
+  <div>
+    <div class="agenda-row"><span class="t mono">8 min</span><span class="n">Autochequeo: qué sabes hasta ahora</span></div>
+    <div class="agenda-row"><span class="t mono">35 min</span><span class="n">Conceptos: circuito, resistencia, LED, fuente y seguridad</span></div>
+    <div class="agenda-row"><span class="t mono">20 min</span><span class="n">La protoboard y cómo hacer conexiones</span></div>
+    <div class="agenda-row"><span class="t mono">10 min</span><span class="n">Ingresar a Tinkercad con tu correo institucional</span></div>
+    <div class="agenda-row"><span class="t mono">30 min</span><span class="n">Actividad práctica: armar tu primer circuito simulado</span></div>
+    <div class="agenda-row"><span class="t mono">17 min</span><span class="n">Lectura de apoyo, evaluación y cierre</span></div>
+  </div>
+  <div class="callout">
+    <span class="callout-label">Regla de oro</span>
+    No avances a la actividad práctica sin haber leído los conceptos. Te vas a atascar en el simulador si te los saltas.
+  </div>
+`});
+
+/* ---- 3. Diagnóstico ---- */
+const diagQuestions = [
+  {q:"¿Qué necesita un circuito para que un LED encienda?", opts:[
+    {t:"Que el circuito esté cerrado (sin cortes) desde la fuente hasta el LED y de vuelta", ok:true, fb:"Correcto. Un circuito cerrado es un camino completo, sin interrupciones, por donde puede circular la corriente."},
+    {t:"Que el LED esté conectado a cualquier cable suelto", ok:false, fb:"No exactamente. Un cable suelto, sin formar un camino cerrado desde la fuente y de vuelta a ella, no enciende el LED."},
+    {t:"Que la protoboard esté encendida", ok:false, fb:"La protoboard no tiene un botón de encendido: es solo una base para hacer conexiones. Lo que enciende el LED es un circuito cerrado con una fuente de energía."}
+  ]},
+  {q:"¿Para qué sirve una resistencia en un circuito con un LED?", opts:[
+    {t:"Para decorar el circuito", ok:false, fb:"No es decorativa: cumple una función eléctrica concreta."},
+    {t:"Para limitar la corriente y proteger el LED de dañarse", ok:true, fb:"Correcto. Sin una resistencia adecuada, puede pasar demasiada corriente y el LED se quema."},
+    {t:"Para aumentar el brillo del LED al máximo posible", ok:false, fb:"Es lo contrario: la resistencia reduce la corriente, no la aumenta."}
+  ]},
+  {q:"¿Qué significa que un material sea \"aislante\"?", opts:[
+    {t:"Que deja pasar la corriente eléctrica fácilmente", ok:false, fb:"Eso describe a un conductor, no a un aislante."},
+    {t:"Que no permite el paso de la corriente eléctrica", ok:true, fb:"Correcto. El plástico o el vidrio son ejemplos de aislantes: por eso los cables están cubiertos de plástico."},
+    {t:"Que es un componente electrónico como el LED", ok:false, fb:"Aislante no es un componente: es una propiedad de un material."}
+  ]}
+];
+slideDefs.push({time:8, render:()=>{
+  let html = `${kicker("Autochequeo", 8)}<h2>¿Qué sabes hasta ahora?</h2><p class="sub">No tiene nota. Es solo para que actives lo que ya conoces antes de empezar. Elige una opción en cada pregunta.</p>`;
+  diagQuestions.forEach((item, qi)=>{
+    html += `<div class="qcard"><p class="q">${qi+1}. ${item.q}</p><div class="opts">`;
+    item.opts.forEach((o,oi)=> html += `<button class="opt" data-q="${qi}" data-o="${oi}" onclick="answerDiag(this,${qi},${oi})">${o.t}</button>`);
+    html += `</div><div class="feedback" id="diagfb-${qi}"></div></div>`;
+  });
+  return html;
+}});
+
+/* ---- 4. Circuito eléctrico ---- */
+slideDefs.push({time:10, render:()=>`
+  ${kicker("Concepto 1", 10)}
+  <h2>¿Qué es un circuito eléctrico?</h2>
+  <div class="body-text">
+    <p>Un <strong>circuito eléctrico</strong> es un camino cerrado por el que puede circular la corriente eléctrica, desde una fuente de energía (como una pila), pasando por los componentes, y de regreso a la fuente.</p>
+  </div>
+  <div class="grid2">
+    <div class="callout">
+      <span class="callout-label">Circuito cerrado</span>
+      Todos los componentes están conectados en un camino completo, sin cortes. La corriente puede circular y el LED enciende.
+    </div>
+    <div class="callout warn">
+      <span class="callout-label">Circuito abierto</span>
+      Hay un corte en el camino (un cable suelto, un interruptor apagado). La corriente no puede circular y el LED no enciende.
+    </div>
+  </div>
+  <svg viewBox="0 0 420 150" style="width:100%;max-width:420px;display:block;margin:18px auto 4px;">
+    <rect x="0" y="0" width="420" height="150" fill="none"/>
+    <path d="M40 40 H300 V110 H40 Z" fill="none" stroke="var(--ink-soft)" stroke-width="3"/>
+    <rect x="10" y="55" width="30" height="40" rx="3" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="2"/>
+    <text x="25" y="78" text-anchor="middle" font-size="10" font-family="JetBrains Mono, monospace" fill="var(--ink)">+/-</text>
+    <circle cx="300" cy="75" r="16" fill="var(--surface-2)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="300" y="79" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="var(--accent)">LED</text>
+    <circle id="cdot" cx="40" cy="40" r="4.5" fill="var(--accent-2)"/>
+  </svg>
+  <div style="text-align:center;">
+    <button class="btn" id="circuitToggle" onclick="toggleCircuit()">Cerrar el circuito ▶</button>
+  </div>
+`});
+
+/* ---- 5. Resistencia ---- */
+slideDefs.push({time:12, render:()=>`
+  ${kicker("Concepto 2", 12)}
+  <h2>La resistencia y su código de colores</h2>
+  <div class="body-text">
+    <p>La <strong>resistencia</strong> es el componente más básico: limita cuánta corriente pasa por el circuito. En vez de tener el valor escrito, tiene <strong>franjas de colores</strong> que hay que saber leer.</p>
+    <p>Las primeras dos franjas son dígitos, la tercera es el multiplicador. Prueba a cambiar los colores de abajo y observa cómo cambia el valor.</p>
+  </div>
+  <div class="resistor-wrap">
+    <div class="swatches">
+      <div class="swatch-group"><span class="label">1er dígito</span><div class="swatch-row" id="row0"></div></div>
+      <div class="swatch-group"><span class="label">2° dígito</span><div class="swatch-row" id="row1"></div></div>
+      <div class="swatch-group"><span class="label">Multiplicador</span><div class="swatch-row" id="row2"></div></div>
+    </div>
+    <div class="readout" id="resistorReadout">10 Ω</div>
+  </div>
+  <div class="callout">
+    <span class="callout-label">Para tu cuaderno</span>
+    El documento de lectura de esta semana trae la tabla completa de colores. Esa tabla es una de las partes que debes transcribir.
+  </div>
+`});
+
+/* ---- 6. LED ---- */
+slideDefs.push({time:8, render:()=>`
+  ${kicker("Concepto 3", 8)}
+  <h2>El LED y su polaridad</h2>
+  <div class="body-text">
+    <p>El LED solo deja pasar la corriente <strong>en un sentido</strong>. Si lo conectas al revés, no enciende (y no se daña, solo no funciona). Por eso hay que reconocer sus dos patas.</p>
+  </div>
+  <div class="led-wrap">
+    <button class="led-leg" onclick="ledInfo('larga')">Pata larga</button>
+    <button class="led-leg" onclick="ledInfo('corta')">Pata corta</button>
+    <button class="led-leg" onclick="ledInfo('plano')">Lado plano de la carcasa</button>
+  </div>
+  <p class="led-note" id="ledNote">Haz clic en cada parte para ver qué es.</p>
+  <div class="callout">
+    <span class="callout-label">Regla práctica</span>
+    Pata larga = ánodo (+) → va hacia el positivo. Pata corta = cátodo (−) → va hacia el negativo. Si no tiene patas de distinto tamaño, busca el lado plano de la carcasa: ese lado siempre marca el cátodo (−).
+  </div>
+`});
+
+/* ---- 7. Fuente ---- */
+slideDefs.push({time:5, render:()=>`
+  ${kicker("Concepto 4", 5)}
+  <h2>La fuente de voltaje</h2>
+  <div class="body-text">
+    <p>La <strong>fuente</strong> es lo que entrega la energía al circuito (en la vida real, una pila o batería; en Tinkercad, el componente "Battery"). Tiene un lado positivo (+) y uno negativo (−), igual que el LED.</p>
+    <p>El voltaje se mide en <strong>voltios (V)</strong>. Una pila AA común es de 1.5 V; en Tinkercad normalmente usarás una de 5 V o 9 V para tus primeros circuitos.</p>
+  </div>
+  <div class="callout">
+    <span class="callout-label">Importante</span>
+    Nunca conectes el positivo directo al negativo de la fuente sin ningún componente entre medio: eso se llama "corto circuito" y en la vida real puede dañar la pila o calentarse peligrosamente. En el simulador no hay riesgo físico, pero es un hábito que debes aprender desde ya.
+  </div>
+`});
+
+/* ---- 8. Seguridad ---- */
+slideDefs.push({time:5, render:()=>`
+  ${kicker("Seguridad eléctrica", 5)}
+  <h2>Normas básicas de seguridad</h2>
+  <div class="body-text"><p>Aunque esta semana trabajas solo en simulador, estas normas son las que vas a necesitar cuando más adelante trabajes con componentes reales:</p></div>
+  <ul class="list">
+    <li>Nunca toques un circuito con las manos mojadas.</li>
+    <li>Verifica la polaridad (+/−) antes de conectar cualquier componente.</li>
+    <li>No conectes directamente el positivo con el negativo de una fuente (corto circuito).</li>
+    <li>Si un componente se calienta más de lo normal, desconecta la fuente de inmediato.</li>
+    <li>Antes de armar un circuito nuevo, revisa el diagrama completo, no lo armes "a la carrera".</li>
+  </ul>
+`});
+
+/* ---- 9. Protoboard partes ---- */
+const bbZones = {
+  railTop:"Riel superior (+/−): dos líneas largas que conectan todos los huecos en horizontal. Aquí normalmente van el positivo y el negativo de la fuente.",
+  mainTop:"Filas centrales (arriba): cada grupo de 5 huecos, en vertical, está conectado entre sí. Aquí se conectan las patas de los componentes.",
+  gap:"Canal central: separa las dos mitades de la protoboard. Los circuitos integrados se colocan atravesando este canal (esta semana no lo vas a necesitar).",
+  mainBottom:"Filas centrales (abajo): igual que las de arriba, cada grupo de 5 huecos en vertical está conectado entre sí, pero de forma independiente a las de arriba.",
+  railBottom:"Riel inferior (+/−): igual que el riel superior, conecta todos los huecos de esa línea en horizontal."
+};
+slideDefs.push({time:12, render:()=>`
+  ${kicker("La protoboard", 12)}
+  <h2>Las partes de la protoboard</h2>
+  <p class="sub">Haz clic en cada zona del dibujo para ver qué es y cómo están conectados sus huecos por dentro.</p>
+  <div class="bb-wrap">
+    <svg viewBox="0 0 460 220" style="width:100%;max-width:460px;display:block;margin:0 auto;">
+      <rect x="0" y="0" width="460" height="220" rx="10" fill="var(--surface-2)" stroke="var(--line)"/>
+      <g onclick="bbInfo('railTop')" style="cursor:pointer;">
+        <rect x="14" y="14" width="432" height="24" rx="4" fill="none" stroke="var(--rail-pos)" stroke-width="2"/>
+        <text x="20" y="30" font-size="9" font-family="JetBrains Mono, monospace" fill="var(--rail-pos)">+</text>
+      </g>
+      <g onclick="bbInfo('mainTop')" style="cursor:pointer;">
+        <rect x="14" y="46" width="432" height="56" rx="4" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="3 3"/>
+      </g>
+      <g onclick="bbInfo('gap')" style="cursor:pointer;">
+        <rect x="14" y="106" width="432" height="10" fill="none" stroke="var(--ink-faint)" stroke-width="1.5"/>
+      </g>
+      <g onclick="bbInfo('mainBottom')" style="cursor:pointer;">
+        <rect x="14" y="120" width="432" height="56" rx="4" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="3 3"/>
+      </g>
+      <g onclick="bbInfo('railBottom')" style="cursor:pointer;">
+        <rect x="14" y="182" width="432" height="24" rx="4" fill="none" stroke="var(--rail-neg)" stroke-width="2"/>
+        <text x="20" y="198" font-size="9" font-family="JetBrains Mono, monospace" fill="var(--rail-neg)">−</text>
+      </g>
+      ${Array.from({length:44}).map((_,i)=>`<circle cx="${24+i*10}" cy="26" r="1.6" fill="var(--ink-faint)"/>`).join('')}
+      ${Array.from({length:44}).map((_,i)=>`<circle cx="${24+i*10}" cy="194" r="1.6" fill="var(--ink-faint)"/>`).join('')}
+    </svg>
+    <p class="bb-hint">Toca / haz clic sobre el riel superior, las filas centrales o el riel inferior</p>
+    <div class="bb-explain" id="bbExplain">Selecciona una zona del dibujo para ver la explicación aquí.</div>
+  </div>
+`});
+
+/* ---- 10. Conexión ejemplo ---- */
+slideDefs.push({time:8, render:()=>`
+  ${kicker("Cómo se conecta", 8)}
+  <h2>Ejemplo: cómo se hace una conexión</h2>
+  <div class="body-text">
+    <p>Para armar un circuito simple de resistencia + LED en la protoboard, el camino es siempre el mismo:</p>
+  </div>
+  <ol class="steps">
+    <li><span class="num">1</span>El positivo de la fuente se conecta al riel superior (+).</li>
+    <li><span class="num">2</span>Desde el riel superior, un cable baja hasta una fila donde está una pata de la resistencia.</li>
+    <li><span class="num">3</span>La otra pata de la resistencia está en otra fila, conectada a la pata larga (ánodo) del LED.</li>
+    <li><span class="num">4</span>La pata corta (cátodo) del LED está en una fila conectada, por otro cable, al riel inferior (−).</li>
+    <li><span class="num">5</span>El riel inferior se conecta al negativo de la fuente, cerrando el circuito.</li>
+  </ol>
+  <div class="callout warn">
+    <span class="callout-label">Error frecuente</span>
+    Poner las dos patas de un mismo componente en la <strong>misma fila</strong> de 5 huecos. Como esa fila ya está conectada entre sí, el componente queda "puenteado" y el circuito no funciona como se espera.
+  </div>
+`});
+
+/* ---- 11. Tinkercad login ---- */
+slideDefs.push({time:10, render:()=>`
+  ${kicker("Herramienta de trabajo", 10)}
+  <h2>Ingresar a Tinkercad con tu correo institucional</h2>
+  <p class="sub">Todo el curso se practica en Tinkercad Circuits. Usa siempre tu correo institucional, nunca uno personal.</p>
+  <ol class="steps">
+    <li><span class="num">1</span>Abre tu navegador y entra a <code>tinkercad.com</code></li>
+    <li><span class="num">2</span>Haz clic en <strong>"Iniciar sesión" / "Sign In"</strong>, arriba a la derecha.</li>
+    <li><span class="num">3</span>Elige la opción <strong>"Google"</strong> para iniciar sesión (no crees una cuenta con usuario y contraseña nuevos).</li>
+    <li><span class="num">4</span>Selecciona o escribe tu correo institucional: <code>tuusuario@colpopulardiocesano.edu.co</code></li>
+    <li><span class="num">5</span>Ingresa tu contraseña institucional si el sistema te la pide.</li>
+    <li><span class="num">6</span>Si es la primera vez que entras, Tinkercad puede pedirte completar algunos datos adicionales de la cuenta: complétalos y continúa.</li>
+    <li><span class="num">7</span>Verifica que tu nombre aparezca arriba a la derecha: eso confirma que iniciaste sesión correctamente.</li>
+  </ol>
+  <div class="video-card">
+    <div class="play-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="var(--accent-ink)"/></svg></div>
+    <div class="vt">
+      <div class="name">Video de apoyo: crear cuenta / iniciar sesión en Tinkercad</div>
+      <div class="meta">YOUTUBE · SE ABRE EN UNA PESTAÑA NUEVA</div>
+    </div>
+    <a class="btn primary" href="https://www.youtube.com/watch?v=eK0j0hVaJP0" target="_blank" rel="noopener">Ver video ↗</a>
+  </div>
+  <div class="callout warn">
+    <span class="callout-label">Ojo con esto</span>
+    El video es general sobre cómo crear cuenta en Tinkercad y no menciona correos institucionales. Tú sí debes elegir la opción <strong>"Google"</strong> y usar tu correo <strong>@colpopulardiocesano.edu.co</strong>, tal como dicen los pasos de arriba.
+  </div>
+`});
+
+/* ---- 12. Actividad práctica ---- */
+slideDefs.push({time:30, render:()=>`
+  ${kicker("Actividad práctica", 30)}
+  <h2>Tu primer circuito simulado</h2>
+  <p class="sub">Vas a armar, en Tinkercad, el mismo circuito de resistencia + LED que viste en esta presentación.</p>
+  <ol class="steps">
+    <li><span class="num">1</span>Ya con la sesión iniciada, en el menú superior entra a <strong>"Circuits"</strong> (no a "3D Design").</li>
+    <li><span class="num">2</span>Haz clic en <strong>"Create" → "New Circuit"</strong>.</li>
+    <li><span class="num">3</span>Nombra tu proyecto así: <code>Semana1_TuNombreCompleto</code></li>
+    <li><span class="num">4</span>En el panel de componentes (derecha), busca <strong>"Battery"</strong> y arrástrala al área de trabajo.</li>
+    <li><span class="num">5</span>Busca <strong>"Resistor"</strong> y arrástrala cerca de la pila.</li>
+    <li><span class="num">6</span>Busca <strong>"LED"</strong> y arrástralo también al área de trabajo.</li>
+    <li><span class="num">7</span>Haz clic en la resistencia y cambia su valor a <strong>220 Ω</strong> (usa el panel que aparece).</li>
+    <li><span class="num">8</span>Conecta con cables, en este orden: positivo de la pila → una pata de la resistencia → otra pata de la resistencia a la pata larga (ánodo) del LED → pata corta (cátodo) del LED → negativo de la pila.</li>
+    <li><span class="num">9</span>Haz clic en <strong>"Start Simulation"</strong>. El LED debe encender.</li>
+    <li><span class="num">10</span>Si no enciende: revisa que el LED no esté al revés, y que ningún cable quede suelto o en la fila incorrecta.</li>
+    <li><span class="num">11</span>Cuando funcione, haz clic en <strong>"Share"</strong> (arriba a la derecha) y copia el enlace de tu proyecto.</li>
+  </ol>
+  <div class="callout">
+    <span class="callout-label">Nota</span>
+    Tinkercad guarda tu trabajo automáticamente, pero revisa que el nombre del proyecto haya quedado como se indicó. Los nombres exactos de algunos botones pueden variar un poco si tu cuenta está en otro idioma.
+  </div>
+`});
+
+/* ---- 13. Qué entregar ---- */
+slideDefs.push({time:3, render:()=>`
+  ${kicker("Entregable", 3)}
+  <h2>Qué debes entregar hoy</h2>
+  <div class="check-item"><input type="checkbox" id="c1"><label for="c1">El enlace de tu circuito de Tinkercad (botón "Share"), enviado por el canal que indique tu docente.</label></div>
+  <div class="check-item"><input type="checkbox" id="c2"><label for="c2">La actividad evaluativa (formulario) resuelta — ver diapositiva de evaluación.</label></div>
+  <div class="check-item"><input type="checkbox" id="c3"><label for="c3">Las partes indicadas del documento de lectura, transcritas en tu cuaderno.</label></div>
+`});
+
+/* ---- 14. Lectura y cuaderno ---- */
+slideDefs.push({time:5, render:()=>`
+  ${kicker("Documento de lectura", 5)}
+  <h2>Lectura de apoyo y tu cuaderno</h2>
+  <div class="body-text">
+    <p>Junto con esta presentación recibiste un <strong>documento de lectura corto</strong> ("Lectura — Semana 1"). Ábrelo ahora.</p>
+    <p>Ese documento marca con claridad qué partes debes <strong>transcribir a tu cuaderno</strong> (no todo el documento, solo lo señalado). Escríbelas a mano, no las pegues ni las copies e imprimas.</p>
+  </div>
+  <div class="callout">
+    <span class="callout-label">Por qué</span>
+    Transcribir a mano las partes clave te ayuda a fijarlas en la memoria antes de usarlas en la práctica y en las siguientes semanas.
+  </div>
+`});
+
+/* ---- 15. Evaluación ---- */
+slideDefs.push({time:3, render:()=>`
+  ${kicker("Actividad evaluativa", 3)}
+  <h2>Formulario de evaluación</h2>
+  <div class="body-text">
+    <p>Para cerrar la sesión, resuelve el formulario de evaluación de la Semana 1. Cada respuesta te da retroalimentación inmediata: te dice si acertaste y, si no, te explica por qué.</p>
+  </div>
+  <div class="callout">
+    <span class="callout-label">Enlace del formulario</span>
+    Tu docente compartirá aquí el enlace del formulario por el canal de la clase (aula virtual, correo o mensaje del grupo).
+  </div>
+`});
+
+/* ---- 16. Cierre ---- */
+slideDefs.push({time:4, render:()=>`
+  ${kicker("Cierre", 4)}
+  <h2>Resumen de la Semana 1</h2>
+  <div class="body-text"><p>Hoy trabajaste, de forma autónoma:</p></div>
+  <ul class="list">
+    <li>Qué es un circuito eléctrico cerrado y uno abierto.</li>
+    <li>Cómo leer el código de colores de una resistencia.</li>
+    <li>Cómo identificar la polaridad de un LED.</li>
+    <li>Las partes de la protoboard y cómo se conectan sus huecos internamente.</li>
+    <li>Cómo ingresar a Tinkercad con tu correo institucional y armar tu primer circuito simulado.</li>
+  </ul>
+  <div class="callout">
+    <span class="callout-label">Próxima semana</span>
+    Semana 2: circuitos en serie y en paralelo, y la Ley de Ohm. Vas a necesitar lo que aprendiste hoy sobre la protoboard, así que no lo olvides.
+  </div>
+`});
+
+/* ====================== ENGINE ====================== */
+let current = 0;
+const host = document.getElementById('slideHost');
+const dotsEl = document.getElementById('dots');
+const counterEl = document.getElementById('slideCounter');
+const fillEl = document.getElementById('progressFill');
+
+function buildDots(){
+  dotsEl.innerHTML = slideDefs.map((_,i)=>`<button class="dot" data-i="${i}" aria-label="Ir a diapositiva ${i+1}" onclick="goTo(${i})"></button>`).join('');
+}
+function renderSlide(){
+  host.innerHTML = slideDefs[current].render();
+  counterEl.textContent = `${current+1} / ${slideDefs.length}`;
+  fillEl.style.width = `${((current+1)/slideDefs.length)*100}%`;
+  [...dotsEl.children].forEach((d,i)=>{
+    d.classList.toggle('active', i===current);
+    d.classList.toggle('done', i<current);
+  });
+  document.getElementById('prevBtn').disabled = current===0;
+  document.getElementById('nextBtn').textContent = current===slideDefs.length-1 ? 'Fin ✓' : 'Siguiente →';
+  document.getElementById('nextBtn').disabled = current===slideDefs.length-1;
+  if(current===4) setupResistor();
+  window.scrollTo({top:0, behavior:'instant'});
+}
+function goTo(i){ current = Math.max(0, Math.min(slideDefs.length-1, i)); renderSlide(); }
+document.getElementById('prevBtn').onclick = ()=>goTo(current-1);
+document.getElementById('nextBtn').onclick = ()=>goTo(current+1);
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowRight') goTo(current+1);
+  if(e.key==='ArrowLeft') goTo(current-1);
+});
+
+/* ---- diagnostic quiz ---- */
+function answerDiag(btn, qi, oi){
+  const item = diagQuestions[qi];
+  const opts = item.opts;
+  const group = btn.parentElement;
+  [...group.children].forEach((b,i)=>{
+    b.classList.remove('correct','incorrect');
+    if(opts[i].ok) return;
+  });
+  if(opts[oi].ok){ btn.classList.add('correct'); }
+  else {
+    btn.classList.add('incorrect');
+    [...group.children].forEach((b,i)=>{ if(opts[i].ok) b.classList.add('correct'); });
+  }
+  const fb = document.getElementById(`diagfb-${qi}`);
+  fb.textContent = opts[oi].fb;
+  fb.className = 'feedback show ' + (opts[oi].ok ? 'ok':'bad');
+}
+
+/* ---- circuit toggle ---- */
+let circuitClosed = false;
+function toggleCircuit(){
+  circuitClosed = !circuitClosed;
+  const dot = document.getElementById('cdot');
+  const btn = document.getElementById('circuitToggle');
+  if(!dot) return;
+  if(circuitClosed){
+    btn.textContent = 'Abrir el circuito ▶';
+    animateDot();
+  } else {
+    btn.textContent = 'Cerrar el circuito ▶';
+    dot.style.opacity = 1;
+  }
+}
+let animFrame;
+function animateDot(){
+  const dot = document.getElementById('cdot');
+  if(!dot || !circuitClosed) return;
+  const path = [[40,40],[300,40],[300,110],[40,110],[40,40]];
+  let seg = 0, t = 0;
+  cancelAnimationFrame(animFrame);
+  function step(){
+    if(!circuitClosed) return;
+    const [x1,y1] = path[seg], [x2,y2] = path[seg+1];
+    t += 0.02;
+    if(t>=1){ t=0; seg=(seg+1)%(path.length-1); }
+    dot.setAttribute('cx', x1+(x2-x1)*t);
+    dot.setAttribute('cy', y1+(y2-y1)*t);
+    animFrame = requestAnimationFrame(step);
+  }
+  step();
+}
+
+/* ---- resistor decoder ---- */
+let resistorSel = [1,0,2]; // marrón,negro,rojo -> 10 * 100 = default demo below overridden
+function setupResistor(){
+  resistorSel = [0,0,1]; // negro negro marrón (just a starting demo state)
+  [0,1,2].forEach(rowIdx=>{
+    const row = document.getElementById(`row${rowIdx}`);
+    if(!row) return;
+    row.innerHTML = RESISTOR_COLORS.map((c,ci)=>`<button class="sw" style="background:${c.hex}" data-row="${rowIdx}" data-c="${ci}" onclick="pickColor(${rowIdx},${ci})" aria-label="${c.name}"></button>`).join('');
+  });
+  paintResistor();
+}
+function pickColor(row, ci){ resistorSel[row]=ci; paintResistor(); }
+function paintResistor(){
+  [0,1,2].forEach(rowIdx=>{
+    const row = document.getElementById(`row${rowIdx}`);
+    if(!row) return;
+    [...row.children].forEach((sw,ci)=> sw.classList.toggle('sel', ci===resistorSel[rowIdx]));
+  });
+  const d1 = RESISTOR_COLORS[resistorSel[0]].digit;
+  const d2 = RESISTOR_COLORS[resistorSel[1]].digit;
+  const mult = RESISTOR_COLORS[resistorSel[2]].mult;
+  const value = (d1*10+d2)*mult;
+  const out = document.getElementById('resistorReadout');
+  if(out) out.textContent = fmtOhms(value);
+}
+
+/* ---- LED info ---- */
+function ledInfo(part){
+  const note = document.getElementById('ledNote');
+  if(part==='larga') note.textContent = 'Pata larga = ánodo (+). Va conectada hacia el lado positivo del circuito.';
+  if(part==='corta') note.textContent = 'Pata corta = cátodo (−). Va conectada hacia el lado negativo del circuito.';
+  if(part==='plano') note.textContent = 'Lado plano de la carcasa = marca el cátodo (−), útil cuando las dos patas quedaron del mismo tamaño.';
+}
+
+/* ---- breadboard info ---- */
+function bbInfo(zone){
+  document.getElementById('bbExplain').textContent = bbZones[zone];
+}
+
+/* ---- init ---- */
+buildDots();
+renderSlide();
+</script>
+</body>
+</html>
