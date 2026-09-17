@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Serie, Paralelo y Ley de Ohm</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2efe3; --surface:#fffdf8; --surface-2:#e8e1cd;
+    --grid-dot: rgba(31,42,38,0.14);
+    --ink:#1f2a26; --ink-soft:#5b6b64; --ink-faint:#8a978f;
+    --accent:#a84e1c; --accent-ink:#fffaf3;
+    --accent-2:#2f6f5e; --accent-2-ink:#f2fbf7;
+    --rail-pos:#a63a2c; --rail-neg:#2a5c8f;
+    --line: rgba(31,42,38,0.16);
+    --shadow: 0 1px 0 rgba(31,42,38,0.05), 0 12px 28px -18px rgba(31,42,38,0.35);
+    --radius: 14px; --danger:#a63a2c;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141f1b; --surface:#1a2723; --surface-2:#20322b;
+      --grid-dot: rgba(238,242,238,0.10);
+      --ink:#edf2ee; --ink-soft:#a7b6ae; --ink-faint:#748179;
+      --accent:#e3a066; --accent-ink:#20140a;
+      --accent-2:#6fcaa6; --accent-2-ink:#0a1f17;
+      --rail-pos:#e2776a; --rail-neg:#7cb0e8;
+      --line: rgba(238,242,238,0.14);
+      --shadow: 0 1px 0 rgba(0,0,0,0.2), 0 12px 28px -18px rgba(0,0,0,0.6);
+      --danger:#e2776a;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141f1b; --surface:#1a2723; --surface-2:#20322b;
+    --grid-dot: rgba(238,242,238,0.10);
+    --ink:#edf2ee; --ink-soft:#a7b6ae; --ink-faint:#748179;
+    --accent:#e3a066; --accent-ink:#20140a;
+    --accent-2:#6fcaa6; --accent-2-ink:#0a1f17;
+    --rail-pos:#e2776a; --rail-neg:#7cb0e8;
+    --line: rgba(238,242,238,0.14);
+    --shadow: 0 1px 0 rgba(0,0,0,0.2), 0 12px 28px -18px rgba(0,0,0,0.6);
+    --danger:#e2776a;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background: radial-gradient(var(--grid-dot) 1.3px, transparent 1.3px) 0 0/22px 22px, var(--bg);
+    color:var(--ink); font-family:'Archivo',system-ui,sans-serif;
+    display:flex; flex-direction:column; min-height:100vh;
+  }
+  h1,h2,h3,.mono{ font-family:'JetBrains Mono',ui-monospace,monospace; }
+  h2{ text-wrap:balance; }
+  a{ color:var(--accent); }
+
+  .topbar{ display:flex; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid var(--line);
+    background:color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(6px); position:sticky; top:0; z-index:20; }
+  .brand{ display:flex; flex-direction:column; line-height:1.15; }
+  .brand .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); }
+  .brand .title{ font-weight:700; font-size:14px; }
+  .topbar .spacer{ flex:1; }
+  .progress-wrap{ display:flex; align-items:center; gap:10px; }
+  .progress-track{ width:min(34vw,220px); height:6px; border-radius:6px; background:var(--surface-2); overflow:hidden; border:1px solid var(--line); }
+  .progress-fill{ height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); width:5.9%; transition:width .25s ease; }
+  .progress-label{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink-soft); white-space:nowrap; }
+
+  .stage{ flex:1; display:flex; align-items:flex-start; justify-content:center; padding:28px 18px 12px; }
+  .slide{ width:100%; max-width:760px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:34px clamp(20px,4vw,46px) 30px; animation: rise .32s ease; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){ .slide{animation:none;} }
+
+  .kicker{ display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .tag{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    padding:4px 9px; border-radius:20px; border:1px solid var(--line); color:var(--ink-soft); }
+  .tag.time{ color:var(--accent); border-color:color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .slide h2{ font-size:clamp(21px,3.2vw,27px); margin:0 0 6px; }
+  .slide .sub{ color:var(--ink-soft); font-size:15px; margin:0 0 22px; max-width:56ch; }
+  .body-text{ font-size:15.5px; line-height:1.65; color:var(--ink); }
+  .body-text p{ margin:0 0 12px; }
+  .body-text strong{ color:var(--ink); }
+
+  ol.steps, ul.list{ margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:10px;}
+  ol.steps li{ display:flex; gap:12px; align-items:flex-start; font-size:15px; line-height:1.55; }
+  ol.steps li .num{ flex:none; width:26px; height:26px; border-radius:7px; background:var(--surface-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--accent); font-weight:700; }
+  ul.list li{ display:flex; gap:10px; align-items:flex-start; font-size:15px; line-height:1.55; }
+  ul.list li::before{ content:"▸"; color:var(--accent); flex:none; }
+
+  .callout{ border:1px solid var(--line); border-left:3px solid var(--accent); background:var(--surface-2);
+    border-radius:10px; padding:13px 15px; font-size:14.5px; line-height:1.55; margin-top:16px; }
+  .callout.warn{ border-left-color: var(--danger); }
+  .callout.ok{ border-left-color: var(--accent-2); }
+  .callout .callout-label{ font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); display:block; margin-bottom:4px; }
+  .callout.warn .callout-label{ color:var(--danger); }
+  .callout.ok .callout-label{ color:var(--accent-2); }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
+
+  table.formula{ width:100%; border-collapse:collapse; font-size:14.5px; margin-top:10px; }
+  table.formula th, table.formula td{ border:1px solid var(--line); padding:8px 10px; text-align:left; }
+  table.formula th{ background:var(--surface-2); font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+  table.formula td.f{ font-family:'JetBrains Mono',monospace; color:var(--accent); font-weight:600; }
+
+  .btn{ font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; letter-spacing:.02em;
+    border:1px solid var(--line); background:var(--surface-2); color:var(--ink);
+    padding:10px 16px; border-radius:9px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+  .btn:hover{ border-color:var(--accent); }
+  .btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .btn:focus-visible, [tabindex]:focus-visible, button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px; }
+
+  .navbar{ display:flex; align-items:center; justify-content:center; gap:16px; padding:16px 18px 22px; }
+  .dots{ display:flex; gap:6px; flex-wrap:wrap; max-width:460px; justify-content:center; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:var(--surface-2); border:1px solid var(--line); cursor:pointer; padding:0; }
+  .dot.active{ background:var(--accent); border-color:var(--accent); width:20px; border-radius:5px; }
+  .dot.done{ background:var(--accent-2); border-color:var(--accent-2); }
+
+  code, .kbd{ font-family:'JetBrains Mono',monospace; background:var(--surface-2); border:1px solid var(--line); padding:1px 6px; border-radius:5px; font-size:.92em; }
+  footer.hint{ text-align:center; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-faint); padding-bottom:16px; }
+
+  /* ---- ohm calculator ---- */
+  .ohm-wrap{ display:flex; flex-direction:column; gap:14px; align-items:center; }
+  .ohm-triangle{ position:relative; width:180px; height:160px; }
+  .ohm-triangle svg{ width:100%; height:100%; }
+  .ohm-pick{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .ohm-pick button{ font-family:'JetBrains Mono',monospace; font-size:12.5px; border:1px solid var(--line); background:var(--surface-2);
+    color:var(--ink); padding:7px 12px; border-radius:8px; cursor:pointer; }
+  .ohm-pick button.sel{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .ohm-inputs{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+  .ohm-field{ display:flex; flex-direction:column; gap:4px; align-items:center; }
+  .ohm-field label{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); }
+  .ohm-field input{ width:96px; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; font-size:14px; text-align:center; }
+  .ohm-field.solve input{ background:var(--surface-2); color:var(--accent); font-weight:700; border-color:var(--accent); }
+
+  /* ---- serie/paralelo diagram ---- */
+  .sp-toggle{ display:flex; gap:8px; justify-content:center; margin-bottom:14px; }
+  .sp-toggle button{ font-family:'JetBrains Mono',monospace; font-size:12.5px; border:1px solid var(--line); background:var(--surface-2);
+    color:var(--ink); padding:8px 16px; border-radius:20px; cursor:pointer; }
+  .sp-toggle button.sel{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+
+  /* ---- worked example reveal ---- */
+  .reveal-box{ margin-top:14px; }
+  .reveal-body{ display:none; margin-top:12px; }
+  .reveal-body.show{ display:block; }
+
+  /* ---- video embed ---- */
+  .video-slot{ border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface-2); }
+  .video-slot .frame-wrap{ position:relative; width:100%; aspect-ratio:16/9; background:#000; }
+  .video-slot iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .video-pending{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; height:100%; padding:20px; text-align:center; }
+  .video-pending .icon{ width:44px; height:44px; border-radius:50%; background:var(--surface); border:1px dashed var(--ink-faint); display:flex; align-items:center; justify-content:center; }
+  .video-pending .msg{ font-size:13px; color:var(--ink-soft); max-width:34ch; }
+  .video-cap{ padding:10px 14px; font-size:12.5px; color:var(--ink-soft); font-family:'JetBrains Mono',monospace; }
+  .video-fallback{ padding:8px 14px 14px; }
+
+  .check-item{ display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--line); }
+  .check-item:last-child{ border-bottom:none; }
+  .check-item input{ margin-top:3px; width:16px; height:16px; accent-color:var(--accent-2); flex:none; }
+  .check-item label{ font-size:14.5px; line-height:1.5; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="eyebrow">Electrónica · Grado octavo</span>
+    <span class="title">Semana 2 — Circuitos en serie y en paralelo · Ley de Ohm</span>
+  </div>
+  <div class="spacer"></div>
+  <div class="progress-wrap">
+    <span class="progress-label mono" id="slideCounter">1 / 17</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+</div>
+
+<div class="stage"><div class="slide" id="slideHost"></div></div>
+
+<div class="navbar">
+  <button class="btn" id="prevBtn" aria-label="Diapositiva anterior">← Anterior</button>
+  <div class="dots" id="dots"></div>
+  <button class="btn primary" id="nextBtn" aria-label="Siguiente diapositiva">Siguiente →</button>
+</div>
+<footer class="hint">Usa las flechas ← → del teclado, o haz clic en los puntos, para moverte entre diapositivas.</footer>
+
+<script>
+/* ======================================================================
+   CONFIGURACIÓN DE VIDEOS — EDITA AQUÍ CUANDO GRABES TUS VIDEOS
+   Pega solo el ID del video de YouTube (lo que va después de "v=" en la URL).
+   Ejemplo: si tu video es https://www.youtube.com/watch?v=AbC123xyz9
+   entonces el ID es: AbC123xyz9
+   Mientras esté vacío (""), la diapositiva muestra un aviso de "video pendiente".
+====================================================================== */
+const VIDEO_SERIE_ID = "87TLmSl4bAM";     // <-- pega aquí el ID del video "circuito en serie"
+const VIDEO_PARALELO_ID = "1Ndw2xW1jmY";  // <-- pega aquí el ID del video "circuito en paralelo"
+/* ====================================================================== */
+
+function videoSlot(id, label){
+  if(id && id.trim() !== ""){
+    return `<div class="video-slot">
+      <div class="frame-wrap"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="${label}" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+      <div class="video-cap">${label}</div>
+      <div class="video-fallback"><a class="btn" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">Abrir en YouTube ↗ (si el video no carga aquí)</a></div>
+    </div>`;
+  }
+  return `<div class="video-slot">
+    <div class="frame-wrap"><div class="video-pending">
+      <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="var(--ink-faint)"/></svg></div>
+      <div class="msg"><strong>Video pendiente.</strong> Tu docente subirá aquí, más adelante, el video "${label}".</div>
+    </div></div>
+    <div class="video-cap">${label}</div>
+  </div>`;
+}
+
+function kicker(tagText, minutes){
+  return `<div class="kicker"><span class="tag">${tagText}</span><span class="tag time">⏱ ${minutes} min sugeridos</span></div>`;
+}
+
+let slideDefs = [];
+
+/* ---- 1. Portada ---- */
+slideDefs.push({time:2, render:()=>`
+  ${kicker("Portada", 2)}
+  <h2>Circuitos en serie, en paralelo y Ley de Ohm</h2>
+  <p class="sub">Grado octavo · Periodo 3 · Semana 2 de 10</p>
+  <div class="body-text">
+    <p>Esta semana aprendes a conectar más de un componente en un mismo circuito, de dos formas distintas — <strong>en serie</strong> y <strong>en paralelo</strong> — y a calcular corriente, voltaje y resistencia con la <strong>Ley de Ohm</strong>. Toda la práctica se hace en Tinkercad.</p>
+  </div>
+  <div class="callout">
+    <span class="callout-label">Necesitas</span>
+    Tu cuenta de Tinkercad (correo institucional), tu cuaderno, una calculadora, y lo que ya armaste la semana pasada.
+  </div>
+`});
+
+/* ---- 2. Agenda ---- */
+slideDefs.push({time:5, render:()=>`
+  ${kicker("Agenda", 5)}
+  <h2>Agenda de las 2 horas</h2>
+  <p class="sub">Tiempos sugeridos, no una regla exacta.</p>
+  <table class="formula">
+    <tr><th>Tiempo</th><th>Qué vas a hacer</th></tr>
+    <tr><td>5 min</td><td>Repaso rápido de la Semana 1</td></tr>
+    <tr><td>32 min</td><td>Circuito en serie, circuito en paralelo y comparación</td></tr>
+    <tr><td>20 min</td><td>Ley de Ohm y dos ejemplos resueltos</td></tr>
+    <tr><td>16 min</td><td>Videos: cómo armar cada circuito en Tinkercad</td></tr>
+    <tr><td>13 min</td><td>Multímetro virtual y cómo compartir tu circuito</td></tr>
+    <tr><td>17 min</td><td>Presentación de las dos actividades evaluativas</td></tr>
+    <tr><td>17 min</td><td>Qué entregar y cierre</td></tr>
+  </table>
+`});
+
+/* ---- 3. Repaso ---- */
+slideDefs.push({time:5, render:()=>`
+  ${kicker("Repaso", 5)}
+  <h2>Lo que ya sabes de la Semana 1</h2>
+  <ul class="list">
+    <li>Un circuito eléctrico necesita un camino <strong>cerrado</strong> para que la corriente circule.</li>
+    <li>La resistencia limita la corriente y se lee con el código de colores.</li>
+    <li>El LED solo enciende si su polaridad es correcta (pata larga = ánodo +).</li>
+    <li>En la protoboard, cada grupo de 5 huecos de una fila central está conectado entre sí.</li>
+  </ul>
+  <div class="callout">
+    <span class="callout-label">Hoy vas más allá</span>
+    La semana pasada armaste un circuito con una sola resistencia y un solo LED. Hoy vas a conectar <strong>varios componentes</strong> en un mismo circuito, de dos formas distintas.
+  </div>
+`});
+
+/* ---- 4. Serie ---- */
+slideDefs.push({time:12, render:()=>`
+  ${kicker("Concepto 1", 12)}
+  <h2>Circuito en serie</h2>
+  <div class="body-text"><p>En un circuito en <strong>serie</strong>, los componentes se conectan uno detrás de otro, formando <strong>un solo camino</strong> para la corriente. Toda la corriente que sale de la fuente pasa por cada componente, uno tras otro.</p></div>
+  <svg viewBox="0 0 420 130" style="width:100%;max-width:420px;display:block;margin:14px auto;">
+    <path d="M30 65 H120 M170 65 H260 M310 65 H390 V100 H30 Z" fill="none" stroke="var(--ink-soft)" stroke-width="3"/>
+    <rect x="120" y="50" width="50" height="30" fill="var(--surface-2)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="145" y="70" text-anchor="middle" font-size="10" font-family="JetBrains Mono, monospace" fill="var(--accent)">R1</text>
+    <rect x="260" y="50" width="50" height="30" fill="var(--surface-2)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="285" y="70" text-anchor="middle" font-size="10" font-family="JetBrains Mono, monospace" fill="var(--accent)">R2</text>
+    <rect x="10" y="50" width="20" height="30" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="2"/>
+    <text x="20" y="70" text-anchor="middle" font-size="8" font-family="JetBrains Mono, monospace" fill="var(--ink)">V</text>
+  </svg>
+  <table class="formula">
+    <tr><th>Magnitud</th><th>Qué pasa en serie</th><th>Fórmula</th></tr>
+    <tr><td>Corriente (I)</td><td>Es la misma en todos los componentes</td><td class="f">I = I₁ = I₂ = I₃...</td></tr>
+    <tr><td>Voltaje (V)</td><td>Se reparte entre los componentes</td><td class="f">V = V₁ + V₂ + V₃...</td></tr>
+    <tr><td>Resistencia (R)</td><td>Se suman todas</td><td class="f">R = R₁ + R₂ + R₃...</td></tr>
+  </table>
+`});
+
+/* ---- 5. Paralelo ---- */
+slideDefs.push({time:12, render:()=>`
+  ${kicker("Concepto 2", 12)}
+  <h2>Circuito en paralelo</h2>
+  <div class="body-text"><p>En un circuito en <strong>paralelo</strong>, los componentes se conectan entre los mismos dos puntos, formando <strong>varios caminos</strong> distintos. La corriente se reparte entre esos caminos.</p></div>
+  <svg viewBox="0 0 420 150" style="width:100%;max-width:420px;display:block;margin:14px auto;">
+    <path d="M30 30 H390 M30 30 V120 H390 V30 M170 30 V70 M170 110 V70 M170 70 H130 M170 70 H210" fill="none" stroke="var(--ink-soft)" stroke-width="3"/>
+    <rect x="130" y="55" width="40" height="30" fill="var(--surface-2)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="150" y="75" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="var(--accent)">R1</text>
+    <rect x="210" y="55" width="40" height="30" fill="var(--surface-2)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="230" y="75" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="var(--accent)">R2</text>
+    <rect x="10" y="60" width="20" height="30" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="2"/>
+    <text x="20" y="80" text-anchor="middle" font-size="8" font-family="JetBrains Mono, monospace" fill="var(--ink)">V</text>
+  </svg>
+  <table class="formula">
+    <tr><th>Magnitud</th><th>Qué pasa en paralelo</th><th>Fórmula</th></tr>
+    <tr><td>Voltaje (V)</td><td>Es el mismo en cada rama</td><td class="f">V = V₁ = V₂ = V₃...</td></tr>
+    <tr><td>Corriente (I)</td><td>Se reparte y luego se suma</td><td class="f">I = I₁ + I₂ + I₃...</td></tr>
+    <tr><td>Resistencia (R)</td><td>Se combinan por inversos</td><td class="f">1/R = 1/R₁ + 1/R₂...</td></tr>
+  </table>
+`});
+
+/* ---- 6. Comparación interactiva ---- */
+const spExplain = {
+  serie: "En serie: un solo camino. Si un componente falla o se desconecta, todo el circuito se apaga (como las luces navideñas antiguas). La corriente es igual en cada punto del camino.",
+  paralelo: "En paralelo: varios caminos independientes. Si un componente falla, los demás siguen funcionando. El voltaje es igual en cada rama; la corriente total se reparte entre ellas."
+};
+slideDefs.push({time:8, render:()=>`
+  ${kicker("Comparación", 8)}
+  <h2>Serie vs. paralelo, en una idea</h2>
+  <div class="sp-toggle">
+    <button class="sel" id="spSerieBtn" onclick="spPick('serie')">Serie</button>
+    <button id="spParaleloBtn" onclick="spPick('paralelo')">Paralelo</button>
+  </div>
+  <div class="callout" id="spExplainBox">${spExplain.serie}</div>
+  <table class="formula" style="margin-top:18px;">
+    <tr><th></th><th>Serie</th><th>Paralelo</th></tr>
+    <tr><td>Caminos para la corriente</td><td>Uno solo</td><td>Varios</td></tr>
+    <tr><td>Si un componente falla</td><td>Se apaga todo el circuito</td><td>Los demás siguen funcionando</td></tr>
+    <tr><td>Resistencia total</td><td>Siempre aumenta</td><td>Siempre disminuye</td></tr>
+  </table>
+`});
+
+/* ---- 7. Ley de Ohm ---- */
+slideDefs.push({time:10, render:()=>`
+  ${kicker("Concepto 3", 10)}
+  <h2>La Ley de Ohm</h2>
+  <div class="body-text"><p>La Ley de Ohm relaciona tres magnitudes de cualquier circuito: el <strong>voltaje (V)</strong> en voltios, la <strong>corriente (I)</strong> en amperios y la <strong>resistencia (R)</strong> en ohmios.</p></div>
+  <table class="formula">
+    <tr><th>Quieres calcular</th><th>Fórmula</th></tr>
+    <tr><td>Voltaje</td><td class="f">V = I × R</td></tr>
+    <tr><td>Corriente</td><td class="f">I = V / R</td></tr>
+    <tr><td>Resistencia</td><td class="f">R = V / I</td></tr>
+  </table>
+  <p class="sub" style="margin-top:16px;">Prueba la calculadora: elige qué quieres hallar, escribe los otros dos valores y observa el resultado.</p>
+  <div class="ohm-wrap">
+    <div class="ohm-pick">
+      <button class="sel" data-k="V" onclick="ohmPick('V')">Hallar V</button>
+      <button data-k="I" onclick="ohmPick('I')">Hallar I</button>
+      <button data-k="R" onclick="ohmPick('R')">Hallar R</button>
+    </div>
+    <div class="ohm-inputs">
+      <div class="ohm-field" id="ohmV"><label>V (voltios)</label><input type="number" oninput="ohmCalc()"></div>
+      <div class="ohm-field" id="ohmI"><label>I (amperios)</label><input type="number" oninput="ohmCalc()"></div>
+      <div class="ohm-field" id="ohmR"><label>R (ohmios)</label><input type="number" oninput="ohmCalc()"></div>
+    </div>
+  </div>
+`});
+
+/* ---- 8. Ejemplo serie ---- */
+slideDefs.push({time:10, render:()=>`
+  ${kicker("Ejemplo resuelto", 10)}
+  <h2>Cálculo en un circuito en serie</h2>
+  <div class="body-text"><p>Una fuente de <strong>9 V</strong> alimenta dos resistencias en serie: R₁ = 100 Ω y R₂ = 200 Ω.</p></div>
+  <p class="sub">Intenta calcular tú primero la resistencia total y la corriente. Luego haz clic para ver la solución.</p>
+  <div class="reveal-box">
+    <button class="btn primary" onclick="toggleReveal('rev1', this)">Ver solución paso a paso</button>
+    <div class="reveal-body" id="rev1">
+      <ol class="steps">
+        <li><span class="num">1</span>Resistencia total: R = R₁ + R₂ = 100 + 200 = <strong>300 Ω</strong></li>
+        <li><span class="num">2</span>Corriente (igual en todo el circuito): I = V / R = 9 / 300 = <strong>0.03 A (30 mA)</strong></li>
+        <li><span class="num">3</span>Voltaje en R₁: V₁ = I × R₁ = 0.03 × 100 = <strong>3 V</strong></li>
+        <li><span class="num">4</span>Voltaje en R₂: V₂ = I × R₂ = 0.03 × 200 = <strong>6 V</strong></li>
+      </ol>
+      <div class="callout ok"><span class="callout-label">Verificación</span>V₁ + V₂ = 3 + 6 = 9 V, igual al voltaje de la fuente. ✓</div>
+    </div>
+  </div>
+`});
+
+/* ---- 9. Ejemplo paralelo ---- */
+slideDefs.push({time:10, render:()=>`
+  ${kicker("Ejemplo resuelto", 10)}
+  <h2>Cálculo en un circuito en paralelo</h2>
+  <div class="body-text"><p>Una fuente de <strong>9 V</strong> alimenta dos resistencias en paralelo: R₁ = 300 Ω y R₂ = 600 Ω.</p></div>
+  <p class="sub">Intenta calcularlo tú primero. Luego haz clic para ver la solución.</p>
+  <div class="reveal-box">
+    <button class="btn primary" onclick="toggleReveal('rev2', this)">Ver solución paso a paso</button>
+    <div class="reveal-body" id="rev2">
+      <ol class="steps">
+        <li><span class="num">1</span>Voltaje (igual en cada rama): V₁ = V₂ = <strong>9 V</strong></li>
+        <li><span class="num">2</span>Corriente en R₁: I₁ = V / R₁ = 9 / 300 = <strong>0.03 A</strong></li>
+        <li><span class="num">3</span>Corriente en R₂: I₂ = V / R₂ = 9 / 600 = <strong>0.015 A</strong></li>
+        <li><span class="num">4</span>Corriente total: I = I₁ + I₂ = 0.03 + 0.015 = <strong>0.045 A</strong></li>
+      </ol>
+      <div class="callout ok"><span class="callout-label">Verificación</span>Resistencia total: 1/R = 1/300 + 1/600 = 3/600 → R = 200 Ω. Con V=9V, I = 9/200 = 0.045 A. Coincide. ✓</div>
+    </div>
+  </div>
+`});
+
+/* ---- 10. Video serie ---- */
+slideDefs.push({time:8, render:()=>`
+  ${kicker("Video · Tinkercad", 8)}
+  <h2>Cómo armar un circuito en serie en Tinkercad</h2>
+  <p class="sub">Observa el video completo antes de intentarlo tú mismo.</p>
+  ${videoSlot(VIDEO_SERIE_ID, "Circuito en serie en Tinkercad")}
+`});
+
+/* ---- 11. Video paralelo ---- */
+slideDefs.push({time:8, render:()=>`
+  ${kicker("Video · Tinkercad", 8)}
+  <h2>Cómo armar un circuito en paralelo en Tinkercad</h2>
+  <p class="sub">Observa el video completo antes de intentarlo tú mismo.</p>
+  ${videoSlot(VIDEO_PARALELO_ID, "Circuito en paralelo en Tinkercad")}
+`});
+
+/* ---- 12. Multímetro ---- */
+slideDefs.push({time:8, render:()=>`
+  ${kicker("Herramienta", 8)}
+  <h2>El multímetro virtual de Tinkercad</h2>
+  <div class="body-text"><p>Sirve para comprobar, dentro de la simulación, si tus cálculos fueron correctos.</p></div>
+  <ol class="steps">
+    <li><span class="num">1</span>Busca el componente <strong>"Multimeter"</strong> en el panel de componentes y arrástralo al área de trabajo.</li>
+    <li><span class="num">2</span>Selecciona el modo: <strong>voltaje (V)</strong>, <strong>corriente (A)</strong> o <strong>resistencia (Ω)</strong>, según lo que quieras medir.</li>
+    <li><span class="num">3</span>Para medir <strong>voltaje</strong>: toca las dos puntas del multímetro en los dos extremos del componente.</li>
+    <li><span class="num">4</span>Para medir <strong>corriente</strong>: el multímetro debe quedar conectado en serie, dentro del mismo camino del circuito.</li>
+    <li><span class="num">5</span>Compara el valor que muestra con el que calculaste a mano.</li>
+  </ol>
+  <div class="callout warn">
+    <span class="callout-label">Si no coincide</span>
+    Revisa primero tu cálculo (fórmula y valores), y luego revisa las conexiones del circuito. Casi siempre el error está en uno de los dos.
+  </div>
+`});
+
+/* ---- 13. Compartir circuito ---- */
+slideDefs.push({time:5, render:()=>`
+  ${kicker("Importante para la entrega", 5)}
+  <h2>Cómo compartir tu circuito de Tinkercad</h2>
+  <div class="body-text"><p>Vas a necesitar esto varias veces esta semana: cada actividad te pide el <strong>enlace compartido</strong> de tu circuito, no una captura de pantalla.</p></div>
+  <p class="sub">El documento de lectura de esta semana trae el paso a paso completo. En resumen:</p>
+  <ol class="steps">
+    <li><span class="num">1</span>Con tu circuito abierto, haz clic en <strong>"Share"</strong> (arriba a la derecha).</li>
+    <li><span class="num">2</span>Copia el enlace que aparece.</li>
+    <li><span class="num">3</span>Pega ese enlace en la tarea correspondiente de Classroom.</li>
+  </ol>
+`});
+
+/* ---- 14. Actividad 1 ---- */
+slideDefs.push({time:3, render:()=>`
+  ${kicker("Actividad evaluativa 1", 3)}
+  <h2>Formulario autocalificable</h2>
+  <div class="body-text"><p>Preguntas de selección múltiple sobre circuitos en serie, en paralelo y Ley de Ohm — incluye cálculos numéricos. Cada respuesta te da retroalimentación inmediata.</p></div>
+  <div class="callout"><span class="callout-label">Enlace del formulario</span>Tu docente compartirá aquí el enlace por el canal de la clase.</div>
+`});
+
+/* ---- 15. Actividad 2 ---- */
+slideDefs.push({time:5, render:()=>`
+  ${kicker("Actividad evaluativa 2", 5)}
+  <h2>Construcción de circuitos en Tinkercad</h2>
+  <div class="body-text"><p>Vas a construir <strong>4 circuitos distintos</strong> (2 en serie, 2 en paralelo) con los valores que indica la guía de la actividad. Para cada uno debes:</p></div>
+  <ol class="steps">
+    <li><span class="num">1</span>Calcular a mano, en tu cuaderno, la resistencia total, la corriente y el voltaje de cada componente (según corresponda).</li>
+    <li><span class="num">2</span>Armar el circuito en Tinkercad con los valores exactos indicados.</li>
+    <li><span class="num">3</span>Verificar tus cálculos con el multímetro virtual.</li>
+    <li><span class="num">4</span>Compartir el enlace de cada circuito y entregarlo en la tarea de Classroom.</li>
+  </ol>
+  <div class="callout warn"><span class="callout-label">Dónde están los valores</span>Los 4 circuitos exactos (con sus valores de voltaje y resistencia) están en la guía "Actividad práctica — Semana 2", que recibiste junto con este material.</div>
+`});
+
+/* ---- 16. Qué entregar ---- */
+slideDefs.push({time:4, render:()=>`
+  ${kicker("Entregable", 4)}
+  <h2>Qué debes entregar hoy</h2>
+  <div class="check-item"><input type="checkbox" id="c1"><label for="c1">El formulario autocalificable resuelto.</label></div>
+  <div class="check-item"><input type="checkbox" id="c2"><label for="c2">Los cálculos de Ley de Ohm de los 4 circuitos, en tu cuaderno.</label></div>
+  <div class="check-item"><input type="checkbox" id="c3"><label for="c3">Los enlaces compartidos de los 4 circuitos, en la tarea de Classroom.</label></div>
+`});
+
+/* ---- 17. Cierre ---- */
+slideDefs.push({time:5, render:()=>`
+  ${kicker("Cierre", 5)}
+  <h2>Resumen de la Semana 2</h2>
+  <ul class="list">
+    <li>En serie: un solo camino, la corriente es igual en todo el circuito, las resistencias se suman.</li>
+    <li>En paralelo: varios caminos, el voltaje es igual en cada rama, las corrientes se suman.</li>
+    <li>Ley de Ohm: V = I × R, y sus formas despejadas I = V/R y R = V/I.</li>
+    <li>Cómo comprobar tus cálculos con el multímetro virtual y compartir tu circuito.</li>
+  </ul>
+  <div class="callout"><span class="callout-label">Próxima semana</span>Semana 3: el diodo y la protección de circuitos.</div>
+`});
+
+/* ====================== ENGINE ====================== */
+let current = 0;
+const host = document.getElementById('slideHost');
+const dotsEl = document.getElementById('dots');
+const counterEl = document.getElementById('slideCounter');
+const fillEl = document.getElementById('progressFill');
+
+function buildDots(){
+  dotsEl.innerHTML = slideDefs.map((_,i)=>`<button class="dot" data-i="${i}" aria-label="Ir a diapositiva ${i+1}" onclick="goTo(${i})"></button>`).join('');
+}
+function renderSlide(){
+  host.innerHTML = slideDefs[current].render();
+  counterEl.textContent = `${current+1} / ${slideDefs.length}`;
+  fillEl.style.width = `${((current+1)/slideDefs.length)*100}%`;
+  [...dotsEl.children].forEach((d,i)=>{ d.classList.toggle('active', i===current); d.classList.toggle('done', i<current); });
+  document.getElementById('prevBtn').disabled = current===0;
+  document.getElementById('nextBtn').textContent = current===slideDefs.length-1 ? 'Fin ✓' : 'Siguiente →';
+  document.getElementById('nextBtn').disabled = current===slideDefs.length-1;
+  if(current===6) ohmPick('V');
+  window.scrollTo({top:0, behavior:'instant'});
+}
+function goTo(i){ current = Math.max(0, Math.min(slideDefs.length-1, i)); renderSlide(); }
+document.getElementById('prevBtn').onclick = ()=>goTo(current-1);
+document.getElementById('nextBtn').onclick = ()=>goTo(current+1);
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowRight') goTo(current+1);
+  if(e.key==='ArrowLeft') goTo(current-1);
+});
+
+/* ---- reveal ---- */
+function toggleReveal(id, btn){
+  const el = document.getElementById(id);
+  el.classList.toggle('show');
+  btn.textContent = el.classList.contains('show') ? 'Ocultar solución' : 'Ver solución paso a paso';
+}
+
+/* ---- serie/paralelo toggle ---- */
+function spPick(which){
+  document.getElementById('spSerieBtn').classList.toggle('sel', which==='serie');
+  document.getElementById('spParaleloBtn').classList.toggle('sel', which==='paralelo');
+  document.getElementById('spExplainBox').textContent = spExplain[which];
+}
+
+/* ---- ohm calculator ---- */
+let ohmTarget = 'V';
+function ohmPick(k){
+  ohmTarget = k;
+  document.querySelectorAll('.ohm-pick button').forEach(b=> b.classList.toggle('sel', b.dataset.k===k));
+  ['V','I','R'].forEach(key=>{
+    const field = document.getElementById('ohm'+key);
+    if(!field) return;
+    const input = field.querySelector('input');
+    field.classList.toggle('solve', key===k);
+    if(key===k){ input.value=''; input.disabled = true; } else { input.disabled = false; }
+  });
+  ohmCalc();
+}
+function ohmCalc(){
+  const vI = parseFloat(document.querySelector('#ohmV input').value);
+  const iI = parseFloat(document.querySelector('#ohmI input').value);
+  const rI = parseFloat(document.querySelector('#ohmR input').value);
+  const out = document.querySelector(`#ohm${ohmTarget} input`);
+  if(!out) return;
+  let result = null;
+  if(ohmTarget==='V' && !isNaN(iI) && !isNaN(rI)) result = iI*rI;
+  if(ohmTarget==='I' && !isNaN(vI) && !isNaN(rI) && rI!==0) result = vI/rI;
+  if(ohmTarget==='R' && !isNaN(vI) && !isNaN(iI) && iI!==0) result = vI/iI;
+  out.value = result===null ? '' : (Math.round(result*10000)/10000);
+}
+
+/* ---- init ---- */
+buildDots();
+renderSlide();
+</script>
+</body>
+</html>
