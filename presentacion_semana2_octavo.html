@@ -275,7 +275,7 @@ slideDefs.push({time:12, render:()=>`
   <h2>Circuito en serie</h2>
   <div class="body-text"><p>En un circuito en <strong>serie</strong>, los componentes se conectan uno detrás de otro, formando <strong>un solo camino</strong> para la corriente. Toda la corriente que sale de la fuente pasa por cada componente, uno tras otro.</p></div>
   <svg viewBox="0 0 420 130" style="width:100%;max-width:420px;display:block;margin:14px auto;">
-    <path d="M30 65 H120 M170 65 H260 M310 65 H390 V100 H30 Z" fill="none" stroke="var(--ink-soft)" stroke-width="3"/>
+    <path d="M30 65 H120 M170 65 H260 M310 65 H390 V100 H20 L20 65 " fill="none" stroke="var(--ink-soft)" stroke-width="3"/>
     <rect x="120" y="50" width="50" height="30" fill="var(--surface-2)" stroke="var(--accent)" stroke-width="2"/>
     <text x="145" y="70" text-anchor="middle" font-size="10" font-family="JetBrains Mono, monospace" fill="var(--accent)">R1</text>
     <rect x="260" y="50" width="50" height="30" fill="var(--surface-2)" stroke="var(--accent)" stroke-width="2"/>
@@ -297,7 +297,7 @@ slideDefs.push({time:12, render:()=>`
   <h2>Circuito en paralelo</h2>
   <div class="body-text"><p>En un circuito en <strong>paralelo</strong>, los componentes se conectan entre los mismos dos puntos, formando <strong>varios caminos</strong> distintos. La corriente se reparte entre esos caminos.</p></div>
   <svg viewBox="0 0 420 150" style="width:100%;max-width:420px;display:block;margin:14px auto;">
-    <path d="M30 30 H390 M30 30 V120 H390 V30 M170 30 V70 M170 110 V70 M170 70 H130 M170 70 H210" fill="none" stroke="var(--ink-soft)" stroke-width="3"/>
+    <path d="M20 30 H390 M20 30 V110 H390 V30 M150 30 V70 M150 110 V70 M230 30 V70 M230 110 V70" fill="none" stroke="var(--ink-soft)" stroke-width="3"/>
     <rect x="130" y="55" width="40" height="30" fill="var(--surface-2)" stroke="var(--accent)" stroke-width="2"/>
     <text x="150" y="75" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="var(--accent)">R1</text>
     <rect x="210" y="55" width="40" height="30" fill="var(--surface-2)" stroke="var(--accent)" stroke-width="2"/>
