@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operadores DML — Semana 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f4f5f8; --surface:#ffffff; --surface-2:#eceef3;
+  --ink:#1a2130; --ink-soft:#525b6b; --line:#d7dbe4;
+  --accent:#0e7c86; --accent-ink:#ffffff;
+  --amber:#b86e12; --amber-soft:#fbeedd;
+  --good:#1f7a4d; --bad:#b5342d;
+  --code-bg:#0f1720; --code-fg:#e6edf3; --code-key:#f2b846; --code-str:#7fd0c9; --code-com:#7c8899; --code-num:#c9a6ff;
+  --f-comp:#2f6fb5; --f-arit:#7a4fb0; --f-logi:#b86e12; --f-espe:#b0407a; --f-conj:#0e7c86;
+  --shadow:0 1px 2px rgba(20,25,40,.04), 0 8px 24px rgba(20,25,40,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1319; --surface:#161f28; --surface-2:#1d2733;
+    --ink:#e7ecf2; --ink-soft:#9aa7b6; --line:#2b3745;
+    --accent:#43c2c7; --accent-ink:#08181a;
+    --amber:#e7a94a; --amber-soft:#2a2013;
+    --good:#4fbd85; --bad:#e2695f;
+    --code-bg:#080d12; --code-com:#6b7684;
+    --f-comp:#6aa6e8; --f-arit:#b28be6; --f-logi:#e7a94a; --f-espe:#e07bb0; --f-conj:#43c2c7;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1319; --surface:#161f28; --surface-2:#1d2733;
+  --ink:#e7ecf2; --ink-soft:#9aa7b6; --line:#2b3745;
+  --accent:#43c2c7; --accent-ink:#08181a;
+  --amber:#e7a94a; --amber-soft:#2a2013;
+  --good:#4fbd85; --bad:#e2695f;
+  --code-bg:#080d12; --code-com:#6b7684;
+  --f-comp:#6aa6e8; --f-arit:#b28be6; --f-logi:#e7a94a; --f-espe:#e07bb0; --f-conj:#43c2c7;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg); color:var(--ink); font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif; overscroll-behavior:none;}
+h1,h2,h3{font-family:"IBM Plex Serif", Georgia, serif; text-wrap:balance; margin:0;}
+h3{font-size:19px; font-weight:600;}
+code,.mono{font-family:"IBM Plex Mono", ui-monospace, Consolas, monospace;}
+p code, li code, td code, .callout code{background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:0 5px; font-size:.92em;}
+
+/* ---------- shell ---------- */
+#deck{position:relative; height:100vh; height:100dvh; display:flex; flex-direction:column; overflow:hidden;}
+#topbar{display:flex; align-items:center; gap:14px; padding:10px 18px; border-bottom:1px solid var(--line); background:var(--surface); flex:0 0 auto;}
+#topbar .brand{font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.04em; color:var(--ink-soft); white-space:nowrap;}
+#progress-track{flex:1 1 auto; height:5px; background:var(--surface-2); border-radius:99px; overflow:hidden;}
+#progress-fill{height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--amber)); transition:width .35s ease;}
+#counter{font-family:"IBM Plex Mono"; font-size:12.5px; color:var(--ink-soft); white-space:nowrap; min-width:52px; text-align:right; font-variant-numeric:tabular-nums;}
+#theme-btn{font-family:"IBM Plex Mono"; font-size:12px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-soft); border-radius:8px; padding:5px 9px; cursor:pointer;}
+@media (max-width:560px){ #topbar .brand{display:none;} }
+#viewport{flex:1 1 auto; position:relative; overflow:hidden;}
+.slide{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; padding:clamp(20px,4vw,48px) clamp(16px,5vw,80px); opacity:0; transform:translateX(24px); pointer-events:none; transition:opacity .35s ease, transform .35s ease; overflow-y:auto; visibility:hidden;}
+.slide.active{opacity:1; transform:none; pointer-events:auto; visibility:visible;}
+@media (prefers-reduced-motion: reduce){ .slide{transition:none; transform:none;} }
+.slide-inner{width:100%; max-width:960px; margin:auto; display:flex; flex-direction:column; gap:18px;}
+.eyebrow{font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); font-weight:600;}
+.slide h2{font-size:clamp(26px,4vw,40px); font-weight:600; line-height:1.15;}
+.slide.cover h2{font-size:clamp(34px,6vw,58px);}
+.lede{font-size:17px; line-height:1.6; color:var(--ink-soft); max-width:72ch; margin:0;}
+.slide p{font-size:16px; line-height:1.65; max-width:72ch; margin:0;}
+.slide ul{margin:0; padding-left:20px; line-height:1.7; font-size:16px;}
+.slide.section-slide .slide-inner{border-left:4px solid var(--amber); padding-left:22px;}
+
+#navbar{flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 18px; border-top:1px solid var(--line); background:var(--surface);}
+.navbtn{font-family:"IBM Plex Sans"; font-weight:600; font-size:14px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:10px; padding:9px 16px; cursor:pointer;}
+.navbtn:hover{border-color:var(--accent);}
+.navbtn:disabled{opacity:.35; cursor:default;}
+.navbtn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+button:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+#dots{display:flex; gap:5px; flex-wrap:wrap; justify-content:center; max-width:56vw;}
+.dot{width:7px; height:7px; border-radius:99px; background:var(--line); border:none; padding:0; cursor:pointer;}
+.dot.section{background:var(--amber);}
+.dot.active{background:var(--accent); width:18px;}
+
+/* ---------- components ---------- */
+.card{background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:clamp(14px,2.2vw,24px);}
+.card h3{margin-bottom:8px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+@media (max-width:760px){ .grid2,.grid3{grid-template-columns:1fr;} }
+.grid2>*,.grid3>*,.venn-wrap>*,.tabpanel>*,.steppanel>*,.ex{min-width:0;}
+.pill{display:inline-flex; align-items:center; gap:6px; font-family:"IBM Plex Mono"; font-size:12px; font-weight:600; padding:3px 10px; border-radius:99px; background:var(--surface-2); color:var(--ink-soft); border:1px solid var(--line); white-space:nowrap;}
+
+pre.code{background:var(--code-bg); color:var(--code-fg); border-radius:12px; padding:14px 18px; overflow-x:auto; font-size:14.5px; line-height:1.6; margin:0; font-family:"IBM Plex Mono", ui-monospace, monospace;}
+.code .k{color:var(--code-key); font-weight:600;}
+.code .s{color:var(--code-str);}
+.code .c{color:var(--code-com); font-style:italic;}
+.code .n{color:var(--code-num);}
+
+.ex{display:flex; flex-direction:column; gap:8px;}
+.ex-head .pill{white-space:normal;}
+.ex-head{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;}
+.ex-actions{display:flex; gap:8px;}
+.mini{font-family:"IBM Plex Mono"; font-size:12.5px; font-weight:600; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:8px; padding:6px 11px; cursor:pointer;}
+.mini:hover{border-color:var(--accent);}
+.reveal-btn{font-family:"IBM Plex Mono"; font-size:12.5px; font-weight:600; background:var(--amber-soft); color:var(--amber); border:1px solid var(--amber); border-radius:8px; padding:6px 11px; cursor:pointer;}
+.reveal-box{display:none; border-left:3px solid var(--amber); background:var(--surface); border-radius:0 10px 10px 0; padding:10px 14px;}
+.reveal-box.show{display:block;}
+.err{font-family:"IBM Plex Mono"; font-size:13.5px; color:var(--bad); border:1px solid var(--bad); border-radius:8px; padding:8px 12px; background:color-mix(in srgb,var(--bad) 8%,var(--surface));}
+
+.table-wrap{overflow-x:auto;}
+table.data{border-collapse:collapse; width:100%; font-size:14px;}
+table.data caption{caption-side:top; text-align:left; font-family:"IBM Plex Mono"; font-size:12px; color:var(--ink-soft); padding-bottom:6px;}
+table.data th, table.data td{border:1px solid var(--line); padding:6px 10px; text-align:left; font-variant-numeric:tabular-nums; white-space:nowrap;}
+table.data th{background:var(--surface-2); font-family:"IBM Plex Mono"; font-weight:600; font-size:12.5px;}
+table.data td.null{color:var(--ink-soft); font-style:italic;}
+table.ops td:first-child{font-family:"IBM Plex Mono"; font-weight:600;}
+
+.tabs{display:flex; gap:6px; flex-wrap:wrap;}
+.tab{font-family:"IBM Plex Sans"; font-weight:600; font-size:14px; padding:8px 13px; border-radius:9px 9px 0 0; cursor:pointer; background:var(--surface-2); color:var(--ink-soft); border:1px solid var(--line); border-bottom:none;}
+.tab.active{background:var(--surface); color:var(--accent); border-color:var(--accent);}
+.tabpanel{display:none; border:1px solid var(--line); border-radius:0 10px 10px 10px; padding:16px; background:var(--surface); flex-direction:column; gap:12px;}
+.tabpanel.active{display:flex;}
+.tabset{display:flex; flex-direction:column;}
+
+.callout{border-radius:10px; padding:12px 16px; font-size:15px; line-height:1.6; border:1px solid var(--line); background:var(--surface);}
+.callout.warn{border-left:4px solid var(--bad);}
+.callout.tip{border-left:4px solid var(--accent);}
+.callout.note{border-left:4px solid var(--amber);}
+.callout strong{font-weight:600;}
+
+/* familias de operadores */
+.fam{--c:var(--accent);}
+.fam.comp{--c:var(--f-comp);} .fam.arit{--c:var(--f-arit);} .fam.logi{--c:var(--f-logi);} .fam.espe{--c:var(--f-espe);} .fam.conj{--c:var(--f-conj);}
+.famcard{border:1px solid var(--line); border-top:4px solid var(--c); border-radius:12px; padding:12px 14px; background:var(--surface);}
+.famcard b{display:block; color:var(--c); font-size:15px; margin-bottom:4px;}
+.famcard .mono{font-size:13.5px;}
+.famgrid{display:grid; grid-template-columns:repeat(5,1fr); gap:10px;}
+@media (max-width:860px){ .famgrid{grid-template-columns:repeat(2,1fr);} }
+.chip{display:inline-block; font-family:"IBM Plex Mono"; font-weight:600; font-size:13px; color:var(--c); border:1px solid var(--c); border-radius:7px; padding:2px 8px; background:color-mix(in srgb,var(--c) 10%,var(--surface));}
+
+.anatomy{display:flex; gap:10px; align-items:stretch; justify-content:center; flex-wrap:wrap; font-family:"IBM Plex Mono";}
+.anatomy div{border:1px dashed var(--line); border-radius:10px; padding:10px 16px; text-align:center; font-size:22px; font-weight:600; background:var(--surface);}
+.anatomy div small{display:block; font-family:"IBM Plex Sans"; font-size:12px; font-weight:500; color:var(--ink-soft); margin-top:4px;}
+.anatomy .op{border:2px solid var(--f-comp); color:var(--f-comp);}
+
+/* esquema BD */
+.schema{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px;}
+.tcard{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); box-shadow:var(--shadow);}
+.tcard header{background:var(--accent); color:var(--accent-ink); font-family:"IBM Plex Mono"; font-weight:600; font-size:14px; padding:7px 12px;}
+.tcard ul{list-style:none; margin:0; padding:8px 12px; font-family:"IBM Plex Mono"; font-size:13px; line-height:1.8;}
+.tcard li span{font-size:10.5px; font-weight:600; border-radius:4px; padding:0 4px; margin-left:5px; border:1px solid var(--line); color:var(--ink-soft);}
+.tcard li span.pk{color:var(--amber); border-color:var(--amber);}
+.tcard li span.fk{color:var(--f-comp); border-color:var(--f-comp);}
+.tcard footer{font-size:12px; color:var(--ink-soft); padding:0 12px 8px;}
+
+/* pasos */
+.steps{display:flex; gap:6px; flex-wrap:wrap;}
+.stepbtn{font-family:"IBM Plex Sans"; font-weight:600; font-size:14px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-soft); border-radius:99px; padding:7px 14px; cursor:pointer;}
+.stepbtn.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+.steppanel{display:none; flex-direction:column; gap:10px;}
+.steppanel.active{display:flex;}
+
+/* agenda */
+.agenda{display:grid; grid-template-columns:auto 1fr auto; gap:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface);}
+.agenda div{padding:9px 14px; border-bottom:1px solid var(--line); font-size:15px;}
+.agenda div:nth-last-child(-n+3){border-bottom:none;}
+.agenda .num{font-family:"IBM Plex Mono"; color:var(--accent); font-weight:600;}
+.agenda .min{font-family:"IBM Plex Mono"; color:var(--ink-soft); text-align:right; white-space:nowrap;}
+
+/* venn */
+.venn-wrap{display:grid; grid-template-columns:minmax(260px,1fr) 1.2fr; gap:16px; align-items:start;}
+@media (max-width:820px){ .venn-wrap{grid-template-columns:1fr;} }
+svg.venn{width:100%; height:auto; max-width:440px;}
+svg.venn .rg{fill:var(--f-conj); opacity:.08; transition:opacity .25s;}
+svg.venn .rg.on{opacity:.45;}
+svg.venn .outline{fill:none; stroke:var(--ink-soft); stroke-width:1.5;}
+svg.venn text{fill:var(--ink); font-family:"IBM Plex Mono"; font-size:12.5px;}
+svg.venn text.ttl{font-family:"IBM Plex Sans"; font-weight:600; font-size:13px; fill:var(--ink-soft);}
+svg.venn text.twice{fill:var(--bad); font-weight:600; opacity:0; transition:opacity .25s;}
+svg.venn text.twice.on{opacity:1;}
+.setbtns{display:flex; gap:6px; flex-wrap:wrap;}
+.setbtn{font-family:"IBM Plex Mono"; font-weight:600; font-size:13px; border:1px solid var(--f-conj); color:var(--f-conj); background:var(--surface); border-radius:8px; padding:7px 12px; cursor:pointer;}
+.setbtn.active{background:var(--f-conj); color:var(--accent-ink);}
+
+/* quiz */
+.quiz{display:flex; flex-direction:column; gap:8px;}
+.quiz .qtext{font-weight:600; font-size:16px;}
+.choice{text-align:left; font-family:"IBM Plex Sans"; font-size:15px; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; padding:10px 14px; cursor:pointer;}
+.choice:hover{border-color:var(--accent);}
+.choice code{background:none; border:none; padding:0;}
+.choice.correct{border-color:var(--good); background:color-mix(in srgb,var(--good) 12%,var(--surface));}
+.choice.wrong{border-color:var(--bad); background:color-mix(in srgb,var(--bad) 10%,var(--surface));}
+.feedback{display:none; font-size:14.5px; line-height:1.55; padding:8px 12px; border-radius:8px;}
+.feedback.show{display:block;}
+.feedback.ok{color:var(--good); background:color-mix(in srgb,var(--good) 10%,var(--surface));}
+.feedback.no{color:var(--bad); background:color-mix(in srgb,var(--bad) 8%,var(--surface));}
+
+/* actividad 1: clasificar */
+.pool{display:flex; flex-wrap:wrap; gap:8px; min-height:56px; padding:12px; border:1px dashed var(--line); border-radius:12px; background:var(--surface);}
+.opcard{font-family:"IBM Plex Mono"; font-weight:600; font-size:15px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:9px; padding:7px 12px; cursor:grab; user-select:none;}
+.opcard.sel{outline:2px solid var(--accent); outline-offset:2px; background:color-mix(in srgb,var(--accent) 14%,var(--surface));}
+.opcard.ok{border-color:var(--good); background:color-mix(in srgb,var(--good) 16%,var(--surface));}
+.opcard.bad{border-color:var(--bad); background:color-mix(in srgb,var(--bad) 14%,var(--surface)); text-decoration:line-through wavy var(--bad);}
+.bins{display:grid; grid-template-columns:repeat(5,1fr); gap:8px;}
+@media (max-width:860px){ .bins{grid-template-columns:repeat(2,1fr);} }
+.bin{border:1px solid var(--line); border-top:4px solid var(--c); border-radius:12px; background:var(--surface); min-height:120px; display:flex; flex-direction:column; cursor:pointer;}
+.bin.over{background:color-mix(in srgb,var(--c) 10%,var(--surface));}
+.bin h4{margin:0; padding:8px 10px 4px; font-size:13.5px; color:var(--c); font-family:"IBM Plex Sans";}
+.bin .drop{display:flex; flex-wrap:wrap; gap:6px; padding:6px 8px 10px; flex:1;}
+.bin .drop .opcard{font-size:13.5px; padding:5px 9px;}
+.actbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+.score{font-family:"IBM Plex Mono"; font-weight:600; font-size:14px;}
+
+/* actividad 2: detectar */
+.catbar{display:flex; gap:6px; flex-wrap:wrap; position:sticky; top:-2px; z-index:3; background:var(--bg); padding:8px 0;}
+.catbtn{font-family:"IBM Plex Sans"; font-weight:600; font-size:13.5px; border:1px solid var(--c); color:var(--c); background:var(--surface); border-radius:8px; padding:7px 11px; cursor:pointer;}
+.catbtn:hover{background:color-mix(in srgb,var(--c) 12%,var(--surface));}
+.detq{display:flex; flex-direction:column; gap:6px;}
+.detq .lbl{font-family:"IBM Plex Mono"; font-size:12px; color:var(--ink-soft);}
+.optok{font-family:"IBM Plex Mono"; font-size:14.5px; font-weight:600; color:var(--code-fg); background:transparent; border:1.5px dashed #8a97a8; border-radius:6px; padding:0 5px; margin:0 1px; cursor:pointer; line-height:1.5; position:relative;}
+.optok.sel{border-style:solid; border-color:#ffffff; background:rgba(255,255,255,.14);}
+.optok[data-as]{border-style:solid;}
+.optok[data-as="comp"]{border-color:#6aa6e8; background:rgba(106,166,232,.22);}
+.optok[data-as="arit"]{border-color:#b28be6; background:rgba(178,139,230,.22);}
+.optok[data-as="logi"]{border-color:#e7a94a; background:rgba(231,169,74,.22);}
+.optok[data-as="espe"]{border-color:#e07bb0; background:rgba(224,123,176,.22);}
+.optok[data-as="conj"]{border-color:#43c2c7; background:rgba(67,194,199,.22);}
+.optok .tag{margin-left:5px; font-size:9.5px; font-family:"IBM Plex Sans"; font-weight:700; letter-spacing:.03em; color:var(--code-fg); opacity:.85; vertical-align:1px; pointer-events:none;}
+.optok .tag:empty{display:none;}
+.optok.ok::after, .optok.bad::after{position:absolute; right:-7px; top:-9px; font-size:11px; width:15px; height:15px; line-height:15px; text-align:center; border-radius:99px; color:#fff; font-family:"IBM Plex Sans";}
+.optok.ok::after{content:"✓"; background:#1f7a4d;}
+.optok.bad::after{content:"✗"; background:#b5342d;}
+.detq pre.code{padding-top:16px; line-height:2.1; white-space:pre-wrap;}
+.legend{display:flex; gap:10px; flex-wrap:wrap; font-size:13px;}
+.legend span{display:inline-flex; align-items:center; gap:5px;}
+.legend i{width:12px; height:12px; border-radius:3px; background:var(--c); display:inline-block;}
+
+.center-note{text-align:center; color:var(--ink-soft); font-size:14px;}
+.kbd{font-family:"IBM Plex Mono"; font-size:12px; border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:1px 6px; background:var(--surface-2);}
+.toast{position:fixed; left:50%; bottom:74px; transform:translateX(-50%); background:var(--ink); color:var(--bg); font-size:14px; padding:8px 14px; border-radius:8px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:20;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="deck">
+  <header id="topbar">
+    <span class="brand">BASES DE DATOS · SEMANA 2</span>
+    <div id="progress-track" aria-hidden="true"><div id="progress-fill"></div></div>
+    <span id="counter" aria-live="polite">01/01</span>
+    <button id="theme-btn" type="button" aria-label="Cambiar tema claro u oscuro">Tema</button>
+  </header>
+  <main id="viewport"></main>
+  <nav id="navbar" aria-label="Navegación de diapositivas">
+    <button class="navbtn" id="btn-prev" type="button">← Anterior</button>
+    <div id="dots"></div>
+    <button class="navbtn primary" id="btn-next" type="button">Siguiente →</button>
+  </nav>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+// =========================================================
+// DATOS GENERADOS Y VERIFICADOS CONTRA SQLite
+// =========================================================
+const Q = {"T_aplicaciones": "SELECT * FROM aplicaciones;", "T_desarrolladores": "SELECT * FROM desarrolladores;", "T_usuarios": "SELECT * FROM usuarios;", "T_descargas": "SELECT * FROM descargas;", "T_favoritas": "SELECT * FROM favoritas;", "VERIF": "SELECT\n  (SELECT COUNT(*) FROM desarrolladores) AS desarrolladores,\n  (SELECT COUNT(*) FROM aplicaciones)    AS aplicaciones,\n  (SELECT COUNT(*) FROM usuarios)        AS usuarios,\n  (SELECT COUNT(*) FROM descargas)       AS descargas,\n  (SELECT COUNT(*) FROM favoritas)       AS favoritas;", "C1": "SELECT nombre, precio\nFROM aplicaciones\nWHERE precio = 0;", "C2": "SELECT nombre, calificacion\nFROM aplicaciones\nWHERE calificacion >= 4.5;", "C3": "SELECT nombre, categoria\nFROM aplicaciones\nWHERE categoria <> 'Juegos';", "C4": "SELECT COUNT(*) AS menores_a_4_5\nFROM aplicaciones\nWHERE calificacion < 4.5;", "C5": "SELECT COUNT(*) AS total\nFROM aplicaciones\nWHERE categoria = 'juegos';   -- en minúscula", "A1": "SELECT nombre, precio, descargas,\n       precio * descargas AS ingresos\nFROM aplicaciones\nWHERE precio > 0;", "A2": "SELECT nombre, precio,\n       precio * 1.19 AS precio_con_iva\nFROM aplicaciones\nWHERE precio > 0;", "A3": "SELECT 7 / 2   AS division_entera,\n       7 / 2.0 AS division_decimal,\n       7 % 2   AS residuo;", "A4": "SELECT nombre, descargas,\n       descargas / 1000 AS miles,\n       descargas % 1000 AS sobrante\nFROM aplicaciones\nWHERE id <= 4;", "A5": "SELECT nombre, precio * descargas AS ingresos\nFROM aplicaciones\nWHERE precio * descargas > 15000;", "L1": "SELECT nombre, categoria, precio\nFROM aplicaciones\nWHERE categoria = 'Juegos' AND precio = 0;", "L2": "SELECT nombre, categoria\nFROM aplicaciones\nWHERE categoria = 'Social' OR categoria = 'Finanzas';", "L3": "SELECT nombre, precio\nFROM aplicaciones\nWHERE NOT (precio = 0);", "P1": "SELECT nombre, categoria, precio\nFROM aplicaciones\nWHERE categoria = 'Juegos'\n   OR categoria = 'Productividad'\n  AND precio > 0;", "P2": "SELECT nombre, categoria, precio\nFROM aplicaciones\nWHERE (categoria = 'Juegos'\n    OR categoria = 'Productividad')\n  AND precio > 0;", "B1": "SELECT nombre, descargas\nFROM aplicaciones\nWHERE descargas BETWEEN 3000 AND 15000;", "I1": "SELECT nombre, categoria\nFROM aplicaciones\nWHERE categoria IN ('Juegos', 'Social');", "I2": "SELECT nombre, ciudad\nFROM usuarios\nWHERE ciudad NOT IN ('Bogotá', 'Pereira');", "K1": "SELECT nombre FROM aplicaciones\nWHERE nombre LIKE 'S%';", "K2": "SELECT nombre FROM aplicaciones\nWHERE nombre LIKE '%a';", "K3": "SELECT nombre, email FROM desarrolladores\nWHERE email LIKE '%.co';", "K4": "SELECT nombre FROM aplicaciones\nWHERE nombre LIKE '_o%';", "K5": "SELECT nombre FROM aplicaciones\nWHERE nombre LIKE '%plus%';", "N1": "SELECT COUNT(*) AS total\nFROM aplicaciones\nWHERE calificacion = NULL;   -- ¡incorrecto!", "N2": "SELECT nombre, calificacion\nFROM aplicaciones\nWHERE calificacion IS NULL;", "N3": "SELECT nombre, ciudad\nFROM usuarios\nWHERE email IS NULL;", "V0": "SELECT usuario_id, app_id\nFROM descargas\nWHERE usuario_id IN (1, 2);", "V_UNION": "SELECT app_id FROM descargas WHERE usuario_id = 1\nUNION\nSELECT app_id FROM descargas WHERE usuario_id = 2;", "V_ALL": "SELECT app_id FROM descargas WHERE usuario_id = 1\nUNION ALL\nSELECT app_id FROM descargas WHERE usuario_id = 2;", "V_INTER": "SELECT app_id FROM descargas WHERE usuario_id = 1\nINTERSECT\nSELECT app_id FROM descargas WHERE usuario_id = 2;", "V_EXCEPT": "SELECT app_id FROM descargas WHERE usuario_id = 1\nEXCEPT\nSELECT app_id FROM descargas WHERE usuario_id = 2;", "U1": "SELECT app_id FROM descargas\nUNION\nSELECT app_id FROM favoritas;", "U2": "SELECT COUNT(*) AS filas_union_all\nFROM (SELECT app_id FROM descargas\n      UNION ALL\n      SELECT app_id FROM favoritas);", "U3": "SELECT nombre, email, 'usuario' AS tipo\nFROM usuarios\nWHERE email IS NOT NULL\nUNION\nSELECT nombre, email, 'desarrollador'\nFROM desarrolladores\nORDER BY nombre;", "S1": "SELECT app_id FROM descargas\nINTERSECT\nSELECT app_id FROM favoritas;", "S2": "SELECT app_id FROM descargas\nEXCEPT\nSELECT app_id FROM favoritas;", "S3": "SELECT nombre\nFROM aplicaciones\nWHERE id IN (SELECT app_id FROM descargas\n             EXCEPT\n             SELECT app_id FROM favoritas);", "S4": "SELECT nombre\nFROM aplicaciones\nWHERE id IN (SELECT id FROM aplicaciones\n             EXCEPT\n             SELECT app_id FROM descargas);", "S5": "SELECT app_id FROM favoritas\nEXCEPT\nSELECT app_id FROM descargas;", "E1": "SELECT nombre, email FROM usuarios\nUNION\nSELECT nombre FROM desarrolladores;", "E2": "SELECT nombre FROM usuarios\nORDER BY nombre\nUNION\nSELECT nombre FROM desarrolladores;", "G1": "-- Paso 1: ¿cuáles son los desarrolladores colombianos?\nSELECT id, nombre\nFROM desarrolladores\nWHERE pais = 'Colombia';", "G2": "-- Paso 2: sus apps con calificación de 4.5 o más\nSELECT nombre, calificacion\nFROM aplicaciones\nWHERE desarrollador_id IN (SELECT id FROM desarrolladores\n                           WHERE pais = 'Colombia')\n  AND calificacion >= 4.5;", "G3": "-- Paso 3: apps favoritas de alguien que cuestan máximo 2 dólares\nSELECT nombre, precio\nFROM aplicaciones\nWHERE id IN (SELECT app_id FROM favoritas)\n  AND precio BETWEEN 0 AND 2;", "G4": "-- Paso 4: lista final de la campaña (sin repetidos y ordenada)\nSELECT nombre\nFROM aplicaciones\nWHERE desarrollador_id IN (SELECT id FROM desarrolladores\n                           WHERE pais = 'Colombia')\n  AND calificacion >= 4.5\nUNION\nSELECT nombre\nFROM aplicaciones\nWHERE id IN (SELECT app_id FROM favoritas)\n  AND precio BETWEEN 0 AND 2\nORDER BY nombre;", "ACT1": "SELECT nombre FROM aplicaciones WHERE precio = 0;", "ACT2": "SELECT nombre, precio * descargas AS ingresos FROM aplicaciones WHERE categoria <> 'Juegos' AND precio > 0;", "ACT3": "SELECT nombre FROM aplicaciones WHERE (categoria IN ('Social', 'Juegos') OR descargas BETWEEN 1000 AND 5000) AND calificacion IS NOT NULL;", "ACT4": "SELECT app_id FROM descargas WHERE usuario_id % 2 = 1 EXCEPT SELECT app_id FROM favoritas WHERE NOT (usuario_id >= 5);"};
+const R = {"T_aplicaciones": {"cols": ["id", "nombre", "categoria", "precio", "calificacion", "descargas", "desarrollador_id"], "rows": [["1", "PixelRun", "Juegos", "0", "4.6", "15000", "1"], ["2", "FocoStudy", "Productividad", "2.99", "4.2", "3200", "3"], ["3", "ChatNova", "Social", "0", "3.8", "42000", "2"], ["4", "MapaFacil", "Navegacion", "1.99", "4.7", "8700", "3"], ["5", "SkyBattle", "Juegos", "0", "4.1", "27000", "1"], ["6", "NotasPlus", "Productividad", "0", "4.4", "5100", "2"], ["7", "RitmoFit", "Salud", "4.99", "4.5", "2600", "4"], ["8", "BiciRuta", "Navegacion", "0", "NULL", "950", "5"], ["9", "ZombieLab", "Juegos", "1.49", "3.5", "11000", "4"], ["10", "PresupuestoYa", "Finanzas", "3.99", "4.8", "1800", "3"], ["11", "FotoMix", "Social", "0", "4", "19500", "5"], ["12", "AulaViva", "Educacion", "0", "NULL", "400", "2"]]}, "T_desarrolladores": {"cols": ["id", "nombre", "pais", "email"], "rows": [["1", "PixelForge", "Colombia", "contacto@pixelforge.co"], ["2", "NubeSoft", "México", "hola@nubesoft.mx"], ["3", "AndinaApps", "Colombia", "info@andinaapps.co"], ["4", "BlueWave Studio", "Chile", "team@bluewave.cl"], ["5", "CódigoSur", "Argentina", "dev@codigosur.ar"]]}, "T_usuarios": {"cols": ["id", "nombre", "ciudad", "email"], "rows": [["1", "Laura Gómez", "Bogotá", "laura.gomez@mail.com"], ["2", "Santiago Ruiz", "Medellín", "santi.ruiz@mail.com"], ["3", "Valentina Díaz", "Pereira", "vale.diaz@mail.com"], ["4", "Mateo Herrera", "Cali", "mateo.h@mail.com"], ["5", "Camila Torres", "Bogotá", "cami.torres@mail.com"], ["6", "Andrés Pérez", "Barranquilla", "NULL"], ["7", "Sofía Castro", "Pereira", "sofia.castro@mail.com"], ["8", "Juan Morales", "Bogotá", "juan.morales@mail.com"]]}, "T_descargas": {"cols": ["usuario_id", "app_id"], "rows": [["1", "1"], ["1", "3"], ["1", "6"], ["2", "3"], ["2", "5"], ["2", "9"], ["3", "2"], ["3", "4"], ["3", "10"], ["4", "1"], ["4", "5"], ["5", "3"], ["5", "11"], ["7", "2"], ["7", "7"]]}, "T_favoritas": {"cols": ["usuario_id", "app_id"], "rows": [["1", "1"], ["1", "6"], ["2", "5"], ["3", "4"], ["3", "10"], ["5", "11"], ["7", "7"]]}, "VERIF": {"cols": ["desarrolladores", "aplicaciones", "usuarios", "descargas", "favoritas"], "rows": [["5", "12", "8", "15", "7"]]}, "C1": {"cols": ["nombre", "precio"], "rows": [["PixelRun", "0"], ["ChatNova", "0"], ["SkyBattle", "0"], ["NotasPlus", "0"], ["BiciRuta", "0"], ["FotoMix", "0"], ["AulaViva", "0"]]}, "C2": {"cols": ["nombre", "calificacion"], "rows": [["PixelRun", "4.6"], ["MapaFacil", "4.7"], ["RitmoFit", "4.5"], ["PresupuestoYa", "4.8"]]}, "C3": {"cols": ["nombre", "categoria"], "rows": [["FocoStudy", "Productividad"], ["ChatNova", "Social"], ["MapaFacil", "Navegacion"], ["NotasPlus", "Productividad"], ["RitmoFit", "Salud"], ["BiciRuta", "Navegacion"], ["PresupuestoYa", "Finanzas"], ["FotoMix", "Social"], ["AulaViva", "Educacion"]]}, "C4": {"cols": ["menores_a_4_5"], "rows": [["6"]]}, "C5": {"cols": ["total"], "rows": [["0"]]}, "A1": {"cols": ["nombre", "precio", "descargas", "ingresos"], "rows": [["FocoStudy", "2.99", "3200", "9568"], ["MapaFacil", "1.99", "8700", "17313"], ["RitmoFit", "4.99", "2600", "12974"], ["ZombieLab", "1.49", "11000", "16390"], ["PresupuestoYa", "3.99", "1800", "7182"]]}, "A2": {"cols": ["nombre", "precio", "precio_con_iva"], "rows": [["FocoStudy", "2.99", "3.5581"], ["MapaFacil", "1.99", "2.3681"], ["RitmoFit", "4.99", "5.9381"], ["ZombieLab", "1.49", "1.7731"], ["PresupuestoYa", "3.99", "4.7481"]]}, "A3": {"cols": ["division_entera", "division_decimal", "residuo"], "rows": [["3", "3.5", "1"]]}, "A4": {"cols": ["nombre", "descargas", "miles", "sobrante"], "rows": [["PixelRun", "15000", "15", "0"], ["FocoStudy", "3200", "3", "200"], ["ChatNova", "42000", "42", "0"], ["MapaFacil", "8700", "8", "700"]]}, "A5": {"cols": ["nombre", "ingresos"], "rows": [["MapaFacil", "17313"], ["ZombieLab", "16390"]]}, "L1": {"cols": ["nombre", "categoria", "precio"], "rows": [["PixelRun", "Juegos", "0"], ["SkyBattle", "Juegos", "0"]]}, "L2": {"cols": ["nombre", "categoria"], "rows": [["ChatNova", "Social"], ["PresupuestoYa", "Finanzas"], ["FotoMix", "Social"]]}, "L3": {"cols": ["nombre", "precio"], "rows": [["FocoStudy", "2.99"], ["MapaFacil", "1.99"], ["RitmoFit", "4.99"], ["ZombieLab", "1.49"], ["PresupuestoYa", "3.99"]]}, "P1": {"cols": ["nombre", "categoria", "precio"], "rows": [["PixelRun", "Juegos", "0"], ["FocoStudy", "Productividad", "2.99"], ["SkyBattle", "Juegos", "0"], ["ZombieLab", "Juegos", "1.49"]]}, "P2": {"cols": ["nombre", "categoria", "precio"], "rows": [["FocoStudy", "Productividad", "2.99"], ["ZombieLab", "Juegos", "1.49"]]}, "B1": {"cols": ["nombre", "descargas"], "rows": [["PixelRun", "15000"], ["FocoStudy", "3200"], ["MapaFacil", "8700"], ["NotasPlus", "5100"], ["ZombieLab", "11000"]]}, "I1": {"cols": ["nombre", "categoria"], "rows": [["PixelRun", "Juegos"], ["ChatNova", "Social"], ["SkyBattle", "Juegos"], ["ZombieLab", "Juegos"], ["FotoMix", "Social"]]}, "I2": {"cols": ["nombre", "ciudad"], "rows": [["Santiago Ruiz", "Medellín"], ["Mateo Herrera", "Cali"], ["Andrés Pérez", "Barranquilla"]]}, "K1": {"cols": ["nombre"], "rows": [["SkyBattle"]]}, "K2": {"cols": ["nombre"], "rows": [["ChatNova"], ["BiciRuta"], ["PresupuestoYa"], ["AulaViva"]]}, "K3": {"cols": ["nombre", "email"], "rows": [["PixelForge", "contacto@pixelforge.co"], ["AndinaApps", "info@andinaapps.co"]]}, "K4": {"cols": ["nombre"], "rows": [["FocoStudy"], ["NotasPlus"], ["ZombieLab"], ["FotoMix"]]}, "K5": {"cols": ["nombre"], "rows": [["NotasPlus"]]}, "N1": {"cols": ["total"], "rows": [["0"]]}, "N2": {"cols": ["nombre", "calificacion"], "rows": [["BiciRuta", "NULL"], ["AulaViva", "NULL"]]}, "N3": {"cols": ["nombre", "ciudad"], "rows": [["Andrés Pérez", "Barranquilla"]]}, "V0": {"cols": ["usuario_id", "app_id"], "rows": [["1", "1"], ["1", "3"], ["1", "6"], ["2", "3"], ["2", "5"], ["2", "9"]]}, "V_UNION": {"cols": ["app_id"], "rows": [["1"], ["3"], ["5"], ["6"], ["9"]]}, "V_ALL": {"cols": ["app_id"], "rows": [["1"], ["3"], ["6"], ["3"], ["5"], ["9"]]}, "V_INTER": {"cols": ["app_id"], "rows": [["3"]]}, "V_EXCEPT": {"cols": ["app_id"], "rows": [["1"], ["6"]]}, "U1": {"cols": ["app_id"], "rows": [["1"], ["2"], ["3"], ["4"], ["5"], ["6"], ["7"], ["9"], ["10"], ["11"]]}, "U2": {"cols": ["filas_union_all"], "rows": [["22"]]}, "U3": {"cols": ["nombre", "email", "tipo"], "rows": [["AndinaApps", "info@andinaapps.co", "desarrollador"], ["BlueWave Studio", "team@bluewave.cl", "desarrollador"], ["Camila Torres", "cami.torres@mail.com", "usuario"], ["CódigoSur", "dev@codigosur.ar", "desarrollador"], ["Juan Morales", "juan.morales@mail.com", "usuario"], ["Laura Gómez", "laura.gomez@mail.com", "usuario"], ["Mateo Herrera", "mateo.h@mail.com", "usuario"], ["NubeSoft", "hola@nubesoft.mx", "desarrollador"], ["PixelForge", "contacto@pixelforge.co", "desarrollador"], ["Santiago Ruiz", "santi.ruiz@mail.com", "usuario"], ["Sofía Castro", "sofia.castro@mail.com", "usuario"], ["Valentina Díaz", "vale.diaz@mail.com", "usuario"]]}, "S1": {"cols": ["app_id"], "rows": [["1"], ["4"], ["5"], ["6"], ["7"], ["10"], ["11"]]}, "S2": {"cols": ["app_id"], "rows": [["2"], ["3"], ["9"]]}, "S3": {"cols": ["nombre"], "rows": [["FocoStudy"], ["ChatNova"], ["ZombieLab"]]}, "S4": {"cols": ["nombre"], "rows": [["BiciRuta"], ["AulaViva"]]}, "S5": {"cols": ["app_id"], "rows": []}, "E1": {"error": "SELECTs to the left and right of UNION do not have the same number of result columns"}, "E2": {"error": "ORDER BY clause should come after UNION not before"}, "G1": {"cols": ["id", "nombre"], "rows": [["1", "PixelForge"], ["3", "AndinaApps"]]}, "G2": {"cols": ["nombre", "calificacion"], "rows": [["PixelRun", "4.6"], ["MapaFacil", "4.7"], ["PresupuestoYa", "4.8"]]}, "G3": {"cols": ["nombre", "precio"], "rows": [["PixelRun", "0"], ["MapaFacil", "1.99"], ["SkyBattle", "0"], ["NotasPlus", "0"], ["FotoMix", "0"]]}, "G4": {"cols": ["nombre"], "rows": [["FotoMix"], ["MapaFacil"], ["NotasPlus"], ["PixelRun"], ["PresupuestoYa"], ["SkyBattle"]]}, "ACT1": {"cols": ["nombre"], "rows": [["PixelRun"], ["ChatNova"], ["SkyBattle"], ["NotasPlus"], ["BiciRuta"], ["FotoMix"], ["AulaViva"]]}, "ACT2": {"cols": ["nombre", "ingresos"], "rows": [["FocoStudy", "9568"], ["MapaFacil", "17313"], ["RitmoFit", "12974"], ["PresupuestoYa", "7182"]]}, "ACT3": {"cols": ["nombre"], "rows": [["PixelRun"], ["FocoStudy"], ["ChatNova"], ["SkyBattle"], ["RitmoFit"], ["ZombieLab"], ["PresupuestoYa"], ["FotoMix"]]}, "ACT4": {"cols": ["app_id"], "rows": [["2"], ["3"], ["7"], ["11"]]}};
+const SQL_SCRIPT = "-- =====================================================================\n--  IMPLEMENTACIÓN DE BASES DE DATOS — Programa DAM (SENA)\n--  Semana 2 · Operadores DML\n--  Script de creación y carga de la base de datos del caso de estudio\n--  \"TiendaApp\" (versión ampliada: 5 tablas)\n--\n--  Motor: SQLite (SQL Online → https://sqliteonline.com)\n--\n--  CÓMO USARLO\n--  1. Abre SQL Online y verifica que el motor seleccionado sea SQLite.\n--  2. Copia TODO este archivo, pégalo en el editor y presiona \"Run\".\n--  3. Comprueba la carga con las consultas de verificación del final.\n--  Puedes ejecutar este script las veces que quieras: primero borra las\n--  tablas (si existen) y las vuelve a crear con los datos originales.\n--\n--  NOTA: las apps con id 1 a 6 son exactamente las mismas de la semana 1.\n-- =====================================================================\n\nPRAGMA foreign_keys = ON;\n\n-- Se borran en orden inverso a sus dependencias\nDROP TABLE IF EXISTS favoritas;\nDROP TABLE IF EXISTS descargas;\nDROP TABLE IF EXISTS usuarios;\nDROP TABLE IF EXISTS aplicaciones;\nDROP TABLE IF EXISTS desarrolladores;\n\n-- ---------------------------------------------------------------------\n-- 1. desarrolladores: empresas que publican apps en la tienda\n-- ---------------------------------------------------------------------\nCREATE TABLE desarrolladores (\n  id      INTEGER PRIMARY KEY,\n  nombre  TEXT    NOT NULL,\n  pais    TEXT    NOT NULL,\n  email   TEXT    NOT NULL\n);\n\nINSERT INTO desarrolladores (id, nombre, pais, email) VALUES\n  (1, 'PixelForge',      'Colombia',  'contacto@pixelforge.co'),\n  (2, 'NubeSoft',        'México',    'hola@nubesoft.mx'),\n  (3, 'AndinaApps',      'Colombia',  'info@andinaapps.co'),\n  (4, 'BlueWave Studio', 'Chile',     'team@bluewave.cl'),\n  (5, 'CódigoSur',       'Argentina', 'dev@codigosur.ar');\n\n-- ---------------------------------------------------------------------\n-- 2. aplicaciones: catálogo de la tienda\n--    precio en dólares (0 = gratuita)\n--    calificacion de 1.0 a 5.0 (NULL = aún no tiene calificaciones)\n-- ---------------------------------------------------------------------\nCREATE TABLE aplicaciones (\n  id               INTEGER PRIMARY KEY,\n  nombre           TEXT    NOT NULL,\n  categoria        TEXT    NOT NULL,\n  precio           REAL    NOT NULL DEFAULT 0,\n  calificacion     REAL,\n  descargas        INTEGER NOT NULL DEFAULT 0,\n  desarrollador_id INTEGER NOT NULL REFERENCES desarrolladores(id)\n);\n\nINSERT INTO aplicaciones (id, nombre, categoria, precio, calificacion, descargas, desarrollador_id) VALUES\n  ( 1, 'PixelRun',      'Juegos',        0,    4.6,  15000, 1),\n  ( 2, 'FocoStudy',     'Productividad', 2.99, 4.2,   3200, 3),\n  ( 3, 'ChatNova',      'Social',        0,    3.8,  42000, 2),\n  ( 4, 'MapaFacil',     'Navegacion',    1.99, 4.7,   8700, 3),\n  ( 5, 'SkyBattle',     'Juegos',        0,    4.1,  27000, 1),\n  ( 6, 'NotasPlus',     'Productividad', 0,    4.4,   5100, 2),\n  ( 7, 'RitmoFit',      'Salud',         4.99, 4.5,   2600, 4),\n  ( 8, 'BiciRuta',      'Navegacion',    0,    NULL,   950, 5),\n  ( 9, 'ZombieLab',     'Juegos',        1.49, 3.5,  11000, 4),\n  (10, 'PresupuestoYa', 'Finanzas',      3.99, 4.8,   1800, 3),\n  (11, 'FotoMix',       'Social',        0,    4.0,  19500, 5),\n  (12, 'AulaViva',      'Educacion',     0,    NULL,   400, 2);\n\n-- ---------------------------------------------------------------------\n-- 3. usuarios: personas registradas en la tienda\n--    email NULL = el usuario no registró correo\n-- ---------------------------------------------------------------------\nCREATE TABLE usuarios (\n  id      INTEGER PRIMARY KEY,\n  nombre  TEXT    NOT NULL,\n  ciudad  TEXT    NOT NULL,\n  email   TEXT\n);\n\nINSERT INTO usuarios (id, nombre, ciudad, email) VALUES\n  (1, 'Laura Gómez',    'Bogotá',       'laura.gomez@mail.com'),\n  (2, 'Santiago Ruiz',  'Medellín',     'santi.ruiz@mail.com'),\n  (3, 'Valentina Díaz', 'Pereira',      'vale.diaz@mail.com'),\n  (4, 'Mateo Herrera',  'Cali',         'mateo.h@mail.com'),\n  (5, 'Camila Torres',  'Bogotá',       'cami.torres@mail.com'),\n  (6, 'Andrés Pérez',   'Barranquilla', NULL),\n  (7, 'Sofía Castro',   'Pereira',      'sofia.castro@mail.com'),\n  (8, 'Juan Morales',   'Bogotá',       'juan.morales@mail.com');\n\n-- ---------------------------------------------------------------------\n-- 4. descargas: qué usuario descargó qué aplicación\n-- ---------------------------------------------------------------------\nCREATE TABLE descargas (\n  usuario_id INTEGER NOT NULL REFERENCES usuarios(id),\n  app_id     INTEGER NOT NULL REFERENCES aplicaciones(id),\n  PRIMARY KEY (usuario_id, app_id)\n);\n\nINSERT INTO descargas (usuario_id, app_id) VALUES\n  (1, 1), (1, 3), (1, 6),\n  (2, 3), (2, 5), (2, 9),\n  (3, 2), (3, 4), (3, 10),\n  (4, 1), (4, 5),\n  (5, 3), (5, 11),\n  (7, 2), (7, 7);\n\n-- ---------------------------------------------------------------------\n-- 5. favoritas: apps que cada usuario marcó como favoritas\n-- ---------------------------------------------------------------------\nCREATE TABLE favoritas (\n  usuario_id INTEGER NOT NULL REFERENCES usuarios(id),\n  app_id     INTEGER NOT NULL REFERENCES aplicaciones(id),\n  PRIMARY KEY (usuario_id, app_id)\n);\n\nINSERT INTO favoritas (usuario_id, app_id) VALUES\n  (1, 1), (1, 6),\n  (2, 5),\n  (3, 4), (3, 10),\n  (5, 11),\n  (7, 7);\n\n-- =====================================================================\n--  CONSULTA DE VERIFICACIÓN\n--  Resultado esperado (una sola fila):\n--  desarrolladores = 5 | aplicaciones = 12 | usuarios = 8 |\n--  descargas = 15 | favoritas = 7\n-- =====================================================================\nSELECT\n  (SELECT COUNT(*) FROM desarrolladores) AS desarrolladores,\n  (SELECT COUNT(*) FROM aplicaciones)    AS aplicaciones,\n  (SELECT COUNT(*) FROM usuarios)        AS usuarios,\n  (SELECT COUNT(*) FROM descargas)       AS descargas,\n  (SELECT COUNT(*) FROM favoritas)       AS favoritas;\n";
+
+// =========================================================
+// UTILIDADES
+// =========================================================
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const KW = /^(SELECT|FROM|WHERE|AS|ORDER|BY|GROUP|HAVING|COUNT|UNION|ALL|INTERSECT|EXCEPT|AND|OR|NOT|BETWEEN|IN|LIKE|IS|NULL|DESC|ASC|CREATE|TABLE|INSERT|INTO|VALUES|DISTINCT)$/i;
+function hl(sql){
+  const re = /(--[^\n]*)|('(?:[^']|'')*')|([A-Za-z_][A-Za-z_0-9]*)|(\d+(?:\.\d+)?)|([\s\S])/g;
+  let out = '', m;
+  while((m = re.exec(sql))){
+    if(m[1]) out += `<span class="c">${esc(m[1])}</span>`;
+    else if(m[2]) out += `<span class="s">${esc(m[2])}</span>`;
+    else if(m[3]) out += KW.test(m[3]) ? `<span class="k">${esc(m[3])}</span>` : esc(m[3]);
+    else if(m[4]) out += `<span class="n">${esc(m[4])}</span>`;
+    else out += esc(m[5]);
+  }
+  return out;
+}
+function table(id, caption){
+  const r = R[id];
+  if(!r) return `<div class="err">Resultado no disponible (${esc(id)})</div>`;
+  if(r.error) return `<div class="err">Error de SQLite: ${esc(r.error)}</div>`;
+  const n = r.rows.length;
+  const cap = caption !== undefined ? caption : `${n} ${n===1?'fila':'filas'}`;
+  if(n===0) return `<div class="table-wrap"><table class="data"><caption>${cap}</caption><thead><tr>${r.cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody><tr><td colspan="${r.cols.length}" class="null">(sin filas)</td></tr></tbody></table></div>`;
+  return `<div class="table-wrap"><table class="data"><caption>${cap}</caption><thead><tr>${r.cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${
+    r.rows.map(row=>`<tr>${row.map(v=>v==='NULL'?`<td class="null">NULL</td>`:`<td>${esc(v)}</td>`).join('')}</tr>`).join('')
+  }</tbody></table></div>`;
+}
+let uid = 0;
+function ex(id, label, opts){
+  opts = opts || {};
+  const rid = 'rv' + (uid++);
+  const isErr = R[id] && R[id].error;
+  const btnTxt = isErr ? 'Ver qué pasa' : 'Ver resultado';
+  return `<div class="ex">
+    <div class="ex-head">${label ? `<span class="pill">${label}</span>` : '<span></span>'}
+      <div class="ex-actions">
+        <button class="mini" type="button" data-copy="${id}">Copiar</button>
+        <button class="reveal-btn" type="button" data-reveal="${rid}" data-show="${btnTxt}" data-hide="Ocultar">${opts.open?'Ocultar':btnTxt}</button>
+      </div>
+    </div>
+    <pre class="code">${hl(Q[id])}</pre>
+    <div class="reveal-box${opts.open?' show':''}" id="${rid}">${table(id)}${opts.after||''}</div>
+  </div>`;
+}
+let tg = 0;
+function tabs(items){
+  const g = 'tg' + (tg++);
+  return `<div class="tabset"><div class="tabs" role="tablist">${
+    items.map((it,i)=>`<button class="tab${i===0?' active':''}" type="button" role="tab" data-tabgroup="${g}" data-tabidx="${i}">${it[0]}</button>`).join('')
+  }</div>${
+    items.map((it,i)=>`<div class="tabpanel${i===0?' active':''}" data-tabgroup="${g}" data-tabidx="${i}">${it[1]}</div>`).join('')
+  }</div>`;
+}
+let sg = 0;
+function steps(items){
+  const g = 'sg' + (sg++);
+  return `<div class="steps">${
+    items.map((it,i)=>`<button class="stepbtn${i===0?' active':''}" type="button" data-stepgroup="${g}" data-stepidx="${i}">${it[0]}</button>`).join('')
+  }</div>${
+    items.map((it,i)=>`<div class="steppanel${i===0?' active':''}" data-stepgroup="${g}" data-stepidx="${i}">${it[1]}</div>`).join('')
+  }`;
+}
+function quiz(question, options, correct, okMsg, noMsg){
+  return `<div class="quiz card" data-quizroot data-correct="${correct}">
+    <div class="qtext">${question}</div>
+    ${options.map((o,i)=>`<button class="choice" type="button" data-idx="${i}">${o}</button>`).join('')}
+    <div class="feedback" data-ok="${esc(okMsg)}" data-no="${esc(noMsg)}"></div>
+  </div>`;
+}
+const FAM = {
+  comp:{name:'Comparación', short:'COMP'},
+  arit:{name:'Aritmético', short:'ARIT'},
+  logi:{name:'Lógico', short:'LÓG'},
+  espe:{name:'Especial', short:'ESP'},
+  conj:{name:'Conjuntos', short:'CONJ'}
+};
+
+// =========================================================
+// DIAPOSITIVAS
+// =========================================================
+const slides = [];
+const S = o => slides.push(o);
+
+// 1. Portada
+S({cls:'cover', eyebrow:'Implementación de Bases de Datos · Programa DAM (SENA) · Semana 2', title:'Operadores DML',
+body:`
+<p class="lede">Comparación, aritméticos, lógicos, especiales y de conjuntos: las piezas con las que construyes condiciones y cálculos en tus consultas SQL.</p>
+<div class="grid3">
+  <div class="card"><h3>Trabajo autónomo</h3><p>Avanza a tu ritmo. Tiempo sugerido: <b>60 minutos</b>, incluida la actividad interactiva.</p></div>
+  <div class="card"><h3>Qué necesitas</h3><p>Navegador, <b>SQL Online</b> con motor <b>SQLite</b>, el script <code>tiendaapp_semana2.sql</code> y el documento de apoyo.</p></div>
+  <div class="card"><h3>Cómo navegar</h3><p>Botones inferiores, teclas <span class="kbd">←</span> <span class="kbd">→</span> o deslizando en el celular.</p></div>
+</div>
+<div class="callout tip"><strong>Consejo:</strong> no te limites a leer. Cada ejemplo tiene un botón <b>Copiar</b>: pégalo en SQL Online, predice el resultado y luego compáralo con <b>Ver resultado</b>.</div>
+`});
+
+// 2. Objetivos y ruta
+S({eyebrow:'Ruta de la sesión', title:'¿Qué vas a lograr hoy?',
+body:`
+<p class="lede">Al terminar serás capaz de:</p>
+<ul>
+  <li>Filtrar filas con operadores de <b>comparación</b> sobre números y texto.</li>
+  <li>Calcular nuevas columnas con operadores <b>aritméticos</b> y evitar la trampa de la división entera.</li>
+  <li>Combinar condiciones con <b>AND, OR y NOT</b> respetando la precedencia.</li>
+  <li>Usar los operadores <b>especiales</b> BETWEEN, IN, LIKE e IS NULL.</li>
+  <li>Unir, intersectar y restar resultados con <b>UNION, UNION ALL, INTERSECT y EXCEPT</b>.</li>
+  <li>Identificar a qué familia pertenece cada operador dentro de una consulta real.</li>
+</ul>
+<div class="agenda">
+  <div class="num">01</div><div>Base de datos TiendaApp y carga en SQL Online</div><div class="min">8 min</div>
+  <div class="num">02</div><div>Comparación y aritméticos</div><div class="min">12 min</div>
+  <div class="num">03</div><div>Lógicos y precedencia</div><div class="min">8 min</div>
+  <div class="num">04</div><div>Especiales: BETWEEN, IN, LIKE, IS NULL</div><div class="min">10 min</div>
+  <div class="num">05</div><div>Conjuntos, errores comunes y consulta integradora</div><div class="min">12 min</div>
+  <div class="num">06</div><div>Actividad interactiva y autoevaluación</div><div class="min">10 min</div>
+</div>
+`});
+
+// 3. Caso de estudio: esquema
+S({section:true, eyebrow:'01 · Caso de estudio', title:'TiendaApp crece: de 1 a 5 tablas',
+body:`
+<p class="lede">En la semana 1 trabajaste con la tabla <code>aplicaciones</code>. Para practicar operadores de conjuntos necesitamos más tablas. Las apps 1 a 6 son <b>las mismas</b> que ya conoces.</p>
+<div class="schema">
+  <div class="tcard"><header>desarrolladores</header><ul><li>id<span class="pk">PK</span></li><li>nombre</li><li>pais</li><li>email</li></ul><footer>5 filas · empresas que publican apps</footer></div>
+  <div class="tcard"><header>aplicaciones</header><ul><li>id<span class="pk">PK</span></li><li>nombre</li><li>categoria</li><li>precio</li><li>calificacion</li><li>descargas</li><li>desarrollador_id<span class="fk">FK</span></li></ul><footer>12 filas · 2 sin calificación (NULL)</footer></div>
+  <div class="tcard"><header>usuarios</header><ul><li>id<span class="pk">PK</span></li><li>nombre</li><li>ciudad</li><li>email</li></ul><footer>8 filas · 1 sin email (NULL)</footer></div>
+  <div class="tcard"><header>descargas</header><ul><li>usuario_id<span class="fk">FK</span></li><li>app_id<span class="fk">FK</span></li></ul><footer>15 filas · quién descargó qué</footer></div>
+  <div class="tcard"><header>favoritas</header><ul><li>usuario_id<span class="fk">FK</span></li><li>app_id<span class="fk">FK</span></li></ul><footer>7 filas · apps marcadas como favoritas</footer></div>
+</div>
+<div class="callout note"><strong>Todavía no usamos JOIN</strong> (llega en la semana 5). Cuando necesitemos pasar de un <code>id</code> a un nombre usaremos <code>WHERE id IN (subconsulta)</code>, que verás paso a paso más adelante.</div>
+`});
+
+// 4. Datos
+S({eyebrow:'01 · Caso de estudio', title:'Los datos con los que vas a trabajar',
+body:`
+<p class="lede">Revisa las tablas antes de consultar: predecir el resultado es la mejor forma de comprobar que entiendes cada operador.</p>
+${tabs([
+  ['aplicaciones', table('T_aplicaciones','aplicaciones · precio en dólares (0 = gratuita)')],
+  ['desarrolladores', table('T_desarrolladores','desarrolladores')],
+  ['usuarios', table('T_usuarios','usuarios')],
+  ['descargas', table('T_descargas','descargas (usuario_id, app_id)')],
+  ['favoritas', table('T_favoritas','favoritas (usuario_id, app_id)')]
+])}
+`});
+
+// 5. Carga en SQL Online
+S({eyebrow:'01 · Caso de estudio', title:'Crea la base de datos en SQL Online',
+body:`
+<div class="grid2">
+  <div class="card">
+    <h3>Pasos</h3>
+    <ul>
+      <li>Entra a <b>sqliteonline.com</b> y confirma que el motor activo es <b>SQLite</b>.</li>
+      <li>Abre el archivo <code>tiendaapp_semana2.sql</code> o usa el botón de abajo para copiar el script completo.</li>
+      <li>Pégalo en el editor y presiona <b>Run</b>.</li>
+      <li>Ejecuta la consulta de verificación de la derecha.</li>
+    </ul>
+    <p style="margin-top:12px;"><button class="navbtn primary" type="button" data-copy="__SCRIPT__">Copiar script completo</button></p>
+    <p style="margin-top:10px; font-size:14px; color:var(--ink-soft);">Si algo sale mal, vuelve a ejecutar el script: borra las tablas y las crea de nuevo con los datos originales.</p>
+  </div>
+  <div class="card">
+    <h3>Verificación</h3>
+    ${ex('VERIF','Debe devolver una sola fila')}
+  </div>
+</div>
+<div class="callout note"><strong>Nota sobre la visualización:</strong> SQLite guarda <code>precio</code> como número decimal. Según la herramienta, un precio de 0 puede verse como <code>0</code> o como <code>0.0</code>; ambos son el mismo valor.</div>
+`});
+
+// 6. ¿Qué es un operador?
+S({eyebrow:'Conceptos', title:'¿Qué es un operador?',
+body:`
+<p class="lede">Un <b>operador</b> es un símbolo o palabra reservada que indica una operación sobre uno o más valores (operandos). El resultado puede ser un valor calculado o un valor de verdad: verdadero, falso o desconocido.</p>
+<div class="anatomy">
+  <div>precio<small>operando</small></div>
+  <div class="op">&gt;=<small>operador</small></div>
+  <div>2<small>operando</small></div>
+  <div style="border-style:solid;">→ verdadero / falso<small>resultado</small></div>
+</div>
+<div class="famgrid">
+  <div class="famcard fam comp"><b>Comparación</b><span class="mono">= &lt;&gt; != &gt; &lt; &gt;= &lt;=</span><p style="font-size:13.5px;margin-top:6px;">Comparan dos valores.</p></div>
+  <div class="famcard fam arit"><b>Aritméticos</b><span class="mono">+ - * / %</span><p style="font-size:13.5px;margin-top:6px;">Calculan valores numéricos.</p></div>
+  <div class="famcard fam logi"><b>Lógicos</b><span class="mono">AND OR NOT</span><p style="font-size:13.5px;margin-top:6px;">Combinan o niegan condiciones.</p></div>
+  <div class="famcard fam espe"><b>Especiales</b><span class="mono">BETWEEN IN LIKE IS NULL</span><p style="font-size:13.5px;margin-top:6px;">Resumen condiciones frecuentes.</p></div>
+  <div class="famcard fam conj"><b>Conjuntos</b><span class="mono">UNION INTERSECT EXCEPT</span><p style="font-size:13.5px;margin-top:6px;">Combinan resultados de consultas.</p></div>
+</div>
+<div class="grid2">
+  <div class="callout tip"><strong>¿Dónde aparecen?</strong> En el <code>SELECT</code> para calcular columnas, en el <code>WHERE</code> y el <code>HAVING</code> para filtrar, y <b>entre dos consultas</b> completas en el caso de los operadores de conjuntos.</div>
+  <div class="callout note"><strong>Sobre la clasificación:</strong> algunas documentaciones (W3Schools, SQL Server) incluyen BETWEEN, IN y LIKE dentro de los lógicos. En este curso los agrupamos como <b>especiales</b> para estudiarlos por separado.</div>
+</div>
+`});
+
+// 7. Comparación
+S({section:true, eyebrow:'02 · Operadores de comparación', title:'Comparar dos valores',
+body:`
+<div class="grid2">
+  <div class="table-wrap"><table class="data ops">
+    <thead><tr><th>Operador</th><th>Significado</th><th>Ejemplo</th></tr></thead>
+    <tbody>
+      <tr><td>=</td><td>igual a</td><td><code>precio = 0</code></td></tr>
+      <tr><td>&lt;&gt; o !=</td><td>diferente de</td><td><code>categoria &lt;&gt; 'Juegos'</code></td></tr>
+      <tr><td>&gt;</td><td>mayor que</td><td><code>descargas &gt; 10000</code></td></tr>
+      <tr><td>&lt;</td><td>menor que</td><td><code>precio &lt; 2</code></td></tr>
+      <tr><td>&gt;=</td><td>mayor o igual que</td><td><code>calificacion &gt;= 4.5</code></td></tr>
+      <tr><td>&lt;=</td><td>menor o igual que</td><td><code>id &lt;= 4</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="ex-col" style="display:flex;flex-direction:column;gap:10px;">
+    <p><b>Nivel 1.</b> ¿Cuáles apps son gratuitas? Antes de ver el resultado, cuéntalas en la tabla de datos.</p>
+    ${ex('C1','Nivel 1 · igualdad')}
+  </div>
+</div>
+<div class="callout tip"><strong><code>&lt;&gt;</code> y <code>!=</code> hacen lo mismo.</strong> <code>&lt;&gt;</code> es la forma del estándar SQL; <code>!=</code> la aceptan SQLite, MySQL, PostgreSQL y SQL Server.</div>
+`});
+
+// 8. Comparación: niveles 2 y 3
+S({eyebrow:'02 · Operadores de comparación', title:'Números, texto y una sorpresa con NULL',
+body:`
+${steps([
+  ['Nivel 2 · números', `${ex('C2','calificación de 4.5 o más')}<p>El valor <b>4.5 sí aparece</b> (RitmoFit) porque <code>&gt;=</code> incluye el límite.</p>`],
+  ['Nivel 2 · texto', `${ex('C3','todas menos Juegos')}<p>El texto va entre <b>comillas simples</b>. Las comillas dobles se reservan para nombres de columnas.</p>`],
+  ['Nivel 3 · mayúsculas', `${ex('C5','¿cuántas hay en la categoría "juegos"?')}<p>Devuelve <b>0</b>: con <code>=</code>, SQLite distingue mayúsculas de minúsculas. <code>'juegos'</code> no es igual a <code>'Juegos'</code>.</p>`],
+  ['Nivel 3 · NULL', `<div class="grid2"><div>${ex('C2','≥ 4.5 → 4 apps')}</div><div>${ex('C4','< 4.5 → ¿cuántas?')}</div></div>
+   <div class="callout warn"><strong>4 + 6 = 10, pero hay 12 apps.</strong> BiciRuta y AulaViva tienen <code>calificacion</code> en <code>NULL</code> (desconocida). Una comparación con NULL no es verdadera ni falsa: es <b>desconocida</b>, y el WHERE descarta esas filas. Para encontrarlas necesitarás <code>IS NULL</code>.</div>`]
+])}
+`});
+
+// 9. Aritméticos
+S({section:true, eyebrow:'03 · Operadores aritméticos', title:'Calcular nuevas columnas',
+body:`
+<div class="grid2">
+  <div class="table-wrap"><table class="data ops">
+    <thead><tr><th>Operador</th><th>Operación</th><th>Ejemplo</th></tr></thead>
+    <tbody>
+      <tr><td>+</td><td>suma</td><td><code>descargas + 100</code></td></tr>
+      <tr><td>-</td><td>resta</td><td><code>precio - 0.5</code></td></tr>
+      <tr><td>*</td><td>multiplicación</td><td><code>precio * descargas</code></td></tr>
+      <tr><td>/</td><td>división</td><td><code>descargas / 1000</code></td></tr>
+      <tr><td>%</td><td>módulo (residuo)</td><td><code>id % 2</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout tip"><strong>El cálculo no modifica la tabla.</strong> La columna calculada solo existe en el resultado de la consulta. Con <code>AS</code> le das un nombre (alias) legible. Precedencia: primero <code>* / %</code>, después <code>+ -</code>; usa paréntesis si dudas.</div>
+</div>
+${tabs([
+  ['Nivel 1 · ingresos', `${ex('A1','ingresos estimados = precio × descargas')}`],
+  ['Nivel 2 · IVA 19 %', `${ex('A2','precio con IVA')}<p>Los decimales largos se redondean con <code>ROUND</code>, que verás en la semana 3.</p>`]
+])}
+`});
+
+// 10. División entera y aritméticos en WHERE
+S({eyebrow:'03 · Operadores aritméticos', title:'La trampa de la división entera',
+body:`
+<div class="grid2">
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    ${ex('A3','Nivel 2 · predice los tres valores')}
+    <div class="callout warn"><strong>Entero ÷ entero = entero.</strong> En SQLite (y en SQL Server y PostgreSQL) <code>7 / 2</code> devuelve <b>3</b>: se descarta la parte decimal. Si uno de los operandos es decimal (<code>2.0</code>), el resultado es <b>3.5</b>. MySQL, en cambio, devuelve 3.5.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    ${ex('A4','Nivel 2 · miles y sobrante')}
+  </div>
+</div>
+${ex('A5','Nivel 3 · aritmética dentro del WHERE: apps que generaron más de 15 000 dólares')}
+`});
+
+// 11. Lógicos
+S({section:true, eyebrow:'04 · Operadores lógicos', title:'AND, OR y NOT',
+body:`
+<div class="grid3">
+  <div class="famcard fam logi"><b>AND</b><p style="font-size:14.5px;">Verdadero solo si <b>ambas</b> condiciones son verdaderas. Cada AND hace el filtro <b>más estricto</b>.</p></div>
+  <div class="famcard fam logi"><b>OR</b><p style="font-size:14.5px;">Verdadero si <b>al menos una</b> condición es verdadera. Cada OR hace el filtro <b>más amplio</b>.</p></div>
+  <div class="famcard fam logi"><b>NOT</b><p style="font-size:14.5px;">Invierte el valor de una condición: lo verdadero pasa a falso y viceversa.</p></div>
+</div>
+${tabs([
+  ['AND', ex('L1','juegos gratuitos')],
+  ['OR', ex('L2','apps sociales o de finanzas')],
+  ['NOT', `${ex('L3','apps que no son gratuitas')}<p><code>NOT (precio = 0)</code> equivale a <code>precio &lt;&gt; 0</code>. NOT resulta más útil delante de operadores especiales: <code>NOT IN</code>, <code>NOT LIKE</code>, <code>IS NOT NULL</code>.</p>`]
+])}
+`});
+
+// 12. Precedencia
+S({eyebrow:'04 · Operadores lógicos', title:'Precedencia: NOT → AND → OR',
+body:`
+<p class="lede">Queremos los <b>juegos o apps de productividad que sean de pago</b>. Compara las dos consultas: solo cambian los paréntesis.</p>
+<div class="grid2">
+  <div>${ex('P1','Sin paréntesis')}</div>
+  <div>${ex('P2','Con paréntesis')}</div>
+</div>
+<div class="callout warn"><strong>¿Por qué la primera devuelve 4 filas?</strong> SQL evalúa <code>AND</code> antes que <code>OR</code>, así que la lee como <code>categoria = 'Juegos' OR (categoria = 'Productividad' AND precio &gt; 0)</code>: aparecen <b>todos</b> los juegos, incluso los gratuitos. La segunda agrupa primero las categorías y luego exige <code>precio &gt; 0</code>.</div>
+<div class="callout tip"><strong>Regla práctica:</strong> cuando mezcles AND y OR, escribe siempre los paréntesis, aunque no sean obligatorios. Tu consulta será correcta y más fácil de leer.</div>
+`});
+
+// 13. BETWEEN e IN
+S({section:true, eyebrow:'05 · Operadores especiales', title:'BETWEEN e IN',
+body:`
+<div class="grid2">
+  <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+    <h3><span class="chip fam espe">BETWEEN a AND b</span></h3>
+    <p>Rango <b>inclusivo</b>: incluye los dos límites. Equivale a <code>col &gt;= a AND col &lt;= b</code>.</p>
+    ${ex('B1','descargas entre 3 000 y 15 000')}
+    <p style="font-size:14px;color:var(--ink-soft);">PixelRun aparece con exactamente 15 000: el límite superior está incluido.</p>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+    <h3><span class="chip fam espe">IN (lista)</span></h3>
+    <p>Pertenencia a una lista. Equivale a varios <code>=</code> unidos con <code>OR</code>.</p>
+    ${tabs([
+      ['IN', ex('I1','Juegos o Social')],
+      ['NOT IN', ex('I2','usuarios fuera de Bogotá y Pereira')]
+    ])}
+  </div>
+</div>
+<div class="callout note"><strong>Compara:</strong> <code>categoria IN ('Juegos', 'Social')</code> es más corto y claro que <code>categoria = 'Juegos' OR categoria = 'Social'</code>, y devuelve lo mismo.</div>
+`});
+
+// 14. LIKE
+S({eyebrow:'05 · Operadores especiales', title:'LIKE: buscar por patrones de texto',
+body:`
+<div class="grid2">
+  <div class="table-wrap"><table class="data ops">
+    <thead><tr><th>Comodín</th><th>Representa</th><th>Ejemplo</th></tr></thead>
+    <tbody>
+      <tr><td>%</td><td>cero, uno o muchos caracteres</td><td><code>'S%'</code> empieza por S</td></tr>
+      <tr><td>_</td><td>exactamente un carácter</td><td><code>'_o%'</code> segunda letra «o»</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout note"><strong>En SQLite, LIKE no distingue mayúsculas de minúsculas</strong> en letras sin tilde: <code>'%plus%'</code> encuentra «NotasPlus». Recuerda que <code>=</code> sí las distingue. Otros motores, como PostgreSQL, se comportan distinto.</div>
+</div>
+${tabs([
+  ["'S%'", ex('K1','empieza por S')],
+  ["'%a'", ex('K2','termina en a')],
+  ["'%.co'", ex('K3','correos de dominio .co')],
+  ["'_o%'", ex('K4','segunda letra o')],
+  ["'%plus%'", ex('K5','contiene «plus» en cualquier posición')]
+])}
+`});
+
+// 15. IS NULL
+S({eyebrow:'05 · Operadores especiales', title:'IS NULL e IS NOT NULL',
+body:`
+<p class="lede"><code>NULL</code> no es cero ni texto vacío: significa <b>valor desconocido o ausente</b>. Por eso no se puede comparar con <code>=</code>.</p>
+${steps([
+  ['El error', `${ex('N1','comparar con = NULL')}<div class="callout warn">Devuelve <b>0</b> aunque hay dos apps sin calificación. <code>calificacion = NULL</code> nunca es verdadero: el resultado es desconocido.</div>`],
+  ['La forma correcta', `${ex('N2','IS NULL')}`],
+  ['En otra tabla', `${ex('N3','usuarios que no registraron email')}<p>Lo contrario es <code>IS NOT NULL</code>: lo usarás en la lista de contactos con UNION.</p>`]
+])}
+`});
+
+// 16. Conjuntos: concepto + Venn
+S({section:true, eyebrow:'06 · Operadores de conjuntos', title:'Combinar resultados de dos consultas',
+body:`
+<p class="lede">Laura (usuario 1) descargó las apps <b>1, 3 y 6</b>. Santiago (usuario 2) descargó <b>3, 5 y 9</b>. Elige un operador para ver qué filas conserva.</p>
+<div class="venn-wrap">
+  <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
+    <svg class="venn" viewBox="0 0 400 250" role="img" aria-label="Diagrama de Venn de las apps descargadas por Laura y Santiago">
+      <defs>
+        <clipPath id="vA"><circle cx="150" cy="135" r="95"/></clipPath>
+        <mask id="vNotA"><rect width="400" height="250" fill="white"/><circle cx="150" cy="135" r="95" fill="black"/></mask>
+        <mask id="vNotB"><rect width="400" height="250" fill="white"/><circle cx="250" cy="135" r="95" fill="black"/></mask>
+      </defs>
+      <circle class="rg" data-rg="a" cx="150" cy="135" r="95" mask="url(#vNotB)"/>
+      <circle class="rg" data-rg="b" cx="250" cy="135" r="95" mask="url(#vNotA)"/>
+      <circle class="rg" data-rg="ab" cx="250" cy="135" r="95" clip-path="url(#vA)"/>
+      <circle class="outline" cx="150" cy="135" r="95"/>
+      <circle class="outline" cx="250" cy="135" r="95"/>
+      <text class="ttl" x="95" y="28">Laura (1)</text>
+      <text class="ttl" x="248" y="28">Santiago (2)</text>
+      <text x="64" y="120">1 PixelRun</text>
+      <text x="64" y="155">6 NotasPlus</text>
+      <text x="200" y="130" text-anchor="middle">3</text>
+      <text x="200" y="148" text-anchor="middle">ChatNova</text>
+      <text class="twice" x="200" y="172" text-anchor="middle">× 2</text>
+      <text x="254" y="120">5 SkyBattle</text>
+      <text x="254" y="155">9 ZombieLab</text>
+    </svg>
+    <div class="setbtns">
+      <button class="setbtn" type="button" data-set="V_UNION">UNION</button>
+      <button class="setbtn" type="button" data-set="V_ALL">UNION ALL</button>
+      <button class="setbtn" type="button" data-set="V_INTER">INTERSECT</button>
+      <button class="setbtn" type="button" data-set="V_EXCEPT">EXCEPT</button>
+    </div>
+  </div>
+  <div id="set-panel" style="display:flex;flex-direction:column;gap:10px;">
+    <div class="callout tip">Pulsa un operador para ver la consulta, la región que conserva y su resultado.</div>
+  </div>
+</div>
+<div class="callout note"><strong>Reglas para combinar consultas:</strong> (1) el mismo <b>número de columnas</b> en ambos SELECT; (2) columnas de <b>tipos compatibles</b> y en el mismo orden; (3) los nombres del resultado salen de la <b>primera</b> consulta; (4) un solo <code>ORDER BY</code>, al <b>final</b>.</div>
+`});
+
+// 17. UNION / UNION ALL
+S({eyebrow:'06 · Operadores de conjuntos', title:'UNION y UNION ALL en TiendaApp',
+body:`
+${tabs([
+  ['Nivel 1 · UNION', `${ex('U1','apps descargadas o marcadas como favoritas')}<p>Las dos tablas suman <b>22 filas</b>, pero UNION elimina los repetidos y deja <b>10 apps distintas</b>. Las apps 8 y 12 no aparecen: nadie las ha descargado ni marcado.</p>`],
+  ['Nivel 2 · UNION ALL', `${ex('U2','UNION ALL conserva los repetidos')}<p>Usa <code>UNION ALL</code> cuando los duplicados importan (por ejemplo, para contar) o cuando sabes que no los hay: es más rápido porque no busca repetidos.</p>`],
+  ['Nivel 3 · lista de contactos', `${ex('U3','usuarios con email + desarrolladores')}<p>Tres ideas en una consulta: <code>IS NOT NULL</code> para excluir al usuario sin email, una <b>columna literal</b> (<code>'usuario'</code>, <code>'desarrollador'</code>) para saber de dónde viene cada fila y un único <code>ORDER BY</code> al final.</p>`]
+])}
+`});
+
+// 18. INTERSECT / EXCEPT
+S({eyebrow:'06 · Operadores de conjuntos', title:'INTERSECT y EXCEPT',
+body:`
+${tabs([
+  ['Nivel 1 · INTERSECT', `${ex('S1','apps que están en descargas Y en favoritas')}`],
+  ['Nivel 2 · EXCEPT', `${ex('S2','descargadas que nadie marcó como favoritas')}`],
+  ['Nivel 3 · con nombres', `${ex('S3','EXCEPT dentro de IN para mostrar nombres')}<p>La subconsulta entre paréntesis produce los ids 2, 3 y 9; <code>IN</code> los traduce a nombres. Así evitamos JOIN por ahora.</p>`],
+  ['Nivel 3 · apps sin descargas', `${ex('S4','apps que nadie ha descargado')}`],
+  ['El orden importa', `${ex('S5','favoritas EXCEPT descargas')}<p><code>A EXCEPT B</code> no es igual a <code>B EXCEPT A</code>. Aquí el resultado es vacío porque toda app favorita también fue descargada. INTERSECT y UNION, en cambio, dan lo mismo en cualquier orden.</p>`]
+])}
+<div class="callout note"><strong>Compatibilidad:</strong> SQLite, PostgreSQL y SQL Server soportan INTERSECT y EXCEPT. En Oracle, EXCEPT se llama <code>MINUS</code>; MySQL los incluye desde la versión 8.0.31.</div>
+`});
+
+// 19. Errores comunes
+S({eyebrow:'Errores comunes', title:'Lo que suele salir mal (y cómo leer el error)',
+body:`
+${tabs([
+  ['Columnas distintas', `${ex('E1','2 columnas UNION 1 columna')}<p>Cada SELECT debe devolver el mismo número de columnas. Corrección: agrega <code>email</code> al segundo SELECT o quítalo del primero.</p>`],
+  ['ORDER BY en medio', `${ex('E2','ORDER BY antes de UNION')}<p>El ordenamiento se aplica al resultado combinado, por eso va una sola vez al final.</p>`],
+  ['= NULL', `<pre class="code">${hl("WHERE calificacion = NULL      -- incorrecto: 0 filas\nWHERE calificacion IS NULL     -- correcto")}</pre>`],
+  ['AND sin paréntesis', `<pre class="code">${hl("WHERE categoria = 'Juegos' OR categoria = 'Social' AND precio > 0\n-- se lee: 'Juegos' OR ('Social' AND precio > 0)\nWHERE (categoria = 'Juegos' OR categoria = 'Social') AND precio > 0")}</pre>`],
+  ['Comillas y mayúsculas', `<pre class="code">${hl("WHERE categoria = \"Juegos\"   -- evita: comillas dobles son para identificadores\nWHERE categoria = 'juegos'   -- 0 filas: = distingue mayúsculas\nWHERE categoria = 'Juegos'   -- correcto")}</pre>`]
+])}
+`});
+
+// 20. Integradora
+S({eyebrow:'Consulta integradora', title:'Paso a paso: la lista de la campaña',
+body:`
+<p class="lede">El equipo de mercadeo necesita una lista, sin repetidos y ordenada, con: (a) apps de desarrolladores <b>colombianos</b> con calificación de <b>4.5 o más</b>, y (b) apps que alguien marcó como <b>favoritas</b> y cuestan <b>máximo 2 dólares</b>.</p>
+${steps([
+  ['Paso 1', ex('G1','comparación con texto')],
+  ['Paso 2', `${ex('G2','IN con subconsulta + AND + >=')}`],
+  ['Paso 3', `${ex('G3','IN + AND + BETWEEN')}`],
+  ['Paso 4', `${ex('G4','UNION + ORDER BY')}<p>MapaFacil y PixelRun cumplen las dos partes, pero <b>UNION</b> las muestra una sola vez: 3 + 5 filas se convierten en 6.</p>`]
+])}
+<div class="legend">
+  <span class="fam comp"><i></i>comparación: = &gt;=</span>
+  <span class="fam logi"><i></i>lógico: AND</span>
+  <span class="fam espe"><i></i>especial: IN, BETWEEN</span>
+  <span class="fam conj"><i></i>conjuntos: UNION</span>
+</div>
+`});
+
+// 21. Actividad nivel 1
+S({section:true, eyebrow:'Actividad interactiva · Nivel 1', title:'Clasifica cada operador en su familia',
+body:`
+<p class="lede">Selecciona una tarjeta y luego haz clic en la familia correcta (en computador también puedes arrastrarla). Cuando termines, pulsa <b>Comprobar</b>.</p>
+<div class="pool" id="pool" data-bin="pool" aria-label="Operadores sin clasificar"></div>
+<div class="bins" id="bins">
+  <div class="bin fam comp" data-bin="comp"><h4>Comparación</h4><div class="drop"></div></div>
+  <div class="bin fam arit" data-bin="arit"><h4>Aritmético</h4><div class="drop"></div></div>
+  <div class="bin fam logi" data-bin="logi"><h4>Lógico</h4><div class="drop"></div></div>
+  <div class="bin fam espe" data-bin="espe"><h4>Especial</h4><div class="drop"></div></div>
+  <div class="bin fam conj" data-bin="conj"><h4>Conjuntos</h4><div class="drop"></div></div>
+</div>
+<div class="actbar">
+  <button class="navbtn primary" type="button" id="sort-check">Comprobar</button>
+  <button class="navbtn" type="button" id="sort-reset">Reiniciar</button>
+  <button class="navbtn" type="button" id="sort-solve">Ver solución</button>
+  <span class="score" id="sort-score" aria-live="polite"></span>
+</div>
+<div class="feedback" id="sort-fb"></div>
+`});
+
+// 22. Actividad nivel 2
+S({eyebrow:'Actividad interactiva · Nivel 2', title:'Detecta los operadores dentro de consultas reales',
+body:`
+<p class="lede">Haz clic en cada operador marcado con línea punteada y asígnale su familia con los botones. Las consultas aumentan de complejidad. Todas funcionan en TiendaApp: puedes ejecutarlas.</p>
+<div class="catbar" id="catbar">
+  <button class="catbtn fam comp" type="button" data-cat="comp">Comparación</button>
+  <button class="catbtn fam arit" type="button" data-cat="arit">Aritmético</button>
+  <button class="catbtn fam logi" type="button" data-cat="logi">Lógico</button>
+  <button class="catbtn fam espe" type="button" data-cat="espe">Especial</button>
+  <button class="catbtn fam conj" type="button" data-cat="conj">Conjuntos</button>
+</div>
+<div id="detect"></div>
+<div class="actbar">
+  <button class="navbtn primary" type="button" id="det-check">Comprobar</button>
+  <button class="navbtn" type="button" id="det-reset">Reiniciar</button>
+  <span class="score" id="det-score" aria-live="polite"></span>
+</div>
+<div class="feedback" id="det-fb"></div>
+`});
+
+// 23. Autoevaluación
+S({eyebrow:'Autoevaluación (no calificable)', title:'¿Lo tienes claro?',
+body:`
+<div class="grid2">
+${quiz('1. ¿Qué devuelve <code>SELECT 7 / 2;</code> en SQLite?',
+  ['3.5','3','4','Un error: faltan decimales'], 1,
+  '¡Correcto! Entero dividido entre entero da un entero: se descarta el decimal.',
+  'No es correcto. En SQLite, 7 / 2 devuelve 3. Para obtener 3.5 escribe 7 / 2.0.')}
+${quiz('2. ¿Cuántas filas devuelve <code>WHERE calificacion = NULL</code> en TiendaApp?',
+  ['0','2','10','12'], 0,
+  '¡Correcto! Comparar con = NULL nunca es verdadero. Usa IS NULL.',
+  'No es correcto. = NULL siempre produce un resultado desconocido, así que devuelve 0 filas.')}
+${quiz('3. Tienes 15 filas en <code>descargas</code> y 7 en <code>favoritas</code>. ¿Cuántas filas devuelve <code>SELECT app_id FROM descargas UNION ALL SELECT app_id FROM favoritas</code>?',
+  ['10','7','22','15'], 2,
+  '¡Correcto! UNION ALL conserva todas las filas, incluidos los repetidos: 15 + 7 = 22.',
+  'No es correcto. UNION ALL no elimina repetidos: 15 + 7 = 22. Con UNION serían 10.')}
+${quiz('4. ¿Qué condición devuelve solo los juegos y apps sociales <b>de pago</b>?',
+  ["<code>categoria = 'Juegos' OR categoria = 'Social' AND precio &gt; 0</code>",
+   "<code>(categoria = 'Juegos' OR categoria = 'Social') AND precio &gt; 0</code>",
+   "<code>categoria = 'Juegos' AND categoria = 'Social' AND precio &gt; 0</code>",
+   "<code>NOT categoria IN ('Juegos', 'Social') AND precio &gt; 0</code>"], 1,
+  '¡Correcto! Los paréntesis hacen que el OR se evalúe antes que el AND.',
+  'No es correcto. Sin paréntesis el AND se evalúa primero; y una app no puede tener dos categorías a la vez.')}
+</div>
+`});
+
+// 24. Resumen
+S({eyebrow:'Resumen', title:'Tu hoja de referencia de la semana 2',
+body:`
+<div class="famgrid">
+  <div class="famcard fam comp"><b>Comparación</b><span class="mono">= &lt;&gt; != &gt; &lt; &gt;= &lt;=</span><p style="font-size:13.5px;margin-top:6px;">Texto entre comillas simples. Con NULL el resultado es desconocido.</p></div>
+  <div class="famcard fam arit"><b>Aritméticos</b><span class="mono">+ - * / %</span><p style="font-size:13.5px;margin-top:6px;">No cambian la tabla. Ojo: 7 / 2 = 3 en SQLite.</p></div>
+  <div class="famcard fam logi"><b>Lógicos</b><span class="mono">AND OR NOT</span><p style="font-size:13.5px;margin-top:6px;">Precedencia NOT → AND → OR. Usa paréntesis.</p></div>
+  <div class="famcard fam espe"><b>Especiales</b><span class="mono">BETWEEN IN LIKE IS NULL</span><p style="font-size:13.5px;margin-top:6px;">BETWEEN es inclusivo. % y _ en LIKE. Nunca = NULL.</p></div>
+  <div class="famcard fam conj"><b>Conjuntos</b><span class="mono">UNION [ALL] INTERSECT EXCEPT</span><p style="font-size:13.5px;margin-top:6px;">Mismas columnas, ORDER BY al final, EXCEPT depende del orden.</p></div>
+</div>
+<pre class="code">${hl("SELECT columnas, expresión_aritmética AS alias\nFROM tabla\nWHERE (condición OR condición) AND columna BETWEEN a AND b\nUNION\nSELECT columnas, expresión\nFROM otra_tabla\nWHERE columna IN (...) AND columna IS NOT NULL\nORDER BY 1;")}</pre>
+`});
+
+// 25. Actividad valorativa
+S({eyebrow:'Siguientes pasos', title:'Actividad valorativa y espacio de dudas',
+body:`
+<div class="grid2">
+  <div class="card">
+    <h3>1. Profundiza</h3>
+    <p>Lee el <b>documento de apoyo de la semana 2</b> y resuelve los ejercicios propuestos (no calificables) en SQL Online. Intenta cada uno antes de revisar las soluciones al final del documento.</p>
+  </div>
+  <div class="card">
+    <h3>2. Actividad valorativa</h3>
+    <ul>
+      <li>Cuestionario individual en <b>Google Forms</b>.</li>
+      <li><b>45 minutos</b> desde que inicias y <b>un único intento</b>.</li>
+      <li>Ten a mano la base de datos TiendaApp: algunas preguntas piden predecir resultados.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>3. ¿Tienes dudas?</h3>
+    <p>Escríbelas en el bloque final del cuestionario (no afecta tu calificación) y llévalas al <b>espacio de asesoría</b> con el docente.</p>
+  </div>
+  <div class="card">
+    <h3>Antes de empezar, verifica</h3>
+    <ul>
+      <li>¿Distingues las cinco familias de operadores?</li>
+      <li>¿Sabes por qué <code>= NULL</code> no funciona?</li>
+      <li>¿Puedes explicar la diferencia entre UNION y UNION ALL?</li>
+    </ul>
+  </div>
+</div>
+`});
+
+// 26. Cierre
+S({section:true, eyebrow:'Cierre', title:'Nos vemos en la semana 3',
+body:`
+<p class="lede">Próximo tema: <b>funciones de cadena y funciones matemáticas</b> (UPPER, LOWER, SUBSTR, REPLACE, ROUND…). Seguiremos usando TiendaApp, así que conserva tu script.</p>
+<p class="center-note" style="margin-top:16px;">Fin de la presentación · Semana 2 · Operadores DML</p>
+`});
+
+// =========================================================
+// RENDER Y NAVEGACIÓN
+// =========================================================
+const viewport = document.getElementById('viewport');
+const dotsEl = document.getElementById('dots');
+let current = 0;
+slides.forEach((s,i)=>{
+  const el = document.createElement('section');
+  el.className = 'slide' + (s.section ? ' section-slide' : '') + (s.cls ? ' '+s.cls : '');
+  el.id = 'slide-' + i;
+  el.setAttribute('aria-label', 'Diapositiva ' + (i+1) + ': ' + s.title);
+  el.innerHTML = `<div class="slide-inner">${s.eyebrow?`<div class="eyebrow">${s.eyebrow}</div>`:''}<h2>${s.title}</h2>${s.body}</div>`;
+  viewport.appendChild(el);
+  const d = document.createElement('button');
+  d.type = 'button';
+  d.className = 'dot' + (s.section ? ' section' : '');
+  d.setAttribute('aria-label', 'Ir a la diapositiva ' + (i+1));
+  d.addEventListener('click', ()=>goTo(i));
+  dotsEl.appendChild(d);
+});
+const total = slides.length;
+const pad = n => String(n).padStart(2,'0');
+function render(){
+  document.querySelectorAll('.slide').forEach((el,i)=>el.classList.toggle('active', i===current));
+  dotsEl.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active', i===current));
+  document.getElementById('counter').textContent = pad(current+1) + '/' + pad(total);
+  document.getElementById('progress-fill').style.width = (current/(total-1)*100) + '%';
+  document.getElementById('btn-prev').disabled = current===0;
+  document.getElementById('btn-next').disabled = current===total-1;
+  try{ history.replaceState(null,'','#'+(current+1)); }catch(e){}
+}
+function goTo(i){
+  const n = Math.max(0, Math.min(total-1, i));
+  if(n===current && document.querySelector('.slide.active')) return;
+  current = n; render();
+  const el = document.getElementById('slide-'+current); if(el) el.scrollTop = 0;
+}
+document.getElementById('btn-prev').addEventListener('click', ()=>goTo(current-1));
+document.getElementById('btn-next').addEventListener('click', ()=>goTo(current+1));
+document.addEventListener('keydown', e=>{
+  if(e.target.closest && e.target.closest('input,textarea,select')) return;
+  if(e.key==='ArrowRight' || e.key==='PageDown'){ e.preventDefault(); goTo(current+1); }
+  else if(e.key==='ArrowLeft' || e.key==='PageUp'){ e.preventDefault(); goTo(current-1); }
+  else if(e.key==='Home'){ goTo(0); } else if(e.key==='End'){ goTo(total-1); }
+});
+let touchX=null, touchY=null;
+viewport.addEventListener('touchstart', e=>{ touchX=e.touches[0].clientX; touchY=e.touches[0].clientY; }, {passive:true});
+viewport.addEventListener('touchend', e=>{
+  if(touchX===null) return;
+  const dx = e.changedTouches[0].clientX - touchX, dy = e.changedTouches[0].clientY - touchY;
+  const inScrollable = e.target.closest && e.target.closest('pre,.table-wrap,.pool,.bins');
+  if(!inScrollable && Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){ dx<0 ? goTo(current+1) : goTo(current-1); }
+  touchX=null;
+}, {passive:true});
+
+// tema
+document.getElementById('theme-btn').addEventListener('click', ()=>{
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+});
+
+// toast y copiar
+const toast = document.getElementById('toast');
+let toastT;
+function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(()=>toast.classList.remove('show'), 1800); }
+function copyText(txt){
+  const fallback = ()=>{
+    const ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly','');
+    ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+    let ok=false; try{ ok = document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    showToast(ok ? 'Copiado. Pégalo en SQL Online.' : 'No se pudo copiar: selecciona el texto manualmente.');
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(txt).then(()=>showToast('Copiado. Pégalo en SQL Online.'), fallback);
+  } else fallback();
+}
+
+// =========================================================
+// VENN
+// =========================================================
+const SETS = {
+  V_UNION:{on:['a','ab','b'], twice:false, txt:'<b>UNION</b> conserva todo lo que está en cualquiera de las dos consultas y elimina los repetidos: ChatNova (3) aparece una vez.'},
+  V_ALL:{on:['a','ab','b'], twice:true, txt:'<b>UNION ALL</b> conserva todo, incluidos los repetidos: ChatNova (3) aparece dos veces. El orden de las filas puede variar.'},
+  V_INTER:{on:['ab'], twice:false, txt:'<b>INTERSECT</b> conserva solo lo que está en las dos consultas: la app que descargaron ambos.'},
+  V_EXCEPT:{on:['a'], twice:false, txt:'<b>EXCEPT</b> conserva lo de la primera consulta que no está en la segunda: lo que descargó Laura y Santiago no.'}
+};
+function showSet(key){
+  const cfg = SETS[key];
+  document.querySelectorAll('.setbtn').forEach(b=>b.classList.toggle('active', b.dataset.set===key));
+  document.querySelectorAll('svg.venn .rg').forEach(r=>r.classList.toggle('on', cfg.on.includes(r.dataset.rg)));
+  document.querySelector('svg.venn .twice').classList.toggle('on', cfg.twice);
+  document.getElementById('set-panel').innerHTML = `${ex(key, '', {open:true})}<div class="callout tip">${cfg.txt}</div>`;
+}
+
+// =========================================================
+// ACTIVIDAD 1: CLASIFICAR
+// =========================================================
+const CARDS = [
+  ['=', 'comp'], ['<>', 'comp'], ['>=', 'comp'], ['<', 'comp'],
+  ['+', 'arit'], ['-', 'arit'], ['*', 'arit'], ['/', 'arit'], ['%', 'arit'],
+  ['AND', 'logi'], ['OR', 'logi'], ['NOT', 'logi'],
+  ['BETWEEN', 'espe'], ['IN', 'espe'], ['LIKE', 'espe'], ['IS NULL', 'espe'],
+  ['UNION', 'conj'], ['INTERSECT', 'conj'], ['EXCEPT', 'conj']
+];
+let selCard = null;
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function sortInit(){
+  const pool = document.getElementById('pool');
+  document.querySelectorAll('#bins .drop').forEach(d=>d.innerHTML='');
+  pool.innerHTML = '';
+  shuffle(CARDS.map((c,i)=>i)).forEach(i=>{
+    const b = document.createElement('button');
+    b.type='button'; b.className='opcard'; b.draggable=true;
+    b.dataset.cat = CARDS[i][1]; b.id = 'card'+i; b.textContent = CARDS[i][0];
+    b.setAttribute('aria-pressed','false');
+    pool.appendChild(b);
+  });
+  selCard = null;
+  document.getElementById('sort-score').textContent = '';
+  const fb = document.getElementById('sort-fb'); fb.className='feedback'; fb.textContent='';
+}
+function clearMarks(){ document.querySelectorAll('.opcard').forEach(c=>c.classList.remove('ok','bad')); document.getElementById('sort-score').textContent=''; }
+function selectCard(c){
+  document.querySelectorAll('.opcard.sel').forEach(x=>{ x.classList.remove('sel'); x.setAttribute('aria-pressed','false'); });
+  if(c && c!==selCard){ c.classList.add('sel'); c.setAttribute('aria-pressed','true'); selCard=c; } else selCard=null;
+}
+function moveCard(card, binName){
+  const target = binName==='pool' ? document.getElementById('pool') : document.querySelector(`#bins .bin[data-bin="${binName}"] .drop`);
+  if(!target || !card) return;
+  target.appendChild(card); clearMarks(); selectCard(null);
+}
+function sortCheck(){
+  const cards = [...document.querySelectorAll('.opcard')];
+  let ok=0, placed=0;
+  cards.forEach(c=>{
+    const bin = c.closest('.bin');
+    c.classList.remove('ok','bad');
+    if(bin){ placed++; if(bin.dataset.bin===c.dataset.cat){ ok++; c.classList.add('ok'); } else c.classList.add('bad'); }
+  });
+  document.getElementById('sort-score').textContent = `${ok} / ${cards.length} correctas`;
+  const fb = document.getElementById('sort-fb');
+  if(ok===cards.length){ fb.className='feedback show ok'; fb.textContent='¡Excelente! Clasificaste correctamente los 19 operadores.'; }
+  else {
+    fb.className='feedback show no';
+    const missing = cards.length - placed, wrong = placed - ok;
+    fb.textContent = (missing ? `Te faltan ${missing} tarjeta(s) por ubicar. ` : '') +
+      (wrong ? `Hay ${wrong} en la familia equivocada (en rojo): selecciónalas y muévelas. ` : '') +
+      'Pista: BETWEEN, IN, LIKE e IS NULL son especiales; UNION, INTERSECT y EXCEPT trabajan con consultas completas.';
+  }
+}
+function sortSolve(){
+  document.querySelectorAll('.opcard').forEach(c=>{ document.querySelector(`#bins .bin[data-bin="${c.dataset.cat}"] .drop`).appendChild(c); });
+  sortCheck();
+}
+
+// =========================================================
+// ACTIVIDAD 2: DETECTAR
+// =========================================================
+const DET = [
+  {lbl:'Consulta 1 · básica', parts:['SELECT nombre FROM aplicaciones WHERE precio ', ['=','comp'], ' 0;']},
+  {lbl:'Consulta 2 · intermedia', parts:['SELECT nombre, precio ', ['*','arit'], " descargas AS ingresos\nFROM aplicaciones\nWHERE categoria ", ['<>','comp'], " 'Juegos' ", ['AND','logi'], ' precio ', ['>','comp'], ' 0;']},
+  {lbl:'Consulta 3 · avanzada', parts:["SELECT nombre\nFROM aplicaciones\nWHERE (categoria ", ['IN','espe'], " ('Social', 'Juegos')\n       ", ['OR','logi'], ' descargas ', ['BETWEEN','espe'], ' 1000 ', ['AND','espe','between'], ' 5000)\n  ', ['AND','logi'], ' calificacion ', ['IS NOT NULL','espe'], ';']},
+  {lbl:'Consulta 4 · retadora', parts:['SELECT app_id FROM descargas\nWHERE usuario_id ', ['%','arit'], ' 2 ', ['=','comp'], ' 1\n', ['EXCEPT','conj'], '\nSELECT app_id FROM favoritas\nWHERE ', ['NOT','logi'], ' (usuario_id ', ['>=','comp'], ' 5);']}
+];
+let selTok = null;
+function detInit(){
+  const host = document.getElementById('detect');
+  let t = 0;
+  host.innerHTML = DET.map((q,qi)=>`<div class="detq"><span class="lbl">${q.lbl}</span><pre class="code">${
+    q.parts.map(p=> typeof p==='string' ? hl(p) : `<button type="button" class="optok" data-correct="${p[1]}" ${p[2]?`data-note="${p[2]}"`:''} id="tok${t++}">${esc(p[0])}<span class="tag"></span></button>`).join('')
+  }</pre></div>`).join('');
+  selTok = null;
+  document.getElementById('det-score').textContent='';
+  const fb=document.getElementById('det-fb'); fb.className='feedback'; fb.textContent='';
+}
+function selectTok(tok){
+  document.querySelectorAll('.optok.sel').forEach(x=>x.classList.remove('sel'));
+  selTok = tok || null;
+  if(selTok) selTok.classList.add('sel');
+}
+function assign(cat){
+  if(!selTok){ showToast('Primero haz clic en un operador de las consultas.'); return; }
+  selTok.dataset.as = cat;
+  selTok.querySelector('.tag').textContent = FAM[cat].short;
+  document.querySelectorAll('.optok').forEach(x=>x.classList.remove('ok','bad'));
+  document.getElementById('det-score').textContent='';
+  const all = [...document.querySelectorAll('.optok')];
+  const next = all.slice(all.indexOf(selTok)+1).concat(all).find(x=>!x.dataset.as);
+  selectTok(next);
+  if(next) next.focus({preventScroll:true});
+}
+function detCheck(){
+  const all = [...document.querySelectorAll('.optok')];
+  let ok=0, pending=0, betweenMiss=false;
+  all.forEach(x=>{
+    x.classList.remove('ok','bad');
+    if(!x.dataset.as){ pending++; return; }
+    if(x.dataset.as===x.dataset.correct){ ok++; x.classList.add('ok'); }
+    else { x.classList.add('bad'); if(x.dataset.note==='between') betweenMiss=true; }
+  });
+  document.getElementById('det-score').textContent = `${ok} / ${all.length} correctas`;
+  const fb = document.getElementById('det-fb');
+  if(ok===all.length){ fb.className='feedback show ok'; fb.textContent='¡Excelente! Identificaste los 16 operadores, incluida la trampa del AND dentro de BETWEEN.'; return; }
+  fb.className='feedback show no';
+  let msg = pending ? `Te faltan ${pending} operador(es) por clasificar. ` : '';
+  if(betweenMiss) msg += 'Ojo con la consulta 3: el AND de «BETWEEN 1000 AND 5000» no es un AND lógico, forma parte de la sintaxis de BETWEEN. ';
+  msg += 'Revisa los marcados con ✗: selecciónalos y asígnales otra familia.';
+  fb.textContent = msg;
+}
+
+// =========================================================
+// EVENTOS (delegación)
+// =========================================================
+document.addEventListener('click', e=>{
+  const t = e.target;
+  const cp = t.closest('[data-copy]');
+  if(cp){ const k = cp.dataset.copy; copyText(k==='__SCRIPT__' ? SQL_SCRIPT : Q[k]); return; }
+  const rv = t.closest('[data-reveal]');
+  if(rv){ const box = document.getElementById(rv.dataset.reveal); const on = box.classList.toggle('show'); rv.textContent = on ? rv.dataset.hide : rv.dataset.show; return; }
+  const tab = t.closest('.tab');
+  if(tab){ const g=tab.dataset.tabgroup, i=tab.dataset.tabidx;
+    document.querySelectorAll(`.tab[data-tabgroup="${g}"]`).forEach(b=>b.classList.toggle('active', b===tab));
+    document.querySelectorAll(`.tabpanel[data-tabgroup="${g}"]`).forEach(p=>p.classList.toggle('active', p.dataset.tabidx===i)); return; }
+  const sb = t.closest('.stepbtn');
+  if(sb){ const g=sb.dataset.stepgroup, i=sb.dataset.stepidx;
+    document.querySelectorAll(`.stepbtn[data-stepgroup="${g}"]`).forEach(b=>b.classList.toggle('active', b===sb));
+    document.querySelectorAll(`.steppanel[data-stepgroup="${g}"]`).forEach(p=>p.classList.toggle('active', p.dataset.stepidx===i)); return; }
+  const setb = t.closest('.setbtn');
+  if(setb){ showSet(setb.dataset.set); return; }
+  const ch = t.closest('.choice');
+  if(ch){ const root = ch.closest('[data-quizroot]'); if(root.dataset.answered) return; root.dataset.answered='1';
+    const correct = root.dataset.correct;
+    root.querySelectorAll('.choice').forEach(c=>{ c.disabled=true; if(c.dataset.idx===correct) c.classList.add('correct'); });
+    const fb = root.querySelector('.feedback');
+    if(ch.dataset.idx===correct){ fb.textContent = fb.dataset.ok; fb.className='feedback show ok'; }
+    else { ch.classList.add('wrong'); fb.textContent = fb.dataset.no; fb.className='feedback show no'; }
+    return; }
+  // actividad 1
+  const card = t.closest('.opcard');
+  if(card){ selectCard(card); return; }
+  const bin = t.closest('.bin, #pool');
+  if(bin && selCard){ moveCard(selCard, bin.dataset.bin); return; }
+  if(t.id==='sort-check'){ sortCheck(); return; }
+  if(t.id==='sort-reset'){ sortInit(); return; }
+  if(t.id==='sort-solve'){ sortSolve(); return; }
+  // actividad 2
+  const tok = t.closest('.optok');
+  if(tok){ selectTok(tok); return; }
+  const cb = t.closest('.catbtn');
+  if(cb){ assign(cb.dataset.cat); return; }
+  if(t.id==='det-check'){ detCheck(); return; }
+  if(t.id==='det-reset'){ detInit(); return; }
+});
+// arrastrar y soltar (actividad 1)
+document.addEventListener('dragstart', e=>{ const c = e.target.closest && e.target.closest('.opcard'); if(c){ e.dataTransfer.setData('text/plain', c.id); e.dataTransfer.effectAllowed='move'; } });
+document.addEventListener('dragover', e=>{ const b = e.target.closest && e.target.closest('.bin, #pool'); if(b){ e.preventDefault(); b.classList.add('over'); } });
+document.addEventListener('dragleave', e=>{ const b = e.target.closest && e.target.closest('.bin, #pool'); if(b && !b.contains(e.relatedTarget)) b.classList.remove('over'); });
+document.addEventListener('drop', e=>{ const b = e.target.closest && e.target.closest('.bin, #pool'); if(!b) return; e.preventDefault(); b.classList.remove('over');
+  const c = document.getElementById(e.dataTransfer.getData('text/plain')); if(c) moveCard(c, b.dataset.bin); });
+
+sortInit();
+detInit();
+const h = parseInt((location.hash||'').slice(1),10);
+current = (h>=1 && h<=total) ? h-1 : 0;
+render();
+})();
+</script>
+</body>
+</html>
