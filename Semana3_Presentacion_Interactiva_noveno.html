@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semana 3 — Variables, condicionales y bucles en Tinkercad</title>
+<style>
+  :root{
+    --accent:#1F5C99;
+    --accent-light:#EAF2FA;
+    --accent-dark:#123A61;
+    --ink:#22252A;
+    --ink-soft:#565B63;
+    --line:#E1E4E8;
+    --bg:#F7F9FB;
+    --card:#FFFFFF;
+    --ok:#1E8E5A;
+    --ok-bg:#E7F6EE;
+    --bad:#B42318;
+    --bad-bg:#FDECEA;
+    --warn:#B5560B;
+    --warn-bg:#FBECDD;
+    --note:#6B4E00;
+    --note-bg:#FFF6D6;
+    --radius:14px;
+    /* colores de las categorías de bloques de micro:bit en Tinkercad */
+    --k-ctl:#FFAB19;
+    --k-out:#4C97FF;
+    --k-inp:#9966FF;
+    --k-math:#40BF4A;
+    --k-var:#D65CD6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;
+    padding-bottom:84px;
+  }
+  /* ---------- barra superior ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg,var(--accent-dark),var(--accent));
+    color:#fff;padding:10px 16px 12px;
+    box-shadow:0 2px 10px rgba(15,40,70,.18);
+  }
+  .topbar-inner{max-width:960px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;}
+  .topbar .t-title{font-weight:700;font-size:15px;flex:1 1 260px;}
+  .topbar .t-title small{display:block;font-weight:400;opacity:.85;font-size:12px;letter-spacing:.04em;}
+  .topbar .t-prog{flex:1 1 240px;min-width:200px;}
+  .bar-track{background:rgba(255,255,255,.25);border-radius:999px;height:10px;overflow:hidden;}
+  .bar-fill{background:#fff;height:100%;width:0%;transition:width .35s ease;}
+  .t-prog .lbl{font-size:12px;opacity:.92;margin-top:4px;display:flex;justify-content:space-between;gap:8px;}
+
+  .wrap{max-width:960px;margin:0 auto;padding:22px 16px 20px;}
+
+  /* ---------- diapositivas ---------- */
+  .slide{display:none;animation:fade .25s ease;}
+  .slide.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:28px 30px 24px;box-shadow:0 4px 14px rgba(15,40,70,.05);
+  }
+  .eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--accent);font-weight:700;margin-bottom:4px;}
+  h1{font-size:30px;line-height:1.2;margin:0 0 10px;color:var(--accent-dark);}
+  h2{font-size:24px;line-height:1.25;margin:0 0 12px;color:var(--accent-dark);}
+  h3{font-size:17px;margin:18px 0 8px;color:var(--ink);}
+  p{margin:0 0 12px;}
+  .lead{font-size:17px;color:var(--ink-soft);}
+  .muted{color:var(--ink-soft);font-size:14px;}
+  a{color:var(--accent);}
+
+  .hero{
+    background:linear-gradient(160deg,var(--accent-dark),var(--accent));
+    color:#fff;border-radius:var(--radius);padding:40px 30px;text-align:center;
+  }
+  .hero h1{color:#fff;font-size:32px;}
+  .hero p{opacity:.93;max-width:660px;margin:0 auto 12px;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px;}
+  .badge{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);padding:5px 13px;border-radius:999px;font-size:13px;}
+
+  .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;}
+  .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;}
+  @media (max-width:760px){
+    .grid2,.grid3{grid-template-columns:1fr;}
+    .card{padding:22px 18px 20px;}
+    h1{font-size:26px;} h2{font-size:21px;}
+  }
+
+  .box{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:#FBFCFD;}
+  .box h3{margin-top:0;}
+  .tip{background:var(--accent-light);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--accent-dark);margin:14px 0;}
+  .tip > b:first-child{display:block;margin-bottom:2px;}
+  .warn{background:var(--warn-bg);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--warn);margin:14px 0;}
+  .warn > b:first-child{display:block;margin-bottom:2px;}
+  .note{background:var(--note-bg);border:1.5px dashed #D9B84A;border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--note);margin:14px 0;}
+  .note b.h{display:block;margin-bottom:4px;}
+  .men{border-left:5px solid var(--accent);background:var(--card);border-radius:10px;padding:14px 18px;margin:16px 0;font-size:14.5px;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+
+  ol.steps-list{padding-left:22px;margin:8px 0 12px;}
+  ol.steps-list li{margin:7px 0;}
+  ul.clean{padding-left:20px;margin:8px 0 12px;}
+  ul.clean li{margin:5px 0;}
+
+  .kbd{display:inline-block;background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:0 7px;font-size:13px;font-weight:600;color:var(--ink);}
+  .ui{display:inline-block;background:#fff;border:1.5px solid var(--accent);color:var(--accent-dark);border-radius:7px;padding:0 8px;font-size:13.5px;font-weight:600;white-space:nowrap;}
+  .ui.g{border-color:#DADCE0;color:#3C4043;}
+  code{background:#F1F3F5;border-radius:5px;padding:1px 6px;font-size:13.5px;}
+
+  /* ---------- botones ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;
+    background:var(--accent);color:#fff;text-decoration:none;
+    padding:10px 16px;border-radius:9px;font-size:14px;font-weight:600;font-family:inherit;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn:focus-visible{outline:3px solid #9CC3EA;outline-offset:2px;}
+  .btn.secondary{background:#fff;color:var(--accent);border:1.5px solid var(--accent);}
+  .btn.small{padding:6px 11px;font-size:13px;}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;}
+  .btn-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+
+  /* ---------- tareas ---------- */
+  .tasks{margin:16px 0 4px;border:1px dashed #BFD3E8;border-radius:12px;padding:6px 14px;background:#FAFCFE;}
+  .task{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--line);}
+  .task:first-of-type{border-top:none;}
+  .task input{margin-top:4px;width:18px;height:18px;accent-color:var(--ok);flex:0 0 auto;cursor:pointer;}
+  .task label{cursor:pointer;font-size:14.5px;}
+  .task label span{display:block;color:var(--ink-soft);font-size:13px;}
+  .task.auto label::after{content:" (se marca sola al completar)";color:var(--ink-soft);font-size:12px;font-weight:400;}
+
+  /* ---------- pestañas ---------- */
+  .seg{display:inline-flex;border:1.5px solid var(--accent);border-radius:9px;overflow:hidden;margin-bottom:8px;flex-wrap:wrap;}
+  .seg button{border:none;background:#fff;color:var(--accent);padding:8px 14px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px;}
+  .seg button.on{background:var(--accent);color:#fff;}
+
+  /* ---------- preguntas rápidas ---------- */
+  .qq{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0;background:#fff;}
+  .qq .q{font-weight:600;margin-bottom:8px;}
+  .qq .opts{display:flex;flex-direction:column;gap:6px;}
+  .qq .opt{
+    text-align:left;border:1.5px solid var(--line);background:#FBFCFD;border-radius:9px;padding:9px 12px;
+    font-size:14.5px;cursor:pointer;font-family:inherit;color:var(--ink);
+  }
+  .qq .opt:hover{border-color:var(--accent);}
+  .qq .opt.right{border-color:var(--ok);background:var(--ok-bg);}
+  .qq .opt.wrong{border-color:var(--bad);background:var(--bad-bg);}
+  .qq .fb{display:none;margin-top:8px;font-size:14px;border-radius:8px;padding:9px 12px;}
+  .qq .fb.show{display:block;}
+  .qq .fb.ok{background:var(--ok-bg);color:#135C3B;}
+  .qq .fb.no{background:var(--bad-bg);color:#8A1C13;}
+
+  /* ---------- maqueta de pantallas (cuentas) ---------- */
+  .mock{border:1px solid var(--line);border-radius:12px;background:#3D6FD1;padding:16px;}
+  .mock .panel{background:#F1F3F5;border-radius:10px;max-width:320px;margin:0 auto;padding:14px 16px;text-align:center;font-size:13.5px;}
+  .mock .panel .ttl{font-weight:700;font-size:16px;margin-bottom:6px;}
+  .mock .panel .sub{color:var(--ink-soft);margin:6px 0 8px;}
+  .mock .mb{display:block;width:100%;border-radius:6px;padding:7px 8px;margin:6px 0;font-weight:600;font-size:13px;border:1px solid transparent;}
+  .mock .b1{background:#4A90D9;color:#fff;}
+  .mock .b2{background:#5CB85C;color:#fff;}
+  .mock .b3{background:#5D7FD6;color:#fff;}
+  .mock .b4{background:#fff;color:#3C4043;border-color:#DADCE0;}
+  .mock .b5{background:#111;color:#fff;}
+  .mock .lnk{color:#1F4FB5;font-weight:700;}
+  .mock .hl{outline:3px solid #FFD84D;outline-offset:2px;}
+
+  /* ---------- interfaz de Tinkercad (maqueta con puntos) ---------- */
+  .tk{position:relative;border:1px solid #CBD2D9;border-radius:12px;overflow:hidden;background:#F4F6F8;font-size:12.5px;user-select:none;}
+  .tk .tbar{display:flex;align-items:center;gap:8px;background:#fff;border-bottom:1px solid #E1E4E8;padding:8px 10px;}
+  .tk .logo{display:grid;grid-template-columns:repeat(3,9px);gap:1px;}
+  .tk .logo i{width:9px;height:9px;display:block;}
+  .tk .name{border:1px solid #CBD2D9;border-radius:999px;padding:3px 10px;font-weight:600;}
+  .tk .circ{margin-left:auto;border:1.5px solid #1F5C99;color:#1F5C99;border-radius:999px;padding:3px 10px;font-weight:600;}
+  .tk .ava{width:26px;height:26px;border-radius:50%;background:#6A8DD6;}
+  .tk .tools{display:flex;align-items:center;gap:6px;background:#fff;border-bottom:1px solid #E1E4E8;padding:6px 10px;flex-wrap:wrap;}
+  .tk .ic{width:22px;height:22px;border-radius:5px;background:#EEF1F4;display:inline-flex;align-items:center;justify-content:center;color:#6B7280;font-size:12px;}
+  .tk .tbtn{border:1px solid #CBD2D9;border-radius:6px;padding:3px 9px;font-weight:600;background:#fff;}
+  .tk .tbtn.sim{border-color:#2E9E4F;}
+  .tk .body{display:grid;grid-template-columns:1fr 190px;min-height:250px;}
+  .tk .canvas{position:relative;padding:14px;}
+  .tk .mini-mb{width:120px;height:92px;border-radius:12px;background:#1E1F22;margin:28px auto 0;position:relative;box-shadow:inset 0 0 0 2px #333;}
+  .tk .mini-mb::after{content:"0   1   2  3V GND";position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:9px;color:#C9A227;letter-spacing:.5px;}
+  .tk .side{border-left:1px solid #E1E4E8;background:#fff;padding:8px;}
+  .tk .side .ddx{border:1px solid #CBD2D9;border-radius:6px;padding:4px 8px;margin-bottom:6px;}
+  .tk .side .srch{border:1px solid #CBD2D9;border-radius:6px;padding:4px 8px;color:#9AA0A6;margin-bottom:8px;}
+  .tk .side .parts{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+  .tk .side .parts span{background:#F4F6F8;border-radius:6px;text-align:center;padding:6px 2px;font-size:10.5px;}
+  .tk .fit{position:absolute;left:10px;top:10px;width:24px;height:24px;border-radius:50%;border:1px solid #CBD2D9;background:#fff;}
+  .hs{position:relative;flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:#E8590C;color:#fff;font-weight:700;font-size:13px;border:2px solid #fff;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);display:inline-flex;vertical-align:middle;align-items:center;justify-content:center;animation:pulse 1.8s infinite;font-family:inherit;padding:0;}
+  .hs.seen{background:#1E8E5A;animation:none;}
+  .hs.cur{outline:3px solid #FFD84D;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(232,89,12,.55);}70%{box-shadow:0 0 0 10px rgba(232,89,12,0);}100%{box-shadow:0 0 0 0 rgba(232,89,12,0);}}
+  .hs-info{min-height:96px;margin-top:10px;}
+  @media (max-width:760px){ .tk .body{grid-template-columns:1fr 130px;} .tk .side .parts{grid-template-columns:1fr 1fr;} }
+
+  /* ---------- bloques estilo Tinkercad (imitación visual) ---------- */
+  .code{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:13px;color:#fff;line-height:1.35;overflow-x:auto;padding:4px 0;}
+  .tb{border-radius:6px;padding:6px 10px;margin:3px 0;display:block;width:max-content;max-width:100%;font-weight:600;transition:box-shadow .15s, filter .15s;}
+  .tb.hat{border-radius:16px 16px 6px 6px;padding-top:9px;}
+  .tb.ctl{background:var(--k-ctl);}
+  .tb.out{background:var(--k-out);}
+  .tb.inp{background:var(--k-inp);}
+  .tb.mth{background:var(--k-math);}
+  .tb.var{background:var(--k-var);}
+  .tb .in{margin:6px 0 2px 12px;border-left:3px solid rgba(255,255,255,.45);padding-left:8px;}
+  .tb .lbl{display:block;margin-top:6px;}
+  .pv{display:inline-block;background:#fff;color:#22252A;border-radius:999px;padding:0 9px;margin:0 3px;font-weight:600;}
+  .pr{display:inline-block;border-radius:999px;padding:0 9px;margin:0 3px;border:2px solid rgba(255,255,255,.7);}
+  .pr.var{background:var(--k-var);} .pr.inp{background:var(--k-inp);}
+  .hx{display:inline-block;background:var(--k-math);border:2px solid rgba(255,255,255,.7);padding:0 10px;margin:0 3px;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 50%,calc(100% - 8px) 100%,8px 100%,0 50%);}
+  .dd{display:inline-block;background:rgba(0,0,0,.15);border-radius:5px;padding:0 6px;margin:0 2px;}
+  .dd::after{content:" ▾";font-size:10px;}
+  .tb.run{box-shadow:0 0 0 3px #FFE14D, 0 0 12px 2px rgba(255,200,0,.8);}
+  .cmt{color:var(--ink-soft);font-size:12.5px;font-weight:400;font-style:italic;margin:2px 0 0 2px;}
+
+  /* ---------- micro:bit simulada ---------- */
+  .sim-area{display:grid;grid-template-columns:270px 1fr;gap:18px;align-items:start;}
+  @media (max-width:760px){.sim-area{grid-template-columns:1fr;}}
+  .mb{
+    background:#23262B;border-radius:18px;padding:18px 14px 14px;width:250px;margin:0 auto;
+    box-shadow:inset 0 0 0 3px #3A3F46,0 6px 16px rgba(0,0,0,.15);color:#fff;
+  }
+  .mb-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .mb-screen{display:grid;grid-template-columns:repeat(5,22px);grid-template-rows:repeat(5,22px);gap:6px;padding:8px;background:#15171A;border-radius:8px;}
+  .led{width:22px;height:22px;border-radius:4px;background:#3A1E1E;transition:background .08s, box-shadow .08s;}
+  .led.on{background:#FF3B30;box-shadow:0 0 8px #FF3B30;}
+  .mb-btn{
+    width:38px;height:38px;border-radius:50%;border:3px solid #9AA0A6;background:#111;color:#fff;
+    font-weight:700;cursor:pointer;font-family:inherit;font-size:14px;
+  }
+  .mb-btn:active{transform:scale(.94);background:#333;}
+  .mb-btn[disabled]{opacity:.35;cursor:not-allowed;}
+  .mb-pins{display:flex;justify-content:space-between;margin-top:12px;padding:6px 6px 0;border-top:2px solid #C9A227;font-size:11px;color:#C9A227;}
+  .sensor{margin-top:12px;background:#fff;color:var(--ink);border-radius:10px;padding:10px 12px;border:1px solid var(--line);font-size:13.5px;}
+  .sensor input[type=range]{width:100%;accent-color:#E8590C;}
+  .sensor .val{font-weight:700;color:#C2410C;}
+  .sim-log{font-size:13.5px;color:var(--ink-soft);margin-top:8px;min-height:22px;text-align:center;}
+
+  /* ---------- caja de variable ---------- */
+  .varbox{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:10px 0;}
+  .vb{width:130px;border:3px solid var(--k-var);border-radius:12px;background:#FCEFFC;text-align:center;padding:8px 6px;}
+  .vb .vn{font-size:13px;font-weight:700;color:#8E2A8E;}
+  .vb .vv{font-size:40px;font-weight:800;color:#5C1A5C;line-height:1.1;transition:transform .2s;}
+  .vb .vv.pop{transform:scale(1.25);}
+  .watch{display:inline-flex;gap:14px;flex-wrap:wrap;background:#FCEFFC;border:1.5px solid var(--k-var);border-radius:10px;padding:6px 12px;font-size:14px;margin-top:8px;}
+  .watch b{color:#8E2A8E;}
+
+  /* ---------- traza de cuenta regresiva ---------- */
+  table.simple{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0;}
+  table.simple th, table.simple td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top;}
+  table.simple th{background:var(--accent-light);color:var(--accent-dark);}
+  table.simple tr.nowrow td{background:#FFF6D6;}
+  .trace-wrap{max-height:230px;overflow:auto;border-radius:8px;}
+
+  /* ---------- semáforo ---------- */
+  .tl-wrap{display:flex;gap:18px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
+  .tl{background:#2B2F36;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;box-shadow:inset 0 0 0 3px #444;}
+  .lamp{width:46px;height:46px;border-radius:50%;opacity:.22;transition:opacity .08s, box-shadow .08s;}
+  .lamp.r{background:#FF3B30;} .lamp.y{background:#FFC400;} .lamp.g{background:#22C55E;}
+  .lamp.on{opacity:1;}
+  .lamp.r.on{box-shadow:0 0 16px #FF3B30;} .lamp.y.on{box-shadow:0 0 16px #FFC400;} .lamp.g.on{box-shadow:0 0 16px #22C55E;}
+  .tl-lbl{font-size:11px;color:#C9A227;text-align:center;margin-top:-6px;}
+  .mode{display:inline-block;border-radius:999px;padding:2px 12px;font-weight:700;font-size:13px;}
+  .mode.dia{background:#FFF1C2;color:#8A5A00;} .mode.noche{background:#1F2A44;color:#E6ECFF;}
+
+  /* ---------- esquema de conexiones (SVG) ---------- */
+  .schem{width:100%;max-width:560px;height:auto;display:block;margin:6px auto;}
+
+  /* ---------- navegación inferior ---------- */
+  .nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);
+    box-shadow:0 -4px 14px rgba(15,40,70,.06);padding:10px 16px;
+  }
+  .nav-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:10px;}
+  .nav select{flex:1;min-width:0;font-family:inherit;font-size:14px;padding:9px 10px;border-radius:9px;border:1.5px solid var(--line);background:#fff;}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:18px;}
+  .dots span{width:8px;height:8px;border-radius:50%;background:#D5DCE3;}
+  .dots span.seen{background:#9CC3EA;}
+  .dots span.cur{background:var(--accent);transform:scale(1.3);}
+  footer.close{text-align:center;padding:18px 10px 0;color:var(--ink-soft);font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="t-title"><small>SEMANA 3 · GRADO 9°</small>Variables, condicionales y bucles en Tinkercad</div>
+    <div class="t-prog">
+      <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+      <div class="lbl"><span id="progressLabel">0 de 0 tareas</span><span id="slideLabel">Diapositiva 1</span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="deck">
+
+<!-- ===================== 1. PORTADA ===================== -->
+<section class="slide" data-title="Portada">
+  <div class="hero">
+    <div class="eyebrow" style="color:#fff;opacity:.85">Plan de 10 semanas · Pensamiento computacional</div>
+    <h1>Semana 3 — Programación en bloques: variables, condicionales y bucles</h1>
+    <p>Esta semana entras a <b>Tinkercad</b>, conoces cómo funciona y aprendes las tres herramientas que hacen "inteligente" a un programa. Al final construyes un <b>semáforo simulado</b> con LEDs y una micro:bit.</p>
+    <div class="badge-row">
+      <span class="badge">Nivel: básico</span>
+      <span class="badge">Duración estimada: 90–120 min</span>
+      <span class="badge">Trabajo autónomo</span>
+      <span class="badge">Solo simuladores</span>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3 style="margin-top:0">🎯 Objetivo de la semana</h3>
+    <p>Dominar <b>variables</b>, <b>condicionales</b> (si / si no) y <b>bucles</b> (repetir) en la programación por bloques de la micro:bit, y usarlos juntos en un <b>semáforo simulado</b> con LEDs en Tinkercad.</p>
+    <div class="men"><b>Evidencia de aprendizaje (MEN, grados 8°–9°):</b><br><i>"Uso eficientemente herramientas tecnológicas e informáticas en el aprendizaje de otras disciplinas."</i><br><span class="muted">Componente: Uso y apropiación de la T&amp;I</span></div>
+    <p class="muted">Usa los botones <span class="kbd">Siguiente →</span> y <span class="kbd">← Anterior</span> de la parte de abajo, o las flechas del teclado.</p>
+  </div>
+</section>
+
+<!-- ===================== 2. RUTA ===================== -->
+<section class="slide" data-title="Tu ruta de la semana">
+  <div class="card">
+    <div class="eyebrow">Antes de empezar</div>
+    <h2>Tu ruta de la semana</h2>
+    <p>Esta presentación es tu guía principal. Avanza a tu ritmo: cada diapositiva tiene explicaciones cortas, ejemplos guiados, micro:bits simuladas y preguntas rápidas.</p>
+    <div class="grid3">
+      <div class="box"><h3>1️⃣ Esta presentación</h3><p class="muted">Cómo entrar a Tinkercad, cómo funciona y los temas de la semana con ejemplos que puedes probar aquí mismo. Las preguntas rápidas <b>no tienen nota</b>.</p></div>
+      <div class="box"><h3>2️⃣ Documento de apoyo</h3><p class="muted">Profundiza en los temas. Las partes marcadas con <b>📓 PARA TU CUADERNO</b> debes copiarlas en tu cuaderno.</p></div>
+      <div class="box"><h3>3️⃣ Taller evaluativo</h3><p class="muted">4 ejercicios en Tinkercad. Entregas el <b>enlace de cada circuito</b> por Classroom.</p></div>
+    </div>
+    <div class="tip"><b>Esta semana no hay cuestionario</b>La nota de la semana sale del taller: tus circuitos en Tinkercad deben funcionar y el enlace debe abrir.</div>
+    <div class="warn"><b>La barra de progreso no se guarda</b>Si cierras o recargas la página, las casillas se desmarcan. Es solo una ayuda para organizarte, no una entrega.</div>
+  </div>
+</section>
+
+<!-- ===================== 3. QUÉ ES TINKERCAD ===================== -->
+<section class="slide" data-title="¿Qué es Tinkercad?">
+  <div class="card">
+    <div class="eyebrow">Tema 1 · Tinkercad</div>
+    <h2>¿Qué es Tinkercad?</h2>
+    <p><b>Tinkercad</b> es una aplicación web <b>gratuita</b> de Autodesk para diseño 3D, electrónica y programación. Funciona en el navegador (Chrome o Edge recomendados): no se instala nada.</p>
+    <p>Nosotros usaremos <b>Tinkercad Circuits</b> (en español, <b>Circuitos</b>): ahí pones una <b>micro:bit</b>, le conectas componentes como LEDs, la programas con <b>bloques</b> y la pruebas con el botón <span class="ui">Iniciar simulación</span>.</p>
+    <h3>¿Qué cuenta vas a usar?</h3>
+    <table class="simple">
+      <tr><th></th><th>Cuenta personal</th><th>Cuenta institucional</th></tr>
+      <tr><td><b>¿Qué es?</b></td><td>Una cuenta creada con tu correo personal.</td><td>Tu correo del colegio, que es una <b>cuenta de Google</b>.</td></tr>
+      <tr><td><b>¿Cómo se entra?</b></td><td>Con tu correo y una contraseña que tú creas.</td><td>Con el botón <span class="ui g">Iniciar sesión con Google</span>.</td></tr>
+      <tr><td><b>¿Para qué la uso?</b></td><td>Para practicar por tu cuenta.</td><td><b>Para el taller y todas las entregas del curso.</b></td></tr>
+    </table>
+    <div class="warn"><b>Importante</b>Las dos cuentas son <b>independientes</b>: un diseño que hagas en una no aparece en la otra. Haz el taller con la <b>cuenta institucional</b>.</div>
+    <div class="tip"><b>¿Tinkercad te aparece en inglés?</b>Baja hasta el final de la página de inicio de Tinkercad. Allí hay una lista de idiomas: elige <b>Español</b>.</div>
+  </div>
+</section>
+
+<!-- ===================== 4. CUENTA PERSONAL ===================== -->
+<section class="slide" data-title="Paso 1: crea tu cuenta personal">
+  <div class="card">
+    <div class="eyebrow">Tema 1 · Ingreso paso a paso</div>
+    <h2>Paso 1: crea tu cuenta personal</h2>
+    <div class="grid2">
+      <div>
+        <ol class="steps-list" id="accSteps">
+          <li>Abre <a href="https://www.tinkercad.com" target="_blank" rel="noopener"><b>www.tinkercad.com</b></a>.</li>
+          <li>Haz clic en <span class="ui">Empezar a usar Tinkercad</span>.</li>
+          <li>Aparece la pregunta <i>"¿Cómo usarás Tinkercad?"</i>. En la parte <b>Por tu cuenta</b>, elige <span class="ui">Crear una cuenta personal</span>.</li>
+          <li>En <i>"¿Cómo crearás tu cuenta?"</i> elige <span class="ui">Iniciar sesión con el correo electrónico</span>.</li>
+          <li>Se abre la página de cuentas de <b>Autodesk</b>. Primero te pide tu <b>país</b> y tu <b>fecha de nacimiento</b>; luego presiona <b>Siguiente</b>.</li>
+          <li>Completa los datos que te pida (nombre, correo y una contraseña), acepta las condiciones y crea la cuenta.</li>
+          <li>Revisa tu correo (también la carpeta de <b>spam</b>) por si Autodesk te pide confirmar la cuenta.</li>
+        </ol>
+      </div>
+      <div>
+        <div class="mock" aria-label="Maqueta de la pantalla de registro de Tinkercad">
+          <div class="panel">
+            <div class="ttl">Empezar a usar Tinkercad</div>
+            <div class="sub">¿Cómo usarás Tinkercad?</div>
+            <div style="text-align:left;font-size:12.5px">¿En la escuela?</div>
+            <div class="mb b1">Los profesores empiezan aquí</div>
+            <div class="mb b2">Si eres un estudiante, únete a una clase</div>
+            <div style="text-align:left;font-size:12.5px;margin-top:8px">Por tu cuenta</div>
+            <div class="mb b3 hl">Crear una cuenta personal</div>
+            <div style="margin-top:8px">¿Ya dispones de una cuenta? <span class="lnk">Iniciar sesión</span></div>
+          </div>
+        </div>
+        <p class="muted" style="text-align:center;margin-top:6px">Maqueta de la pantalla. El botón resaltado es el que debes elegir.</p>
+      </div>
+    </div>
+    <div class="tip"><b>Otra forma</b>En el paso 4 también puedes elegir <span class="ui g">Iniciar sesión con Google</span> si tienes un Gmail <b>personal</b>.</div>
+    <div class="warn"><b>¿La página no te deja continuar?</b>Escribe tu fecha de nacimiento real. Si aun así no puedes crear la cuenta, avísale a tu profesor y pasa al Paso 2 con tu cuenta institucional.</div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-acc1"><label for="t-acc1"><b>Creé mi cuenta personal en Tinkercad (o ya tenía una)</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 5. CUENTA INSTITUCIONAL ===================== -->
+<section class="slide" data-title="Paso 2: entra con tu cuenta institucional">
+  <div class="card">
+    <div class="eyebrow">Tema 1 · Ingreso paso a paso</div>
+    <h2>Paso 2: entra con tu cuenta institucional (Google)</h2>
+    <p>Tu correo del colegio es una cuenta de Google. No necesitas crear otra contraseña: entras con el botón de Google.</p>
+    <div class="grid2">
+      <div>
+        <ol class="steps-list">
+          <li>Si estás dentro de tu cuenta personal, <b>cierra sesión</b>: haz clic en tu foto o ícono de perfil (arriba a la derecha) y elige la opción para salir.</li>
+          <li>En <a href="https://www.tinkercad.com" target="_blank" rel="noopener"><b>www.tinkercad.com</b></a> haz clic en <span class="ui">Iniciar sesión</span>.</li>
+          <li>En <i>"Bienvenido de nuevo"</i> elige <span class="ui">Cuentas de estudiante</span>.</li>
+          <li>Haz clic en <span class="ui g">Iniciar sesión con Google</span>.</li>
+          <li>Elige tu <b>correo institucional</b> (o escríbelo) y tu contraseña del colegio.</li>
+          <li>La primera vez, Google te pregunta si permites compartir tu <b>nombre, correo y foto de perfil</b> con Autodesk. Presiona <b>Continuar</b>.</li>
+          <li>Si te pide completar algún dato, complétalo con tu información real. Al terminar verás tu panel: <b>Tus diseños</b>.</li>
+        </ol>
+      </div>
+      <div>
+        <div class="mock" aria-label="Maqueta de la pantalla de inicio de sesión">
+          <div class="panel">
+            <div class="ttl">Estudiantes</div>
+            <div class="sub">Iniciar sesión</div>
+            <div class="mb b5">Correo electrónico o nombre de usuario</div>
+            <div class="mb b4 hl">G&nbsp; Iniciar sesión con Google</div>
+            <div class="mb b4"> Iniciar sesión con Apple</div>
+            <div class="lnk" style="margin-top:6px">Más opciones de inicio de sesión...</div>
+          </div>
+        </div>
+        <p class="muted" style="text-align:center;margin-top:6px">Maqueta de la pantalla después de elegir <b>Cuentas de estudiante</b>.</p>
+      </div>
+    </div>
+    <div class="warn"><b>¿Aparece un mensaje de bloqueo o de permisos?</b>Algunas cuentas del colegio tienen restricciones. No crees otra cuenta: toma una captura del mensaje y envíasela a tu profesor.</div>
+    <div class="tip"><b>La próxima vez</b>Solo haz: <span class="ui">Iniciar sesión</span> → <span class="ui">Cuentas de estudiante</span> → <span class="ui g">Iniciar sesión con Google</span> → tu correo institucional.</div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-acc2"><label for="t-acc2"><b>Entré a Tinkercad con mi cuenta institucional de Google</b><span>Con esta cuenta harás el taller.</span></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 6. INTERFAZ ===================== -->
+<section class="slide" data-title="Conoce Tinkercad Circuits">
+  <div class="card">
+    <div class="eyebrow">Tema 1 · Funcionamiento básico · Actividad interactiva</div>
+    <h2>Conoce el editor de circuitos</h2>
+    <p>Así se ve Tinkercad cuando abres un circuito. Haz clic en cada <b>punto naranja</b> para saber para qué sirve esa parte. Cuando los veas todos, se marca la tarea.</p>
+    <div class="tk" id="tkMock">
+      <div class="tbar">
+        <div class="logo"><i style="background:#E8453C"></i><i style="background:#F29A2E"></i><i style="background:#F2C94C"></i><i style="background:#2F9E44"></i><i style="background:#3B82F6"></i><i style="background:#1F5C99"></i><i style="background:#9B59B6"></i><i style="background:#16A085"></i><i style="background:#E67E22"></i></div>
+        <span class="name">Nombre del diseño</span><button class="hs" type="button" data-h="0">1</button>
+        <span class="circ">▣ Circuitos ▾</span><button class="hs" type="button" data-h="1">2</button>
+        <span class="ava"></span>
+      </div>
+      <div class="tools">
+        <span class="ic">⧉</span><span class="ic">📋</span><span class="ic">🗑</span><span class="ic">↶</span><span class="ic">↷</span><button class="hs" type="button" data-h="2">3</button>
+        <span style="flex:1"></span>
+        <span class="tbtn">‹/› Código</span><button class="hs" type="button" data-h="3">4</button>
+        <span class="tbtn sim">▶ Iniciar simulación</span><button class="hs" type="button" data-h="4">5</button>
+        <span class="tbtn">Enviar a</span><button class="hs" type="button" data-h="5">6</button>
+      </div>
+      <div class="body">
+        <div class="canvas">
+          <span class="fit" title="Ajustar vista"></span><button class="hs" type="button" data-h="7" style="position:absolute;left:40px;top:10px">8</button>
+          <div class="mini-mb"></div>
+        </div>
+        <div class="side">
+          <div class="ddx">Componentes <button class="hs" type="button" data-h="6">7</button><br><b>Básico ▾</b></div>
+          <div class="srch">Buscar</div>
+          <div class="parts"><span>Resistencia</span><span>LED</span><span>Pulsador</span><span>Pila de 9 V</span><span>micro:bit</span><span>…</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="box hs-info" id="hsInfo"><b>Haz clic en un punto naranja.</b></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-ui"><label for="t-ui"><b>Exploré las 8 partes del editor</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 7. PRIMER CIRCUITO ===================== -->
+<section class="slide" data-title="Tu primer circuito con micro:bit">
+  <div class="card">
+    <div class="eyebrow">Tema 1 · Práctica guiada</div>
+    <h2>Tu primer circuito con micro:bit</h2>
+    <div class="grid2">
+      <div>
+        <h3 style="margin-top:0">A. Crear y simular</h3>
+        <ol class="steps-list">
+          <li>En tu panel, haz clic en <span class="ui">+ Crear</span> y elige <span class="ui">Circuitos</span>.</li>
+          <li>Haz clic en el nombre raro que Tinkercad le puso al diseño (arriba a la izquierda) y cámbialo por <code>S3_Prueba_TuNombre</code>.</li>
+          <li>En el panel <b>Componentes</b> (lista <b>Básico</b>), busca <b>micro:bit</b> y <b>arrástrala</b> al área de trabajo.</li>
+          <li>Haz clic en <span class="ui">Código</span>. Se abre el editor de bloques con dos bloques listos: <b>al iniciar</b> (con un <i>mostrar icono</i>) y <b>siempre</b>.</li>
+          <li>Haz clic en <span class="ui">Iniciar simulación</span>. La micro:bit muestra la carita feliz. Para parar, usa <span class="ui">Detener simulación</span>.</li>
+        </ol>
+        <p class="muted">Tinkercad guarda tus cambios automáticamente.</p>
+      </div>
+      <div>
+        <h3 style="margin-top:0">B. El editor de código</h3>
+        <p>Arriba del editor hay una lista que debe decir <b>Bloques</b>. Los bloques están en 6 categorías de colores:</p>
+        <div class="code">
+          <span class="tb out">Básico · Salida → mostrar, borrar pantalla, pines</span>
+          <span class="tb inp">Entrada → botones, temperatura, nivel de luz</span>
+          <span class="tb ctl">Control → al iniciar, siempre, esperar, repetir, si</span>
+          <span class="tb mth">Matemáticas → operaciones y comparaciones</span>
+          <span class="tb var">Variables → crear variable, definir, cambiar</span>
+        </div>
+        <p class="muted">Para borrar un bloque, arrástralo a la <b>papelera</b> (abajo a la derecha del editor).</p>
+      </div>
+    </div>
+    <div class="warn"><b>No cambies "Bloques" por "Texto"</b>Según la ayuda oficial de Tinkercad, pasar tu código de Bloques a Texto (Python) <b>no se puede deshacer</b>. En este curso trabajamos siempre en <b>Bloques</b>.</div>
+    <div class="tip"><b>Durante la simulación</b>Debajo de la micro:bit aparece un panel con controles: un termómetro 🌡️ (temperatura), un sol ☀️ (nivel de luz) y botones de movimiento. Los usarás en los ejemplos. Los botones <b>A</b> y <b>B</b> se presionan haciendo clic sobre la micro:bit.</div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-first"><label for="t-first"><b>Creé mi primer circuito con una micro:bit y lo simulé</b><span>Con la cuenta institucional.</span></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 8. VARIABLES ===================== -->
+<section class="slide" data-title="Variables: la memoria del programa">
+  <div class="card">
+    <div class="eyebrow">Tema 2 · Variables · Actividad interactiva</div>
+    <h2>Variables: la memoria del programa</h2>
+    <p>Una <b>variable</b> es como una <b>caja con nombre</b> donde el programa <b>guarda un dato</b> para usarlo después. El dato puede <b>cambiar</b> mientras el programa funciona: por eso se llama <i>variable</i>.</p>
+    <div class="grid2">
+      <div>
+        <h3 style="margin-top:0">Los 3 bloques de variables</h3>
+        <div class="code">
+          <span class="tb var">definir <span class="dd">puntos</span> en <span class="pv">0</span></span>
+          <div class="cmt">Guarda un valor nuevo en la caja (borra el anterior).</div>
+          <span class="tb var">cambiar <span class="dd">puntos</span> por <span class="pv">1</span></span>
+          <div class="cmt">Suma a lo que ya tiene la caja. Con −1, resta.</div>
+          <span class="tb var" style="border-radius:999px">puntos</span>
+          <div class="cmt">Lee lo que hay en la caja. Se pone dentro de otros bloques.</div>
+        </div>
+        <p class="muted" style="margin-top:8px">Primero se crea la variable con el botón <span class="ui">Crear variable...</span> de la categoría <b>Variables</b>.</p>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Pruébalo</h3>
+        <div class="varbox">
+          <div class="vb"><div class="vn">puntos</div><div class="vv" id="vbVal">0</div></div>
+          <div class="btn-row" style="flex-direction:column;margin:0">
+            <button class="btn small" type="button" data-vb="set0">definir puntos en 0</button>
+            <button class="btn small" type="button" data-vb="add1">cambiar puntos por 1</button>
+            <button class="btn small" type="button" data-vb="sub1">cambiar puntos por −1</button>
+          </div>
+        </div>
+        <p class="sim-log" id="vbLog" style="text-align:left">Presiona los botones y mira cómo cambia la caja.</p>
+      </div>
+    </div>
+    <div class="tip"><b>Buenos nombres</b>Usa nombres cortos que digan qué guardan: <code>puntos</code>, <code>tiempo</code>, <code>limite</code>. Sin espacios ni tildes.</div>
+    <div class="qq-group" data-set="var" data-task="t-qq1"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-var"><label for="t-var"><b>Usé los 3 botones de la caja</b></label></div>
+      <div class="task auto"><input type="checkbox" id="t-qq1"><label for="t-qq1"><b>Respondí bien las preguntas de variables</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 9. EJEMPLO 1 ===================== -->
+<section class="slide" data-title="Ejemplo guiado 1: contador de puntos" data-sim="ex1">
+  <div class="card">
+    <div class="eyebrow">Tema 2 · Ejemplo guiado · micro:bit simulada</div>
+    <h2>Ejemplo guiado 1: contador de puntos</h2>
+    <p><b>Problema:</b> quiero contar puntos. Con el botón <b>A</b> sumo un punto y con el <b>B</b> resto uno. La pantalla siempre muestra cuántos puntos llevo.</p>
+    <div class="sim-area">
+      <div>
+        <div class="mb" id="mb1"></div>
+        <div class="watch">Variable <b>puntos</b> = <span id="w1">0</span></div>
+        <div class="btn-row" style="justify-content:center"><button class="btn small secondary" type="button" id="ex1Restart">↻ Reiniciar simulación</button></div>
+        <div class="sim-log" id="log1"></div>
+      </div>
+      <div class="code" id="code1">
+        <span class="tb ctl hat" data-b="s">al iniciar
+          <div class="in">
+            <span class="tb var" data-b="s1">definir <span class="dd">puntos</span> en <span class="pv">0</span></span>
+            <span class="tb out" data-b="s2">mostrar número <span class="pr var">puntos</span></span>
+          </div>
+        </span>
+        <span class="tb ctl hat" data-b="a">con el botón <span class="dd">A</span> <span class="dd">pressed</span>
+          <div class="in">
+            <span class="tb var" data-b="a1">cambiar <span class="dd">puntos</span> por <span class="pv">1</span></span>
+            <span class="tb out" data-b="a2">mostrar número <span class="pr var">puntos</span></span>
+          </div>
+        </span>
+        <span class="tb ctl hat" data-b="b">con el botón <span class="dd">B</span> <span class="dd">pressed</span>
+          <div class="in">
+            <span class="tb var" data-b="b1">cambiar <span class="dd">puntos</span> por <span class="pv">-1</span></span>
+            <span class="tb out" data-b="b2">mostrar número <span class="pr var">puntos</span></span>
+          </div>
+        </span>
+      </div>
+    </div>
+    <div class="note"><b class="h">¿Cómo se arma en Tinkercad?</b>
+      1) <b>Variables</b> → <span class="ui">Crear variable...</span> → escribe <code>puntos</code>. 2) Pon <b>definir puntos en 0</b> dentro de <b>al iniciar</b> (quita el <i>mostrar icono</i> que trae). 3) De <b>Básico</b> arrastra <b>mostrar número</b> y encaja dentro el bloque redondo <b>puntos</b>. 4) De <b>Entrada</b> (o Básico) arrastra <b>con el botón A pressed</b>; en otro bloque igual cambia la A por B. <i>"pressed"</i> significa <i>presionado</i>: algunos bloques traen palabras en inglés.</div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-ex1"><label for="t-ex1"><b>Probé el ejemplo con los botones A y B</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 10. CONDICIONALES ===================== -->
+<section class="slide" data-title="Condicionales: tomar decisiones">
+  <div class="card">
+    <div class="eyebrow">Tema 3 · Condicionales</div>
+    <h2>Condicionales: el programa toma decisiones</h2>
+    <p>Un <b>condicional</b> hace una <b>pregunta</b> cuya respuesta es <b>verdadero</b> o <b>falso</b>, y según eso elige qué bloques ejecutar. Es el rombo <b>◇ Sí / No</b> que dibujaste en los diagramas de flujo de la semana 2.</p>
+    <div class="grid2">
+      <div>
+        <div class="code">
+          <span class="tb ctl">si <span class="hx">condición</span> entonces
+            <div class="in"><span class="tb out">… se hace solo si es verdadero</span></div>
+          </span>
+        </div>
+        <p class="muted">Si la condición es falsa, no hace nada y sigue.</p>
+      </div>
+      <div>
+        <div class="code">
+          <span class="tb ctl">si <span class="hx">condición</span> entonces
+            <div class="in"><span class="tb out">… camino del SÍ</span></div>
+            <span class="lbl">si no</span>
+            <div class="in"><span class="tb out">… camino del NO</span></div>
+          </span>
+        </div>
+        <p class="muted">Siempre hace uno de los dos caminos, nunca los dos.</p>
+      </div>
+    </div>
+    <h3>La condición: comparar dos valores</h3>
+    <p>En <b>Matemáticas</b> está el bloque verde <span class="hx" style="color:#fff">1 <span class="dd">=</span> 1</span>. En el menú del centro eliges el comparador:</p>
+    <table class="simple">
+      <tr><th>Signo</th><th>Se lee</th><th>Ejemplo</th><th>¿Verdadero o falso?</th></tr>
+      <tr><td><b>=</b></td><td>igual a</td><td>5 = 5</td><td>verdadero</td></tr>
+      <tr><td><b>≠</b></td><td>diferente de</td><td>5 ≠ 3</td><td>verdadero</td></tr>
+      <tr><td><b>&lt;</b></td><td>menor que</td><td>7 &lt; 4</td><td>falso</td></tr>
+      <tr><td><b>≤</b></td><td>menor o igual que</td><td>4 ≤ 4</td><td>verdadero</td></tr>
+      <tr><td><b>&gt;</b></td><td>mayor que</td><td>30 &gt; 25</td><td>verdadero</td></tr>
+      <tr><td><b>≥</b></td><td>mayor o igual que</td><td>2 ≥ 9</td><td>falso</td></tr>
+    </table>
+    <div class="qq-group" data-set="cond" data-task="t-qq2"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-qq2"><label for="t-qq2"><b>Respondí bien las preguntas de condicionales</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 11. EJEMPLO 2 ===================== -->
+<section class="slide" data-title="Ejemplo guiado 2: ¿hace frío?" data-sim="ex2">
+  <div class="card">
+    <div class="eyebrow">Tema 3 · Ejemplo guiado · micro:bit simulada</div>
+    <h2>Ejemplo guiado 2: ¿hace frío?</h2>
+    <p><b>Problema:</b> la micro:bit revisa la temperatura todo el tiempo. Si está por debajo del <b>límite</b> (18 °C) muestra una carita triste; si no, una carita feliz. Mueve el termómetro y observa qué camino se ilumina.</p>
+    <div class="sim-area">
+      <div>
+        <div class="mb" id="mb2"></div>
+        <div class="sensor">🌡️ Temperatura: <span class="val" id="tVal">21</span> °C
+          <input type="range" min="-5" max="50" value="21" id="tRange" aria-label="Temperatura simulada">
+        </div>
+        <div class="watch">Variable <b>limite</b> = 18</div>
+        <div class="sim-log" id="log2"></div>
+      </div>
+      <div class="code" id="code2">
+        <span class="tb ctl hat" data-b="s">al iniciar
+          <div class="in"><span class="tb var" data-b="s1">definir <span class="dd">limite</span> en <span class="pv">18</span></span></div>
+        </span>
+        <span class="tb ctl hat" data-b="f">siempre
+          <div class="in">
+            <span class="tb ctl" data-b="if">si <span class="hx"><span class="pr inp">temperatura (°C)</span> <span class="dd">&lt;</span> <span class="pr var">limite</span></span> entonces
+              <div class="in"><span class="tb out" data-b="yes">mostrar icono <span class="dd">😞 triste</span></span></div>
+              <span class="lbl">si no</span>
+              <div class="in"><span class="tb out" data-b="no">mostrar icono <span class="dd">🙂 feliz</span></span></div>
+            </span>
+          </div>
+        </span>
+      </div>
+    </div>
+    <div class="note"><b class="h">¿Cómo se arma en Tinkercad?</b>
+      El bloque <b>si … entonces … si no</b> está en <b>Control</b>. El comparador verde está en <b>Matemáticas</b>: ponlo en el hueco del <b>si</b> y cambia <b>=</b> por <b>&lt;</b>. <b>temperatura (°C)</b> está en <b>Entrada</b>. Los íconos se eligen en la lista del bloque <b>mostrar icono</b>. Al simular, cambia la temperatura con el termómetro del panel que aparece bajo la micro:bit.</div>
+    <div class="tip"><b>¿Por qué dentro de "siempre"?</b>Porque la pregunta se debe repetir sin parar: si la temperatura cambia, la micro:bit se entera en la siguiente vuelta. <b>siempre</b> es un bucle: lo verás en el próximo tema.</div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-ex2"><label for="t-ex2"><b>Probé el ejemplo con frío (menos de 18 °C) y sin frío</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 12. BUCLES ===================== -->
+<section class="slide" data-title="Bucles: repetir sin copiar">
+  <div class="card">
+    <div class="eyebrow">Tema 4 · Bucles</div>
+    <h2>Bucles: repetir sin copiar y pegar</h2>
+    <p>Un <b>bucle</b> (o ciclo) repite un grupo de bloques. En la semana 2 viste que en una cuenta regresiva se repetía el patrón <i>"mostrar número + esperar"</i>. Con un bucle lo escribes <b>una sola vez</b>.</p>
+    <div class="grid3">
+      <div class="box">
+        <h3>🔁 siempre</h3>
+        <div class="code"><span class="tb ctl hat">siempre<div class="in"><span class="tb out">…</span></div></span></div>
+        <p class="muted">Repite <b>sin fin</b> mientras la micro:bit esté encendida. Sirve para revisar sensores todo el tiempo.</p>
+      </div>
+      <div class="box">
+        <h3>🔢 repetir N veces</h3>
+        <div class="code"><span class="tb ctl">repetir <span class="pv">3</span> veces<div class="in"><span class="tb out">…</span></div></span></div>
+        <p class="muted">Repite un número <b>fijo</b> de veces y luego sigue con el bloque de abajo.</p>
+      </div>
+      <div class="box">
+        <h3>❓ repetir mientras</h3>
+        <div class="code"><span class="tb ctl">repetir <span class="dd">mientras</span> <span class="hx">condición</span><div class="in"><span class="tb out">…</span></div></span></div>
+        <p class="muted">Repite <b>mientras</b> la condición sea verdadera. Cuando se vuelve falsa, sale. En el menú también está <b>hasta</b>: repite hasta que sea verdadera.</p>
+      </div>
+    </div>
+    <h3>Compara: sin bucle y con bucle</h3>
+    <div class="grid2">
+      <div class="code">
+        <span class="tb out">mostrar icono <span class="dd">❤</span></span>
+        <span class="tb ctl">esperar <span class="pv">1</span> <span class="dd">segundos</span></span>
+        <span class="tb out">borrar pantalla</span>
+        <span class="tb ctl">esperar <span class="pv">1</span> <span class="dd">segundos</span></span>
+        <span class="tb out">mostrar icono <span class="dd">❤</span></span>
+        <span class="tb ctl">esperar <span class="pv">1</span> <span class="dd">segundos</span></span>
+        <span class="tb out">borrar pantalla</span>
+        <span class="tb ctl">esperar <span class="pv">1</span> <span class="dd">segundos</span></span>
+        <div class="cmt">8 bloques para parpadear 2 veces.</div>
+      </div>
+      <div class="code">
+        <span class="tb ctl">repetir <span class="pv">2</span> veces
+          <div class="in">
+            <span class="tb out">mostrar icono <span class="dd">❤</span></span>
+            <span class="tb ctl">esperar <span class="pv">1</span> <span class="dd">segundos</span></span>
+            <span class="tb out">borrar pantalla</span>
+            <span class="tb ctl">esperar <span class="pv">1</span> <span class="dd">segundos</span></span>
+          </div>
+        </span>
+        <div class="cmt">Hace lo mismo. Para parpadear 10 veces, solo cambias el 2 por 10.</div>
+      </div>
+    </div>
+    <div class="tip"><b>Sobre el bloque "esperar"</b>En Tinkercad el bloque <b>esperar</b> tiene un menú para elegir <b>segundos</b> o <b>milisegundos</b>. 1 segundo = 1000 milisegundos.</div>
+    <div class="qq-group" data-set="loop" data-task="t-qq3"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-qq3"><label for="t-qq3"><b>Respondí bien las preguntas de bucles</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 13. EJEMPLO 3 ===================== -->
+<section class="slide" data-title="Ejemplo guiado 3: cuenta regresiva" data-sim="ex3">
+  <div class="card">
+    <div class="eyebrow">Tema 4 · Ejemplo guiado paso a paso</div>
+    <h2>Ejemplo guiado 3: cuenta regresiva</h2>
+    <p><b>Problema:</b> contar 3, 2, 1 y al final mostrar un chulo ✔. Usa una variable, un bucle <b>repetir mientras</b> y una comparación. Presiona <b>Paso siguiente</b> y sigue la tabla: así piensa la micro:bit.</p>
+    <div class="sim-area">
+      <div>
+        <div class="mb" id="mb3"></div>
+        <div class="watch">Variable <b>tiempo</b> = <span id="w3">—</span></div>
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn small" type="button" id="ex3Step">Paso siguiente ›</button>
+          <button class="btn small secondary" type="button" id="ex3Auto">▶ Ejecutar todo</button>
+          <button class="btn small secondary" type="button" id="ex3Reset">↻</button>
+        </div>
+      </div>
+      <div style="min-width:0">
+        <div class="code" id="code3">
+          <span class="tb ctl hat" data-b="s">al iniciar
+            <div class="in">
+              <span class="tb var" data-b="s1">definir <span class="dd">tiempo</span> en <span class="pv">3</span></span>
+              <span class="tb ctl" data-b="w">repetir <span class="dd">mientras</span> <span class="hx"><span class="pr var">tiempo</span> <span class="dd">&gt;</span> <span class="pv">0</span></span>
+                <div class="in">
+                  <span class="tb out" data-b="w1">mostrar número <span class="pr var">tiempo</span></span>
+                  <span class="tb ctl" data-b="w2">esperar <span class="pv">1</span> <span class="dd">segundos</span></span>
+                  <span class="tb var" data-b="w3">cambiar <span class="dd">tiempo</span> por <span class="pv">-1</span></span>
+                </div>
+              </span>
+              <span class="tb out" data-b="e">mostrar icono <span class="dd">✔</span></span>
+            </div>
+          </span>
+        </div>
+        <div class="trace-wrap"><table class="simple" id="trace"><thead><tr><th>#</th><th>Bloque</th><th>tiempo</th><th>¿Qué pasa?</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <div class="warn"><b>¡Cuidado con el bucle infinito!</b>Si olvidas <b>cambiar tiempo por -1</b>, <i>tiempo</i> nunca llega a 0, la condición siempre es verdadera y el bucle no termina nunca.</div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-ex3"><label for="t-ex3"><b>Recorrí la cuenta regresiva hasta el final</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 14. SEMÁFORO ===================== -->
+<section class="slide" data-title="Todo junto: el semáforo" data-sim="ex4">
+  <div class="card">
+    <div class="eyebrow">Tema 5 · Proyecto de la semana · Simulación</div>
+    <h2>Todo junto: el semáforo simulado</h2>
+    <p>El semáforo usa las tres ideas de la semana:</p>
+    <ul class="clean">
+      <li><b>Variable</b> <code>tiempo</code>: guarda cuántos segundos dura el verde y el rojo (3 s).</li>
+      <li><b>Condicional</b>: <i>si el nivel de luz es menor que 50</i> (es de noche) el semáforo solo parpadea en amarillo; <i>si no</i> (es de día) hace el ciclo normal.</li>
+      <li><b>Bucles</b>: <b>siempre</b> repite el ciclo sin parar y <b>repetir 2 veces</b> hace el parpadeo.</li>
+    </ul>
+    <div class="sim-area">
+      <div>
+        <div class="tl-wrap">
+          <div>
+            <div class="tl"><div class="lamp r" id="lR"></div><div class="lamp y" id="lY"></div><div class="lamp g" id="lG"></div></div>
+            <div class="tl-lbl" style="margin-top:4px">P0 · P1 · P2</div>
+          </div>
+        </div>
+        <div class="sensor">☀️ Nivel de luz: <span class="val" id="lVal">128</span> <span class="mode dia" id="lMode">DÍA</span>
+          <input type="range" min="0" max="255" value="128" id="lRange" aria-label="Nivel de luz simulado">
+          <span class="muted">0 = oscuridad total · 255 = mucha luz</span>
+        </div>
+        <div class="sim-log" id="log4"></div>
+      </div>
+      <div class="code" id="code4">
+        <span class="tb ctl hat" data-b="s">al iniciar
+          <div class="in"><span class="tb var" data-b="s1">definir <span class="dd">tiempo</span> en <span class="pv">3</span></span></div>
+        </span>
+        <span class="tb ctl hat" data-b="f">siempre
+          <div class="in">
+            <span class="tb ctl" data-b="if">si <span class="hx"><span class="pr inp">nivel de luz</span> <span class="dd">&lt;</span> <span class="pv">50</span></span> entonces
+              <div class="in">
+                <span class="tb ctl" data-b="rep">repetir <span class="pv">2</span> veces
+                  <div class="in">
+                    <span class="tb out" data-b="n1">escribir de forma digital el pin <span class="dd">P1</span> en <span class="dd">ALTA</span></span>
+                    <span class="tb ctl" data-b="n2">esperar <span class="pv">500</span> <span class="dd">milisegundos</span></span>
+                    <span class="tb out" data-b="n3">escribir de forma digital el pin <span class="dd">P1</span> en <span class="dd">BAJA</span></span>
+                    <span class="tb ctl" data-b="n4">esperar <span class="pv">500</span> <span class="dd">milisegundos</span></span>
+                  </div>
+                </span>
+              </div>
+              <span class="lbl">si no</span>
+              <div class="in">
+                <span class="tb out" data-b="d1">escribir de forma digital el pin <span class="dd">P2</span> en <span class="dd">ALTA</span></span>
+                <span class="tb ctl" data-b="d2">esperar <span class="pr var">tiempo</span> <span class="dd">segundos</span></span>
+                <span class="tb out" data-b="d3">escribir de forma digital el pin <span class="dd">P2</span> en <span class="dd">BAJA</span></span>
+                <span class="tb out" data-b="d4">escribir de forma digital el pin <span class="dd">P1</span> en <span class="dd">ALTA</span></span>
+                <span class="tb ctl" data-b="d5">esperar <span class="pv">1</span> <span class="dd">segundos</span></span>
+                <span class="tb out" data-b="d6">escribir de forma digital el pin <span class="dd">P1</span> en <span class="dd">BAJA</span></span>
+                <span class="tb out" data-b="d7">escribir de forma digital el pin <span class="dd">P0</span> en <span class="dd">ALTA</span></span>
+                <span class="tb ctl" data-b="d8">esperar <span class="pr var">tiempo</span> <span class="dd">segundos</span></span>
+                <span class="tb out" data-b="d9">escribir de forma digital el pin <span class="dd">P0</span> en <span class="dd">BAJA</span></span>
+              </div>
+            </span>
+          </div>
+        </span>
+      </div>
+    </div>
+    <div class="tip"><b>ALTA y BAJA</b><b>escribir de forma digital el pin P0 en ALTA</b> manda electricidad por el pin 0 y el LED conectado ahí se enciende. <b>BAJA</b> lo apaga. El bloque está en la categoría <b>Salida</b>.</div>
+    <div class="tip"><b>Fíjate</b>Si mueves el sol a la mitad de un ciclo, el semáforo termina ese ciclo y el cambio se nota en la siguiente vuelta de <b>siempre</b>, porque la pregunta se hace al comienzo de cada vuelta.</div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-ex4"><label for="t-ex4"><b>Vi el semáforo en modo DÍA y en modo NOCHE</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 15. ARMAR SEMÁFORO ===================== -->
+<section class="slide" data-title="Arma el semáforo en Tinkercad">
+  <div class="card">
+    <div class="eyebrow">Tema 5 · Práctica guiada</div>
+    <h2>Arma el semáforo en Tinkercad</h2>
+    <div class="seg" id="buildSeg">
+      <button type="button" class="on" data-p="0">1 · Componentes</button>
+      <button type="button" data-p="1">2 · Conexiones</button>
+      <button type="button" data-p="2">3 · Programa y prueba</button>
+    </div>
+    <div class="bp" data-p="0">
+      <ol class="steps-list">
+        <li>Crea un circuito nuevo (<span class="ui">+ Crear</span> → <span class="ui">Circuitos</span>) y llámalo <code>S3_E4_Apellido_Nombre</code>.</li>
+        <li>Arrastra una <b>micro:bit</b> al área de trabajo.</li>
+        <li>Arrastra <b>3 LED</b> (están en la lista <b>Básico</b>). Haz clic en cada uno y, en el cuadro de propiedades, cambia su <b>color</b>: uno rojo, uno amarillo y uno verde.</li>
+        <li>Arrastra <b>3 Resistencia</b>. Haz clic en cada una y cambia su valor: escribe <b>220</b> y en la unidad elige <b>Ω</b> (viene en kΩ).</li>
+      </ol>
+      <div class="warn"><b>¿Por qué resistencias de 220 Ω?</b>Cada LED necesita una resistencia que lo proteja. En la <b>semana 4</b> aprenderás a calcularla. Por ahora, <b>copia el montaje tal como está</b>.</div>
+    </div>
+    <div class="bp" data-p="1" style="display:none">
+      <p><b>Cómo hacer un cable:</b> haz clic en el extremo de un componente (la punta de una pata o un pin) y luego haz clic en el extremo de otro. Si pasas el mouse por las patas del LED, Tinkercad te dice cuál es el <b>Ánodo</b> (pata doblada, +) y cuál el <b>Cátodo</b> (pata recta, −).</p>
+      <svg class="schem" viewBox="0 0 560 250" role="img" aria-label="Esquema: pin 0 a resistencia a LED rojo, pin 1 a resistencia a LED amarillo, pin 2 a resistencia a LED verde, cátodos a GND">
+        <rect x="10" y="20" width="120" height="210" rx="14" fill="#23262B"/>
+        <text x="70" y="44" fill="#fff" font-size="13" text-anchor="middle" font-weight="700">micro:bit</text>
+        <g font-size="12" fill="#C9A227" font-weight="700">
+          <circle cx="130" cy="75" r="9" fill="#C9A227"/><text x="100" y="79">P0</text>
+          <circle cx="130" cy="120" r="9" fill="#C9A227"/><text x="100" y="124">P1</text>
+          <circle cx="130" cy="165" r="9" fill="#C9A227"/><text x="100" y="169">P2</text>
+          <circle cx="130" cy="210" r="9" fill="#C9A227"/><text x="92" y="214">GND</text>
+        </g>
+        <g stroke="#2F9E44" stroke-width="3" fill="none">
+          <line x1="139" y1="75" x2="220" y2="75"/><line x1="139" y1="120" x2="220" y2="120"/><line x1="139" y1="165" x2="220" y2="165"/>
+          <line x1="290" y1="75" x2="360" y2="75"/><line x1="290" y1="120" x2="360" y2="120"/><line x1="290" y1="165" x2="360" y2="165"/>
+        </g>
+        <g stroke="#222" stroke-width="3" fill="none">
+          <polyline points="410,75 470,75 470,210 139,210"/><line x1="410" y1="120" x2="470" y2="120"/><line x1="410" y1="165" x2="470" y2="165"/>
+        </g>
+        <g><rect x="220" y="64" width="70" height="22" rx="6" fill="#E9D8B4" stroke="#8A6D3B"/><rect x="220" y="109" width="70" height="22" rx="6" fill="#E9D8B4" stroke="#8A6D3B"/><rect x="220" y="154" width="70" height="22" rx="6" fill="#E9D8B4" stroke="#8A6D3B"/></g>
+        <g font-size="11" text-anchor="middle" fill="#5B4A2A"><text x="255" y="79">220 Ω</text><text x="255" y="124">220 Ω</text><text x="255" y="169">220 Ω</text></g>
+        <g><circle cx="385" cy="75" r="16" fill="#FF3B30"/><circle cx="385" cy="120" r="16" fill="#FFC400"/><circle cx="385" cy="165" r="16" fill="#22C55E"/></g>
+        <g font-size="10" fill="#555"><text x="343" y="66">+</text><text x="416" y="66">−</text></g>
+        <g font-size="12" fill="#333"><text x="490" y="79">rojo</text><text x="490" y="124">amarillo</text><text x="490" y="169">verde</text><text x="300" y="228">cátodos (−) → GND</text></g>
+      </svg>
+      <p class="muted" style="text-align:center">Esquema de conexiones (no es el dibujo real: en Tinkercad los pines 0, 1, 2 y GND están en el borde de abajo de la micro:bit).</p>
+      <table class="simple">
+        <tr><th>Desde</th><th>Hasta</th><th>Luego</th></tr>
+        <tr><td>Pin <b>0</b> de la micro:bit</td><td>Un extremo de la resistencia 1</td><td>Otro extremo → <b>Ánodo</b> del LED <b>rojo</b></td></tr>
+        <tr><td>Pin <b>1</b></td><td>Un extremo de la resistencia 2</td><td>Otro extremo → <b>Ánodo</b> del LED <b>amarillo</b></td></tr>
+        <tr><td>Pin <b>2</b></td><td>Un extremo de la resistencia 3</td><td>Otro extremo → <b>Ánodo</b> del LED <b>verde</b></td></tr>
+        <tr><td><b>Cátodo</b> del LED rojo</td><td>Pin <b>GND</b></td><td>Cátodo amarillo → cátodo rojo · Cátodo verde → cátodo amarillo</td></tr>
+      </table>
+      <div class="tip"><b>Consejo</b>Haz clic en un cable para cambiar su color en el cuadro de propiedades. Usar <b>negro</b> para los cables que van a GND te ayuda a no confundirte.</div>
+    </div>
+    <div class="bp" data-p="2" style="display:none">
+      <ol class="steps-list">
+        <li>Haz clic en <span class="ui">Código</span>. Quita el <i>mostrar icono</i> que trae <b>al iniciar</b> (arrástralo a la papelera).</li>
+        <li><b>Variables</b> → <span class="ui">Crear variable...</span> → <code>tiempo</code>. Pon <b>definir tiempo en 3</b> dentro de <b>al iniciar</b>.</li>
+        <li>De <b>Control</b>, pon <b>si … entonces … si no</b> dentro de <b>siempre</b>.</li>
+        <li>En el hueco del <b>si</b>: comparador de <b>Matemáticas</b> con <b>nivel de luz</b> (de <b>Entrada</b>) <b>&lt;</b> <b>50</b>.</li>
+        <li>En <b>entonces</b>: <b>repetir 2 veces</b> con los 4 bloques del parpadeo amarillo (P1 ALTA, esperar 500 milisegundos, P1 BAJA, esperar 500 milisegundos).</li>
+        <li>En <b>si no</b>: los 9 bloques del ciclo de día, <b>en el mismo orden</b> de la diapositiva anterior. En los dos <b>esperar</b> del verde y del rojo pon la variable <b>tiempo</b>.</li>
+        <li>Presiona <span class="ui">Iniciar simulación</span>. Revisa: verde 3 s → amarillo 1 s → rojo 3 s. En el panel bajo la micro:bit baja el ☀️ a menos de 50: debe parpadear el amarillo.</li>
+      </ol>
+      <div class="warn"><b>¿Un LED no enciende?</b>Revisa: ① que el cable del ánodo (pata doblada) vaya a la resistencia y al pin correcto; ② que todos los cátodos lleguen a GND; ③ que el pin del bloque (P0, P1, P2) sea el mismo del cable.</div>
+    </div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-build"><label for="t-build"><b>Armé y probé el semáforo en Tinkercad</b><span>Es el Ejercicio 4 del taller.</span></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 16. COMPARTIR ===================== -->
+<section class="slide" data-title="Comparte tu circuito (enlace)">
+  <div class="card">
+    <div class="eyebrow">Entrega · Paso a paso</div>
+    <h2>Comparte tu circuito: copia el enlace</h2>
+    <p>Para el taller entregas el <b>enlace</b> de cada circuito. Tu profesor debe poder abrirlo. Sigue estos pasos con cada diseño:</p>
+    <ol class="steps-list">
+      <li>Ve a tu panel: <b>Tus diseños</b> → filtro <span class="ui">Circuitos</span>.</li>
+      <li>Haz clic en el <b>nombre</b> o la imagen del diseño. Se abre su página (dice <b>Privado</b> y <i>"Solo tú puedes ver el diseño"</i>).</li>
+      <li>Haz clic en <span class="ui">Cambiar visibilidad para compartir</span>. Se abre <b>Propiedades del diseño</b>.</li>
+      <li>Revisa que el <b>Nombre del diseño</b> sea el que pide el taller.</li>
+      <li>En <b>Privacidad</b> elige <b>Compartir vínculo</b>: <i>"No se muestra públicamente, pero es visible para cualquier persona que tenga el vínculo"</i>.</li>
+      <li>Presiona <span class="ui">Guardar cambios</span>.</li>
+      <li>Presiona <span class="ui">Copiar vínculo</span> y pega el enlace en tu entrega de Classroom.</li>
+    </ol>
+    <div class="tip"><b>Prueba el enlace antes de entregar</b>Ábrelo en una <b>ventana de incógnito</b> (Ctrl + Shift + N en Chrome). Si se ve tu circuito, a tu profesor también le abrirá.</div>
+    <div class="warn"><b>Si dejas el diseño en "Privado"</b>Tu profesor no podrá abrir el enlace y el ejercicio no se puede calificar.</div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-share"><label for="t-share"><b>Practiqué cómo compartir con mi circuito de prueba</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 17. REPASO ===================== -->
+<section class="slide" data-title="Repaso final">
+  <div class="card">
+    <div class="eyebrow">Cierre · Preguntas rápidas</div>
+    <h2>Repaso final</h2>
+    <p>Comprueba lo que aprendiste antes de hacer el taller. No tiene nota: si te equivocas, lee la explicación e inténtalo otra vez.</p>
+    <div class="qq-group" data-set="final" data-task="t-qq4"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-qq4"><label for="t-qq4"><b>Respondí bien todo el repaso final</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 18. CIERRE ===================== -->
+<section class="slide" data-title="¿Y ahora qué sigue?">
+  <div class="card">
+    <div class="eyebrow">Cierre de la semana</div>
+    <h2>¿Y ahora qué sigue?</h2>
+    <p id="finalSummary" class="lead"></p>
+    <div class="grid2">
+      <div class="box"><h3>📖 1. Documento de apoyo</h3><p class="muted">Profundiza en los temas y <b>copia en tu cuaderno</b> las partes marcadas con 📓.</p></div>
+      <div class="box"><h3>🔑 2. Tu cuenta institucional</h3><p class="muted">Haz todos los ejercicios del taller con la cuenta institucional de Google.</p></div>
+      <div class="box" style="grid-column:1/-1;border-color:var(--accent);background:var(--accent-light)">
+        <h3>🛠️ 3. Taller evaluativo (100 puntos)</h3>
+        <ul class="clean">
+          <li><b>Ejercicio 1 · Variables</b> — Marcador de goles (20 pts)</li>
+          <li><b>Ejercicio 2 · Condicionales</b> — Alerta de temperatura (20 pts)</li>
+          <li><b>Ejercicio 3 · Bucles</b> — Cuenta regresiva para despegar (20 pts)</li>
+          <li><b>Ejercicio 4 · Semáforo</b> — variable + condicional + bucles (40 pts)</li>
+        </ul>
+        <p style="margin:0">Entregas en Classroom el <b>enlace de Tinkercad de cada ejercicio</b> (4 enlaces). El trabajo es <b>individual</b>.</p>
+      </div>
+    </div>
+    <div class="tip"><b>Recuerda</b>No hay una única solución perfecta: tu programa puede verse distinto al de un compañero y estar bien, siempre que cumpla lo que pide cada ejercicio.</div>
+    <div class="dots" id="dots"></div>
+  </div>
+  <footer class="close">Semana 3 · Plan de 10 semanas — Pensamiento Computacional, Electrónica, Mecatrónica y Programación Física · Grado 9°</footer>
+</section>
+
+</main>
+
+<nav class="nav" aria-label="Navegación de diapositivas">
+  <div class="nav-inner">
+    <button class="btn secondary" type="button" id="prevBtn">← Anterior</button>
+    <select id="jump" aria-label="Ir a la diapositiva"></select>
+    <button class="btn" type="button" id="nextBtn">Siguiente →</button>
+  </div>
+</nav>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   UTILIDADES DE SIMULACIÓN (con cancelación)
+   ========================================================= */
+let runId = 0;                       // cambia cada vez que se detiene una simulación
+function Stop(){ this.stop = true; }
+function sleep(ms, id){
+  return new Promise((res, rej)=>{ setTimeout(()=>{ if(id!==runId) rej(new Stop()); else res(); }, ms); });
+}
+function stopAll(){ runId++; if(typeof ex3Timer!=='undefined' && ex3Timer){ clearInterval(ex3Timer); ex3Timer=null; } }
+
+/* ---------- patrones 5x5 ---------- */
+const PAT = {
+  happy:'00000 01010 00000 10001 01110',
+  sad:  '00000 01010 00000 01110 10001',
+  yes:  '00000 00001 00010 10100 01000',
+  no:   '10001 01010 00100 01010 10001',
+  heart:'01010 11111 11111 01110 00100',
+  '0':'01100 10010 10010 10010 01100',
+  '1':'00100 01100 00100 00100 01110',
+  '2':'11100 00010 01100 10000 11110',
+  '3':'11110 00010 00100 10010 01100',
+  '4':'00110 01010 10010 11111 00010',
+  '5':'11111 10000 11110 00001 11110',
+  '6':'00010 00100 01110 10001 01110',
+  '7':'11111 00010 00100 01000 10000',
+  '8':'01110 10001 01110 10001 01110',
+  '9':'01110 10001 01110 00100 01000',
+  '-':'00000 00000 01110 00000 00000',
+  blank:'00000 00000 00000 00000 00000'
+};
+
+/* ---------- micro:bit simulada ---------- */
+function MicroBit(el, opts){
+  opts = opts||{};
+  el.classList.add('mb');
+  el.setAttribute('aria-label','micro:bit simulada');
+  const row = document.createElement('div'); row.className='mb-row';
+  this.btnA = document.createElement('button'); this.btnA.type='button'; this.btnA.className='mb-btn'; this.btnA.textContent='A'; this.btnA.setAttribute('aria-label','Botón A');
+  this.btnB = document.createElement('button'); this.btnB.type='button'; this.btnB.className='mb-btn'; this.btnB.textContent='B'; this.btnB.setAttribute('aria-label','Botón B');
+  const scr = document.createElement('div'); scr.className='mb-screen';
+  this.leds=[];
+  for(let i=0;i<25;i++){ const d=document.createElement('div'); d.className='led'; scr.appendChild(d); this.leds.push(d); }
+  row.appendChild(this.btnA); row.appendChild(scr); row.appendChild(this.btnB);
+  el.appendChild(row);
+  const pins=document.createElement('div'); pins.className='mb-pins'; pins.innerHTML='<span>0</span><span>1</span><span>2</span><span>3V</span><span>GND</span>';
+  el.appendChild(pins);
+  if(!opts.buttons){ this.btnA.disabled=true; this.btnB.disabled=true; }
+}
+MicroBit.prototype.show = function(key){
+  const bits = (PAT[key]||PAT.blank).replace(/ /g,'');
+  this.leds.forEach((l,i)=>l.classList.toggle('on', bits[i]==='1'));
+};
+MicroBit.prototype.clear = function(){ this.show('blank'); };
+/* mostrar número: un dígito se queda fijo; varios dígitos pasan uno por uno */
+MicroBit.prototype.showNumber = async function(n, id){
+  const s = String(n);
+  if(s.length===1){ this.show(s); return; }
+  for(const ch of s){ this.show(ch); await sleep(420,id); this.clear(); await sleep(80,id); }
+  this.show(s[s.length-1]);
+};
+
+/* =========================================================
+   NAVEGACIÓN Y PROGRESO
+   ========================================================= */
+const slides = Array.from(document.querySelectorAll('.slide'));
+const jump = document.getElementById('jump');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const seen = new Set();
+let current = 0;
+
+slides.forEach((s,i)=>{
+  const o = document.createElement('option');
+  o.value = i; o.textContent = (i+1) + '. ' + s.dataset.title;
+  jump.appendChild(o);
+});
+
+function go(i){
+  if(i<0 || i>=slides.length) return;
+  slides[current].classList.remove('active');
+  current = i;
+  slides[current].classList.add('active');
+  seen.add(i);
+  jump.value = i;
+  prevBtn.disabled = i===0;
+  nextBtn.disabled = i===slides.length-1;
+  document.getElementById('slideLabel').textContent = 'Diapositiva ' + (i+1) + ' de ' + slides.length;
+  window.scrollTo({top:0, behavior:'smooth'});
+  stopAll();
+  const sim = slides[current].dataset.sim;
+  if(sim && SIMS[sim]) SIMS[sim]();
+  renderDots(); updateProgress();
+}
+prevBtn.addEventListener('click',()=>go(current-1));
+nextBtn.addEventListener('click',()=>go(current+1));
+jump.addEventListener('change',()=>go(+jump.value));
+document.addEventListener('keydown',e=>{
+  const tag = (e.target.tagName||'').toLowerCase();
+  if(['input','select','textarea'].includes(tag)) return;
+  if(e.key==='ArrowRight') go(current+1);
+  if(e.key==='ArrowLeft') go(current-1);
+});
+
+function renderDots(){
+  const d = document.getElementById('dots'); d.innerHTML='';
+  slides.forEach((_,i)=>{ const s=document.createElement('span'); if(seen.has(i)) s.className='seen'; if(i===current) s.className='cur'; d.appendChild(s); });
+}
+
+const taskBoxes = Array.from(document.querySelectorAll('.task input[type=checkbox]'));
+taskBoxes.forEach(cb=>cb.addEventListener('change',updateProgress));
+function updateProgress(){
+  const done = taskBoxes.filter(c=>c.checked).length;
+  const total = taskBoxes.length;
+  document.getElementById('barFill').style.width = Math.round(done/total*100) + '%';
+  document.getElementById('progressLabel').textContent = done + ' de ' + total + ' tareas completadas';
+  const fs = document.getElementById('finalSummary');
+  if(fs){
+    fs.textContent = done===total
+      ? '¡Excelente! Completaste las ' + total + ' tareas de la presentación. Ya estás listo para el documento de apoyo y el taller.'
+      : 'Llevas ' + done + ' de ' + total + ' tareas de la presentación. Puedes volver a cualquier diapositiva con el menú de abajo antes de continuar.';
+  }
+}
+function autoCheck(id){ const c=document.getElementById(id); if(c && !c.checked){ c.checked=true; updateProgress(); } }
+
+/* =========================================================
+   PESTAÑAS DEL PASO A PASO DEL SEMÁFORO
+   ========================================================= */
+document.querySelectorAll('#buildSeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#buildSeg button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  document.querySelectorAll('.bp').forEach(p=>p.style.display = p.dataset.p===b.dataset.p ? '' : 'none');
+}));
+
+/* =========================================================
+   PUNTOS DE LA INTERFAZ
+   ========================================================= */
+const HS = [
+  ['1 · Nombre del diseño','Tinkercad le pone un nombre al azar a cada diseño. Haz clic aquí para cambiarlo por el que pide la actividad, por ejemplo <code>S3_E1_Perez_Ana</code>.'],
+  ['2 · Circuitos (área de trabajo)','Indica en qué tipo de editor estás. Debe decir <b>Circuitos</b>. No necesitas cambiarlo.'],
+  ['3 · Herramientas','Copiar, pegar, eliminar, <b>deshacer</b> ↶ y rehacer ↷. Si te equivocas, deshacer es tu mejor amigo.'],
+  ['4 · Código','Abre y cierra el <b>editor de bloques</b> de la micro:bit. Ahí programas.'],
+  ['5 · Iniciar simulación','Pone a funcionar el circuito con tu programa. Mientras simula, el botón cambia a <b>Detener simulación</b>. Para mover o conectar componentes, primero detén la simulación.'],
+  ['6 · Enviar a','Sirve para exportar el diseño. En este curso <b>no lo usamos</b>: entregamos con el enlace.'],
+  ['7 · Componentes','Aquí están las piezas: micro:bit, LED, Resistencia, Pulsador… La lista <b>Básico</b> trae las más usadas. Con <b>Buscar</b> encuentras una pieza por su nombre. Se arrastran al área de trabajo.'],
+  ['8 · Área de trabajo','Aquí armas el circuito. Con la rueda del mouse acercas o alejas la vista. El botón redondo de la esquina (<b>ajustar vista</b>) centra todo el circuito si te pierdes.']
+];
+const hsSeen = new Set();
+document.querySelectorAll('.hs').forEach(b=>b.addEventListener('click',()=>{
+  const i = +b.dataset.h;
+  document.querySelectorAll('.hs').forEach(x=>x.classList.remove('cur'));
+  b.classList.add('cur','seen');
+  document.getElementById('hsInfo').innerHTML = '<b>'+HS[i][0]+'</b><br>'+HS[i][1];
+  hsSeen.add(i); if(hsSeen.size===HS.length) autoCheck('t-ui');
+}));
+
+/* =========================================================
+   CAJA DE VARIABLE
+   ========================================================= */
+let vbValue = 0; const vbUsed = new Set();
+const vbVal = document.getElementById('vbVal'); const vbLog = document.getElementById('vbLog');
+document.querySelectorAll('[data-vb]').forEach(b=>b.addEventListener('click',()=>{
+  const k=b.dataset.vb; const before=vbValue;
+  if(k==='set0'){ vbValue=0; vbLog.textContent='definir: la caja ahora guarda 0 (se borró lo que tenía: '+before+').'; }
+  if(k==='add1'){ vbValue+=1; vbLog.textContent='cambiar por 1: '+before+' + 1 = '+vbValue+'.'; }
+  if(k==='sub1'){ vbValue-=1; vbLog.textContent='cambiar por −1: '+before+' − 1 = '+vbValue+'.'; }
+  vbVal.textContent=vbValue; vbVal.classList.add('pop'); setTimeout(()=>vbVal.classList.remove('pop'),200);
+  vbUsed.add(k); if(vbUsed.size===3) autoCheck('t-var');
+}));
+
+/* =========================================================
+   RESALTADO DE BLOQUES
+   ========================================================= */
+function hl(codeId, key){
+  const root=document.getElementById(codeId);
+  root.querySelectorAll('.tb.run').forEach(x=>x.classList.remove('run'));
+  if(key){ const b=root.querySelector('[data-b="'+key+'"]'); if(b) b.classList.add('run'); }
+}
+
+/* =========================================================
+   EJEMPLO 1 · CONTADOR
+   ========================================================= */
+const mb1 = new MicroBit(document.getElementById('mb1'), {buttons:true});
+let puntos=0, ex1A=false, ex1B=false, ex1Busy=false;
+async function ex1Event(which){
+  if(ex1Busy) return; ex1Busy=true; const id=runId;
+  try{
+    hl('code1', which); await sleep(250,id);
+    hl('code1', which+'1'); puntos += (which==='a'?1:-1);
+    document.getElementById('w1').textContent=puntos; await sleep(350,id);
+    hl('code1', which+'2'); await mb1.showNumber(puntos,id); await sleep(300,id);
+    hl('code1', null);
+    document.getElementById('log1').textContent = which==='a' ? 'Botón A: puntos subió a '+puntos+'.' : 'Botón B: puntos bajó a '+puntos+'.';
+    if(which==='a') ex1A=true; else ex1B=true;
+    if(ex1A && ex1B) autoCheck('t-ex1');
+  }catch(e){ if(!(e instanceof Stop)) throw e; }
+  ex1Busy=false;
+}
+mb1.btnA.addEventListener('click',()=>ex1Event('a'));
+mb1.btnB.addEventListener('click',()=>ex1Event('b'));
+async function runEx1(){
+  const id=runId; ex1Busy=true; puntos=0; document.getElementById('w1').textContent='0'; mb1.clear();
+  document.getElementById('log1').textContent='Al iniciar…';
+  try{
+    hl('code1','s'); await sleep(300,id);
+    hl('code1','s1'); await sleep(400,id);
+    hl('code1','s2'); mb1.showNumber(0,id); await sleep(400,id);
+    hl('code1',null);
+    document.getElementById('log1').textContent='Listo. Presiona A o B en la micro:bit.';
+  }catch(e){ if(!(e instanceof Stop)) throw e; }
+  ex1Busy=false;
+}
+document.getElementById('ex1Restart').addEventListener('click',()=>{ stopAll(); setTimeout(runEx1,30); });
+
+/* =========================================================
+   EJEMPLO 2 · ¿HACE FRÍO?
+   ========================================================= */
+const mb2 = new MicroBit(document.getElementById('mb2'));
+const tRange=document.getElementById('tRange'); let ex2Cold=false, ex2Warm=false;
+tRange.addEventListener('input',()=>{ document.getElementById('tVal').textContent=tRange.value; });
+async function runEx2(){
+  const id=runId; mb2.clear();
+  try{
+    hl('code2','s'); await sleep(300,id); hl('code2','s1'); await sleep(400,id);
+    while(true){
+      hl('code2','f'); await sleep(150,id);
+      hl('code2','if'); await sleep(350,id);
+      const t=+tRange.value;
+      if(t<18){ hl('code2','yes'); mb2.show('sad'); ex2Cold=true;
+        document.getElementById('log2').textContent=t+' < 18 es VERDADERO → camino del "entonces": carita triste.';
+      } else { hl('code2','no'); mb2.show('happy'); ex2Warm=true;
+        document.getElementById('log2').textContent=t+' < 18 es FALSO → camino del "si no": carita feliz.';
+      }
+      if(ex2Cold && ex2Warm) autoCheck('t-ex2');
+      await sleep(500,id);
+    }
+  }catch(e){ if(!(e instanceof Stop)) throw e; }
+}
+
+/* =========================================================
+   EJEMPLO 3 · CUENTA REGRESIVA PASO A PASO
+   ========================================================= */
+const mb3 = new MicroBit(document.getElementById('mb3'));
+let ex3Steps=[], ex3i=0, ex3Timer=null;
+function buildEx3(){
+  const s=[]; let t=3;
+  s.push({b:'s1', t:3, txt:'Se crea la caja <b>tiempo</b> y se guarda 3.', act:()=>{}});
+  while(true){
+    const cond = t>0;
+    s.push({b:'w', t:t, txt:'¿'+t+' &gt; 0? <b>'+(cond?'VERDADERO':'FALSO')+'</b> → '+(cond?'entra al bucle.':'sale del bucle.'), act:()=>{}});
+    if(!cond) break;
+    const shown=t;
+    s.push({b:'w1', t:t, txt:'Muestra '+shown+' en la pantalla.', act:()=>mb3.show(String(shown))});
+    s.push({b:'w2', t:t, txt:'Espera 1 segundo.', act:()=>{}});
+    t=t-1; const nt=t;
+    s.push({b:'w3', t:nt, txt:'tiempo = '+(nt+1)+' + (−1) = '+nt+'.', act:()=>{}});
+  }
+  s.push({b:'e', t:0, txt:'Muestra el chulo ✔. ¡Fin!', act:()=>mb3.show('yes')});
+  return s;
+}
+function resetEx3(){
+  if(ex3Timer){ clearInterval(ex3Timer); ex3Timer=null; }
+  ex3Steps=buildEx3(); ex3i=0; mb3.clear(); hl('code3',null);
+  document.getElementById('w3').textContent='—';
+  document.querySelector('#trace tbody').innerHTML='';
+  document.getElementById('ex3Step').disabled=false; document.getElementById('ex3Auto').disabled=false;
+}
+function stepEx3(){
+  if(ex3i>=ex3Steps.length) return;
+  const st=ex3Steps[ex3i]; st.act(); hl('code3', st.b);
+  document.getElementById('w3').textContent=st.t;
+  const tb=document.querySelector('#trace tbody');
+  tb.querySelectorAll('tr').forEach(r=>r.classList.remove('nowrow'));
+  const tr=document.createElement('tr'); tr.className='nowrow';
+  const NAMES={s1:'definir tiempo en 3',w:'repetir mientras tiempo > 0',w1:'mostrar número tiempo',w2:'esperar 1 segundos',w3:'cambiar tiempo por -1',e:'mostrar icono ✔'};
+  const name=NAMES[st.b];
+  tr.innerHTML='<td>'+(ex3i+1)+'</td><td>'+name+'</td><td>'+st.t+'</td><td>'+st.txt+'</td>';
+  tb.appendChild(tr); tr.scrollIntoView({block:'nearest'});
+  ex3i++;
+  if(ex3i>=ex3Steps.length){
+    document.getElementById('ex3Step').disabled=true; document.getElementById('ex3Auto').disabled=true;
+    if(ex3Timer){ clearInterval(ex3Timer); ex3Timer=null; }
+    autoCheck('t-ex3');
+  }
+}
+document.getElementById('ex3Step').addEventListener('click',stepEx3);
+document.getElementById('ex3Auto').addEventListener('click',()=>{ if(ex3Timer) return; ex3Timer=setInterval(stepEx3,900); });
+document.getElementById('ex3Reset').addEventListener('click',resetEx3);
+
+/* =========================================================
+   EJEMPLO 4 · SEMÁFORO
+   ========================================================= */
+const lR=document.getElementById('lR'), lY=document.getElementById('lY'), lG=document.getElementById('lG');
+const lRange=document.getElementById('lRange'); let sawDay=false, sawNight=false;
+function pin(p,on){ ({P0:lR,P1:lY,P2:lG})[p].classList.toggle('on',on); }
+function modeLabel(){
+  const v=+lRange.value; document.getElementById('lVal').textContent=v;
+  const m=document.getElementById('lMode');
+  if(v<50){ m.textContent='NOCHE'; m.className='mode noche'; } else { m.textContent='DÍA'; m.className='mode dia'; }
+}
+lRange.addEventListener('input',modeLabel);
+async function runEx4(){
+  const id=runId; pin('P0',false); pin('P1',false); pin('P2',false); modeLabel();
+  const log=document.getElementById('log4');
+  try{
+    hl('code4','s'); await sleep(300,id); hl('code4','s1'); log.textContent='tiempo = 3'; await sleep(400,id);
+    const tiempo=3;
+    while(true){
+      hl('code4','f'); await sleep(120,id);
+      hl('code4','if'); await sleep(300,id);
+      const luz=+lRange.value;
+      if(luz<50){
+        sawNight=true; log.textContent='Luz '+luz+' < 50 → VERDADERO: modo noche (parpadeo amarillo).';
+        for(let k=0;k<2;k++){
+          hl('code4','rep'); await sleep(100,id);
+          hl('code4','n1'); pin('P1',true);  await sleep(100,id);
+          hl('code4','n2'); await sleep(500,id);
+          hl('code4','n3'); pin('P1',false); await sleep(100,id);
+          hl('code4','n4'); await sleep(500,id);
+        }
+      } else {
+        sawDay=true; log.textContent='Luz '+luz+' < 50 → FALSO: modo día (ciclo normal).';
+        hl('code4','d1'); pin('P2',true); await sleep(100,id);
+        hl('code4','d2'); await sleep(tiempo*1000,id);
+        hl('code4','d3'); pin('P2',false); await sleep(60,id);
+        hl('code4','d4'); pin('P1',true); await sleep(60,id);
+        hl('code4','d5'); await sleep(1000,id);
+        hl('code4','d6'); pin('P1',false); await sleep(60,id);
+        hl('code4','d7'); pin('P0',true); await sleep(60,id);
+        hl('code4','d8'); await sleep(tiempo*1000,id);
+        hl('code4','d9'); pin('P0',false); await sleep(60,id);
+      }
+      if(sawDay && sawNight) autoCheck('t-ex4');
+    }
+  }catch(e){ if(!(e instanceof Stop)) throw e; }
+}
+
+const SIMS = { ex1:runEx1, ex2:runEx2, ex3:resetEx3, ex4:runEx4 };
+
+/* =========================================================
+   PREGUNTAS RÁPIDAS
+   ========================================================= */
+const QUIZ = {
+  var: [
+    {q:'La variable puntos vale 4. Se ejecuta "cambiar puntos por 1". ¿Cuánto vale ahora?', o:['1','5','4'], a:1, fb:'"cambiar por" suma al valor que ya tenía: 4 + 1 = 5.'},
+    {q:'La variable puntos vale 7. Se ejecuta "definir puntos en 0". ¿Cuánto vale ahora?', o:['0','7','−7'], a:0, fb:'"definir … en" reemplaza el valor: lo anterior se borra y queda 0.'}
+  ],
+  cond: [
+    {q:'La temperatura es 30 °C. ¿La condición "temperatura (°C) > 25" es…?', o:['Verdadera','Falsa'], a:0, fb:'30 es mayor que 25, así que la condición es verdadera.'},
+    {q:'En un bloque "si … entonces … si no", ¿cuántos caminos se ejecutan cada vez?', o:['Los dos','Solo uno','Ninguno'], a:1, fb:'Si la condición es verdadera se hace el "entonces"; si es falsa, el "si no". Nunca los dos.'},
+    {q:'¿En qué categoría de Tinkercad está el bloque verde para comparar (1 = 1)?', o:['Control','Matemáticas','Variables'], a:1, fb:'Las comparaciones y operaciones están en Matemáticas (verde).'}
+  ],
+  loop: [
+    {q:'¿Cuántas veces se muestra el corazón?  repetir 4 veces → mostrar icono ❤ + esperar', o:['1','4','Sin fin'], a:1, fb:'"repetir 4 veces" ejecuta su interior exactamente 4 veces.'},
+    {q:'¿Qué bucle usas para revisar un sensor todo el tiempo, sin parar?', o:['siempre','repetir 3 veces','si … entonces'], a:0, fb:'"siempre" repite sin fin mientras la micro:bit esté encendida. "si" no es un bucle: es un condicional.'},
+    {q:'"repetir mientras tiempo > 0" y tiempo vale 0. ¿Qué pasa?', o:['Entra al bucle','No entra: 0 > 0 es falso','Se repite para siempre'], a:1, fb:'0 no es mayor que 0: la condición es falsa y el bucle termina (o no empieza).'}
+  ],
+  final: [
+    {q:'¿Con qué cuenta de Tinkercad debes hacer y entregar el taller?', o:['Con la cuenta personal','Con la cuenta institucional de Google','Con cualquiera'], a:1, fb:'Las entregas del curso se hacen con la cuenta institucional.'},
+    {q:'Una variable es…', o:['Un bloque que repite','Una caja con nombre que guarda un dato que puede cambiar','Un cable del circuito'], a:1, fb:'La variable es la memoria del programa.'},
+    {q:'¿Qué bloque enciende el LED conectado al pin 2?', o:['escribir de forma digital el pin P2 en ALTA','mostrar número 2','escribir de forma digital el pin P2 en BAJA'], a:0, fb:'ALTA enciende y BAJA apaga. El pin del bloque debe ser el mismo del cable.'},
+    {q:'¿Qué privacidad eliges para que tu profesor pueda abrir el enlace?', o:['Privado','Compartir vínculo','No importa'], a:1, fb:'Con "Compartir vínculo" cualquiera que tenga el enlace puede ver el diseño. En "Privado" solo lo ves tú.'},
+    {q:'¿Qué pasa si cambias el editor de "Bloques" a "Texto"?', o:['Nada, se puede volver','Según la ayuda de Tinkercad, no se puede deshacer','Se borra el circuito'], a:1, fb:'Por eso en el curso trabajamos siempre en Bloques.'}
+  ]
+};
+document.querySelectorAll('.qq-group').forEach(g=>{
+  const set = QUIZ[g.dataset.set]; const solved = new Set();
+  set.forEach((item,qi)=>{
+    const box = document.createElement('div'); box.className='qq';
+    const q = document.createElement('div'); q.className='q'; q.textContent=(qi+1)+'. '+item.q; box.appendChild(q);
+    const opts = document.createElement('div'); opts.className='opts'; box.appendChild(opts);
+    const fb = document.createElement('div'); fb.className='fb';
+    item.o.forEach((txt,oi)=>{
+      const b = document.createElement('button'); b.type='button'; b.className='opt'; b.textContent=txt;
+      b.addEventListener('click',()=>{
+        opts.querySelectorAll('.opt').forEach(x=>x.classList.remove('right','wrong'));
+        if(oi===item.a){
+          b.classList.add('right'); fb.className='fb show ok'; fb.textContent='✔ ¡Correcto! '+item.fb;
+          solved.add(qi); if(solved.size===set.length) autoCheck(g.dataset.task);
+        } else {
+          b.classList.add('wrong'); fb.className='fb show no'; fb.textContent='✘ Todavía no. Vuelve a leer la explicación de esta diapositiva e inténtalo otra vez.';
+        }
+      });
+      opts.appendChild(b);
+    });
+    box.appendChild(fb); g.appendChild(box);
+  });
+});
+
+/* ---------- arranque ---------- */
+resetEx3();
+go(0);
+})();
+</script>
+</body>
+</html>

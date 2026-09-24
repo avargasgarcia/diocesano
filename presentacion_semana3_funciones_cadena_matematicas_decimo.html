@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Funciones SQL — Semana 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f4f5f8; --surface:#ffffff; --surface-2:#eceef3;
+  --ink:#1a2130; --ink-soft:#525b6b; --line:#d7dbe4;
+  --accent:#0e7c86; --accent-ink:#ffffff;
+  --amber:#b86e12; --amber-soft:#fbeedd;
+  --good:#1f7a4d; --bad:#b5342d;
+  --code-bg:#0f1720; --code-fg:#e6edf3; --code-key:#f2b846; --code-str:#7fd0c9; --code-com:#7c8899; --code-num:#c9a6ff;
+  --f-comp:#2f6fb5; --f-arit:#7a4fb0; --f-logi:#b86e12; --f-espe:#b0407a; --f-conj:#0e7c86;
+  --shadow:0 1px 2px rgba(20,25,40,.04), 0 8px 24px rgba(20,25,40,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1319; --surface:#161f28; --surface-2:#1d2733;
+    --ink:#e7ecf2; --ink-soft:#9aa7b6; --line:#2b3745;
+    --accent:#43c2c7; --accent-ink:#08181a;
+    --amber:#e7a94a; --amber-soft:#2a2013;
+    --good:#4fbd85; --bad:#e2695f;
+    --code-bg:#080d12; --code-com:#6b7684;
+    --f-comp:#6aa6e8; --f-arit:#b28be6; --f-logi:#e7a94a; --f-espe:#e07bb0; --f-conj:#43c2c7;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1319; --surface:#161f28; --surface-2:#1d2733;
+  --ink:#e7ecf2; --ink-soft:#9aa7b6; --line:#2b3745;
+  --accent:#43c2c7; --accent-ink:#08181a;
+  --amber:#e7a94a; --amber-soft:#2a2013;
+  --good:#4fbd85; --bad:#e2695f;
+  --code-bg:#080d12; --code-com:#6b7684;
+  --f-comp:#6aa6e8; --f-arit:#b28be6; --f-logi:#e7a94a; --f-espe:#e07bb0; --f-conj:#43c2c7;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg); color:var(--ink); font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif; overscroll-behavior:none;}
+h1,h2,h3{font-family:"IBM Plex Serif", Georgia, serif; text-wrap:balance; margin:0;}
+h3{font-size:19px; font-weight:600;}
+code,.mono{font-family:"IBM Plex Mono", ui-monospace, Consolas, monospace;}
+p code, li code, td code, .callout code{background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:0 5px; font-size:.92em;}
+
+/* ---------- shell ---------- */
+#deck{position:relative; height:100vh; height:100dvh; display:flex; flex-direction:column; overflow:hidden;}
+#topbar{display:flex; align-items:center; gap:14px; padding:10px 18px; border-bottom:1px solid var(--line); background:var(--surface); flex:0 0 auto;}
+#topbar .brand{font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.04em; color:var(--ink-soft); white-space:nowrap;}
+#progress-track{flex:1 1 auto; height:5px; background:var(--surface-2); border-radius:99px; overflow:hidden;}
+#progress-fill{height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--amber)); transition:width .35s ease;}
+#counter{font-family:"IBM Plex Mono"; font-size:12.5px; color:var(--ink-soft); white-space:nowrap; min-width:52px; text-align:right; font-variant-numeric:tabular-nums;}
+#theme-btn{font-family:"IBM Plex Mono"; font-size:12px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-soft); border-radius:8px; padding:5px 9px; cursor:pointer;}
+@media (max-width:560px){ #topbar .brand{display:none;} }
+#viewport{flex:1 1 auto; position:relative; overflow:hidden;}
+.slide{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; padding:clamp(20px,4vw,48px) clamp(16px,5vw,80px); opacity:0; transform:translateX(24px); pointer-events:none; transition:opacity .35s ease, transform .35s ease; overflow-y:auto; visibility:hidden;}
+.slide.active{opacity:1; transform:none; pointer-events:auto; visibility:visible;}
+@media (prefers-reduced-motion: reduce){ .slide{transition:none; transform:none;} }
+.slide-inner{width:100%; max-width:960px; margin:auto; display:flex; flex-direction:column; gap:18px;}
+.eyebrow{font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); font-weight:600;}
+.slide h2{font-size:clamp(26px,4vw,40px); font-weight:600; line-height:1.15;}
+.slide.cover h2{font-size:clamp(34px,6vw,58px);}
+.lede{font-size:17px; line-height:1.6; color:var(--ink-soft); max-width:72ch; margin:0;}
+.slide p{font-size:16px; line-height:1.65; max-width:72ch; margin:0;}
+.slide ul{margin:0; padding-left:20px; line-height:1.7; font-size:16px;}
+.slide.section-slide .slide-inner{border-left:4px solid var(--amber); padding-left:22px;}
+
+#navbar{flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 18px; border-top:1px solid var(--line); background:var(--surface);}
+.navbtn{font-family:"IBM Plex Sans"; font-weight:600; font-size:14px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:10px; padding:9px 16px; cursor:pointer;}
+.navbtn:hover{border-color:var(--accent);}
+.navbtn:disabled{opacity:.35; cursor:default;}
+.navbtn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+button:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+#dots{display:flex; gap:5px; flex-wrap:wrap; justify-content:center; max-width:56vw;}
+.dot{width:7px; height:7px; border-radius:99px; background:var(--line); border:none; padding:0; cursor:pointer;}
+.dot.section{background:var(--amber);}
+.dot.active{background:var(--accent); width:18px;}
+
+/* ---------- components ---------- */
+.card{background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:clamp(14px,2.2vw,24px);}
+.card h3{margin-bottom:8px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+@media (max-width:760px){ .grid2,.grid3{grid-template-columns:1fr;} }
+.grid2>*,.grid3>*,.venn-wrap>*,.tabpanel>*,.steppanel>*,.ex{min-width:0;}
+.pill{display:inline-flex; align-items:center; gap:6px; font-family:"IBM Plex Mono"; font-size:12px; font-weight:600; padding:3px 10px; border-radius:99px; background:var(--surface-2); color:var(--ink-soft); border:1px solid var(--line); white-space:nowrap;}
+
+pre.code{background:var(--code-bg); color:var(--code-fg); border-radius:12px; padding:14px 18px; overflow-x:auto; font-size:14.5px; line-height:1.6; margin:0; font-family:"IBM Plex Mono", ui-monospace, monospace;}
+.code .k{color:var(--code-key); font-weight:600;}
+.code .s{color:var(--code-str);}
+.code .c{color:var(--code-com); font-style:italic;}
+.code .n{color:var(--code-num);}
+
+.ex{display:flex; flex-direction:column; gap:8px;}
+.ex-head .pill{white-space:normal;}
+.ex-head{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;}
+.ex-actions{display:flex; gap:8px;}
+.mini{font-family:"IBM Plex Mono"; font-size:12.5px; font-weight:600; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:8px; padding:6px 11px; cursor:pointer;}
+.mini:hover{border-color:var(--accent);}
+.reveal-btn{font-family:"IBM Plex Mono"; font-size:12.5px; font-weight:600; background:var(--amber-soft); color:var(--amber); border:1px solid var(--amber); border-radius:8px; padding:6px 11px; cursor:pointer;}
+.reveal-box{display:none; border-left:3px solid var(--amber); background:var(--surface); border-radius:0 10px 10px 0; padding:10px 14px;}
+.reveal-box.show{display:block;}
+.err{font-family:"IBM Plex Mono"; font-size:13.5px; color:var(--bad); border:1px solid var(--bad); border-radius:8px; padding:8px 12px; background:color-mix(in srgb,var(--bad) 8%,var(--surface));}
+
+.table-wrap{overflow-x:auto;}
+table.data{border-collapse:collapse; width:100%; font-size:14px;}
+table.data caption{caption-side:top; text-align:left; font-family:"IBM Plex Mono"; font-size:12px; color:var(--ink-soft); padding-bottom:6px;}
+table.data th, table.data td{border:1px solid var(--line); padding:6px 10px; text-align:left; font-variant-numeric:tabular-nums; white-space:nowrap;}
+table.data th{background:var(--surface-2); font-family:"IBM Plex Mono"; font-weight:600; font-size:12.5px;}
+table.data td.null{color:var(--ink-soft); font-style:italic;}
+table.ops td:first-child{font-family:"IBM Plex Mono"; font-weight:600;}
+
+.tabs{display:flex; gap:6px; flex-wrap:wrap;}
+.tab{font-family:"IBM Plex Sans"; font-weight:600; font-size:14px; padding:8px 13px; border-radius:9px 9px 0 0; cursor:pointer; background:var(--surface-2); color:var(--ink-soft); border:1px solid var(--line); border-bottom:none;}
+.tab.active{background:var(--surface); color:var(--accent); border-color:var(--accent);}
+.tabpanel{display:none; border:1px solid var(--line); border-radius:0 10px 10px 10px; padding:16px; background:var(--surface); flex-direction:column; gap:12px;}
+.tabpanel.active{display:flex;}
+.tabset{display:flex; flex-direction:column;}
+
+.callout{border-radius:10px; padding:12px 16px; font-size:15px; line-height:1.6; border:1px solid var(--line); background:var(--surface);}
+.callout.warn{border-left:4px solid var(--bad);}
+.callout.tip{border-left:4px solid var(--accent);}
+.callout.note{border-left:4px solid var(--amber);}
+.callout strong{font-weight:600;}
+
+/* familias de operadores */
+.fam{--c:var(--accent);}
+.fam.comp{--c:var(--f-comp);} .fam.arit{--c:var(--f-arit);} .fam.logi{--c:var(--f-logi);} .fam.espe{--c:var(--f-espe);} .fam.conj{--c:var(--f-conj);}
+.famcard{border:1px solid var(--line); border-top:4px solid var(--c); border-radius:12px; padding:12px 14px; background:var(--surface);}
+.famcard b{display:block; color:var(--c); font-size:15px; margin-bottom:4px;}
+.famcard .mono{font-size:13.5px;}
+.famgrid{display:grid; grid-template-columns:repeat(5,1fr); gap:10px;}
+@media (max-width:860px){ .famgrid{grid-template-columns:repeat(2,1fr);} }
+.chip{display:inline-block; font-family:"IBM Plex Mono"; font-weight:600; font-size:13px; color:var(--c); border:1px solid var(--c); border-radius:7px; padding:2px 8px; background:color-mix(in srgb,var(--c) 10%,var(--surface));}
+
+.anatomy{display:flex; gap:10px; align-items:stretch; justify-content:center; flex-wrap:wrap; font-family:"IBM Plex Mono";}
+.anatomy div{border:1px dashed var(--line); border-radius:10px; padding:10px 16px; text-align:center; font-size:22px; font-weight:600; background:var(--surface);}
+.anatomy div small{display:block; font-family:"IBM Plex Sans"; font-size:12px; font-weight:500; color:var(--ink-soft); margin-top:4px;}
+.anatomy .op{border:2px solid var(--f-comp); color:var(--f-comp);}
+
+/* esquema BD */
+.schema{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px;}
+.tcard{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); box-shadow:var(--shadow);}
+.tcard header{background:var(--accent); color:var(--accent-ink); font-family:"IBM Plex Mono"; font-weight:600; font-size:14px; padding:7px 12px;}
+.tcard ul{list-style:none; margin:0; padding:8px 12px; font-family:"IBM Plex Mono"; font-size:13px; line-height:1.8;}
+.tcard li span{font-size:10.5px; font-weight:600; border-radius:4px; padding:0 4px; margin-left:5px; border:1px solid var(--line); color:var(--ink-soft);}
+.tcard li span.pk{color:var(--amber); border-color:var(--amber);}
+.tcard li span.fk{color:var(--f-comp); border-color:var(--f-comp);}
+.tcard footer{font-size:12px; color:var(--ink-soft); padding:0 12px 8px;}
+
+/* pasos */
+.steps{display:flex; gap:6px; flex-wrap:wrap;}
+.stepbtn{font-family:"IBM Plex Sans"; font-weight:600; font-size:14px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-soft); border-radius:99px; padding:7px 14px; cursor:pointer;}
+.stepbtn.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+.steppanel{display:none; flex-direction:column; gap:10px;}
+.steppanel.active{display:flex;}
+
+/* agenda */
+.agenda{display:grid; grid-template-columns:auto 1fr auto; gap:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface);}
+.agenda div{padding:9px 14px; border-bottom:1px solid var(--line); font-size:15px;}
+.agenda div:nth-last-child(-n+3){border-bottom:none;}
+.agenda .num{font-family:"IBM Plex Mono"; color:var(--accent); font-weight:600;}
+.agenda .min{font-family:"IBM Plex Mono"; color:var(--ink-soft); text-align:right; white-space:nowrap;}
+
+/* venn */
+.venn-wrap{display:grid; grid-template-columns:minmax(260px,1fr) 1.2fr; gap:16px; align-items:start;}
+@media (max-width:820px){ .venn-wrap{grid-template-columns:1fr;} }
+svg.venn{width:100%; height:auto; max-width:440px;}
+svg.venn .rg{fill:var(--f-conj); opacity:.08; transition:opacity .25s;}
+svg.venn .rg.on{opacity:.45;}
+svg.venn .outline{fill:none; stroke:var(--ink-soft); stroke-width:1.5;}
+svg.venn text{fill:var(--ink); font-family:"IBM Plex Mono"; font-size:12.5px;}
+svg.venn text.ttl{font-family:"IBM Plex Sans"; font-weight:600; font-size:13px; fill:var(--ink-soft);}
+svg.venn text.twice{fill:var(--bad); font-weight:600; opacity:0; transition:opacity .25s;}
+svg.venn text.twice.on{opacity:1;}
+.setbtns{display:flex; gap:6px; flex-wrap:wrap;}
+.setbtn{font-family:"IBM Plex Mono"; font-weight:600; font-size:13px; border:1px solid var(--f-conj); color:var(--f-conj); background:var(--surface); border-radius:8px; padding:7px 12px; cursor:pointer;}
+.setbtn.active{background:var(--f-conj); color:var(--accent-ink);}
+
+/* quiz */
+.quiz{display:flex; flex-direction:column; gap:8px;}
+.quiz .qtext{font-weight:600; font-size:16px;}
+.choice{text-align:left; font-family:"IBM Plex Sans"; font-size:15px; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; padding:10px 14px; cursor:pointer;}
+.choice:hover{border-color:var(--accent);}
+.choice code{background:none; border:none; padding:0;}
+.choice.correct{border-color:var(--good); background:color-mix(in srgb,var(--good) 12%,var(--surface));}
+.choice.wrong{border-color:var(--bad); background:color-mix(in srgb,var(--bad) 10%,var(--surface));}
+.feedback{display:none; font-size:14.5px; line-height:1.55; padding:8px 12px; border-radius:8px;}
+.feedback.show{display:block;}
+.feedback.ok{color:var(--good); background:color-mix(in srgb,var(--good) 10%,var(--surface));}
+.feedback.no{color:var(--bad); background:color-mix(in srgb,var(--bad) 8%,var(--surface));}
+
+/* actividad 1: clasificar */
+.pool{display:flex; flex-wrap:wrap; gap:8px; min-height:56px; padding:12px; border:1px dashed var(--line); border-radius:12px; background:var(--surface);}
+.opcard{font-family:"IBM Plex Mono"; font-weight:600; font-size:15px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:9px; padding:7px 12px; cursor:grab; user-select:none;}
+.opcard.sel{outline:2px solid var(--accent); outline-offset:2px; background:color-mix(in srgb,var(--accent) 14%,var(--surface));}
+.opcard.ok{border-color:var(--good); background:color-mix(in srgb,var(--good) 16%,var(--surface));}
+.opcard.bad{border-color:var(--bad); background:color-mix(in srgb,var(--bad) 14%,var(--surface)); text-decoration:line-through wavy var(--bad);}
+.bins{display:grid; grid-template-columns:repeat(5,1fr); gap:8px;}
+@media (max-width:860px){ .bins{grid-template-columns:repeat(2,1fr);} }
+.bin{border:1px solid var(--line); border-top:4px solid var(--c); border-radius:12px; background:var(--surface); min-height:120px; display:flex; flex-direction:column; cursor:pointer;}
+.bin.over{background:color-mix(in srgb,var(--c) 10%,var(--surface));}
+.bin h4{margin:0; padding:8px 10px 4px; font-size:13.5px; color:var(--c); font-family:"IBM Plex Sans";}
+.bin .drop{display:flex; flex-wrap:wrap; gap:6px; padding:6px 8px 10px; flex:1;}
+.bin .drop .opcard{font-size:13.5px; padding:5px 9px;}
+.actbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+.score{font-family:"IBM Plex Mono"; font-weight:600; font-size:14px;}
+
+/* actividad 2: detectar */
+.catbar{display:flex; gap:6px; flex-wrap:wrap; position:sticky; top:-2px; z-index:3; background:var(--bg); padding:8px 0;}
+.catbtn{font-family:"IBM Plex Sans"; font-weight:600; font-size:13.5px; border:1px solid var(--c); color:var(--c); background:var(--surface); border-radius:8px; padding:7px 11px; cursor:pointer;}
+.catbtn:hover{background:color-mix(in srgb,var(--c) 12%,var(--surface));}
+.detq{display:flex; flex-direction:column; gap:6px;}
+.detq .lbl{font-family:"IBM Plex Mono"; font-size:12px; color:var(--ink-soft);}
+.optok{font-family:"IBM Plex Mono"; font-size:14.5px; font-weight:600; color:var(--code-fg); background:transparent; border:1.5px dashed #8a97a8; border-radius:6px; padding:0 5px; margin:0 1px; cursor:pointer; line-height:1.5; position:relative;}
+.optok.sel{border-style:solid; border-color:#ffffff; background:rgba(255,255,255,.14);}
+.optok[data-as]{border-style:solid;}
+.optok[data-as="comp"]{border-color:#6aa6e8; background:rgba(106,166,232,.22);}
+.optok[data-as="arit"]{border-color:#b28be6; background:rgba(178,139,230,.22);}
+.optok[data-as="logi"]{border-color:#e7a94a; background:rgba(231,169,74,.22);}
+.optok[data-as="espe"]{border-color:#e07bb0; background:rgba(224,123,176,.22);}
+.optok[data-as="conj"]{border-color:#43c2c7; background:rgba(67,194,199,.22);}
+.optok .tag{margin-left:5px; font-size:9.5px; font-family:"IBM Plex Sans"; font-weight:700; letter-spacing:.03em; color:var(--code-fg); opacity:.85; vertical-align:1px; pointer-events:none;}
+.optok .tag:empty{display:none;}
+.optok.ok::after, .optok.bad::after{position:absolute; right:-7px; top:-9px; font-size:11px; width:15px; height:15px; line-height:15px; text-align:center; border-radius:99px; color:#fff; font-family:"IBM Plex Sans";}
+.optok.ok::after{content:"✓"; background:#1f7a4d;}
+.optok.bad::after{content:"✗"; background:#b5342d;}
+.detq pre.code{padding-top:16px; line-height:2.1; white-space:pre-wrap;}
+.legend{display:flex; gap:10px; flex-wrap:wrap; font-size:13px;}
+.legend span{display:inline-flex; align-items:center; gap:5px;}
+.legend i{width:12px; height:12px; border-radius:3px; background:var(--c); display:inline-block;}
+
+.center-note{text-align:center; color:var(--ink-soft); font-size:14px;}
+.kbd{font-family:"IBM Plex Mono"; font-size:12px; border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:1px 6px; background:var(--surface-2);}
+.toast{position:fixed; left:50%; bottom:74px; transform:translateX(-50%); background:var(--ink); color:var(--bg); font-size:14px; padding:8px 14px; border-radius:8px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:20;}
+.toast.show{opacity:1;}
+
+.code .f{color:#8fd694; font-weight:600;}
+.famgrid4{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+@media (max-width:860px){ .famgrid4{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:520px){ .famgrid4{grid-template-columns:1fr;} }
+.famgrid4 .famcard p{font-size:13.5px; margin-top:6px; line-height:1.5;}
+/* laboratorio substring */
+.lab{display:flex; flex-direction:column; gap:12px;}
+.labctl{display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;}
+.labctl label{display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:600; color:var(--ink-soft);}
+.labctl select, .labctl input, .pin{font-family:"IBM Plex Mono"; font-size:15px; padding:7px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink);}
+.labctl input{width:110px;}
+.charrow{display:flex; flex-wrap:wrap; gap:4px;}
+.cbox{display:flex; flex-direction:column; align-items:center; min-width:30px; border:1px solid var(--line); border-radius:7px; padding:4px 3px; background:var(--surface-2);}
+.cbox b{font-family:"IBM Plex Mono"; font-size:17px;}
+.cbox span{font-family:"IBM Plex Mono"; font-size:10.5px; color:var(--ink-soft);}
+.cbox span.neg{color:var(--amber);}
+.cbox.on{background:color-mix(in srgb,var(--accent) 22%,var(--surface)); border-color:var(--accent);}
+.subres{font-size:16px; font-weight:600;}
+.subres .mono{color:var(--accent); font-size:17px;}
+/* recta numérica */
+svg.numline{width:100%; max-width:560px; height:auto;}
+svg.numline .ax{stroke:var(--ink-soft); stroke-width:2;}
+svg.numline .tk{stroke:var(--ink-soft); stroke-width:2;}
+svg.numline .tl{fill:var(--ink); font-family:"IBM Plex Mono"; font-size:13px;}
+svg.numline .pt{fill:var(--amber);}
+svg.numline .px{fill:var(--amber); font-family:"IBM Plex Mono"; font-size:13px; font-weight:600;}
+/* retos */
+.reto{display:flex; flex-direction:column; gap:10px;}
+.reto .enun{font-size:16px; line-height:1.6;}
+/* predice */
+.predgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+@media (max-width:760px){ .predgrid{grid-template-columns:1fr;} }
+.predrow{display:grid; grid-template-columns:1fr 140px; gap:4px 8px; align-items:center; border:1px solid var(--line); border-radius:10px; padding:8px 10px; background:var(--surface);}
+.predrow .pexp{font-size:13.5px; background:none; border:none; padding:0; overflow-wrap:anywhere;}
+.predrow .pin{width:100%; font-size:14px; padding:5px 8px;}
+.predrow .pmark{grid-column:1 / -1; font-size:12.5px; font-family:"IBM Plex Mono"; color:var(--ink-soft); min-height:0;}
+.predrow.ok{border-color:var(--good); background:color-mix(in srgb,var(--good) 10%,var(--surface));}
+.predrow.ok .pmark{color:var(--good);}
+.predrow.bad{border-color:var(--bad); background:color-mix(in srgb,var(--bad) 8%,var(--surface));}
+.predrow.bad .pmark{color:var(--bad);}
+/* autoevaluación */
+.autolist{display:flex; flex-direction:column; gap:10px;}
+.aq{border:1px solid var(--line); border-radius:12px; padding:10px 14px 12px; background:var(--surface); margin:0;}
+.aq legend{font-weight:600; font-size:15.5px; padding:0 6px; line-height:1.5;}
+.aq .anum{display:inline-block; min-width:24px; text-align:center; font-family:"IBM Plex Mono"; color:var(--accent-ink); background:var(--accent); border-radius:6px; margin-right:4px;}
+.aopt{display:flex; gap:8px; align-items:flex-start; padding:5px 6px; border-radius:8px; cursor:pointer; font-size:15px;}
+.aopt:hover{background:var(--surface-2);}
+.aq.ok{border-color:var(--good);} .aq.bad{border-color:var(--bad);}
+.aq.ok .aopt.right, .aq.bad .aopt.right{background:color-mix(in srgb,var(--good) 14%,var(--surface));}
+.aexp{font-size:14px; line-height:1.55; color:var(--ink-soft); margin-top:4px;}
+.aexp:empty{display:none;}
+
+</style>
+</head>
+<body>
+<div id="deck">
+  <header id="topbar">
+    <span class="brand">BASES DE DATOS · SEMANA 3</span>
+    <div id="progress-track" aria-hidden="true"><div id="progress-fill"></div></div>
+    <span id="counter" aria-live="polite">01/01</span>
+    <button id="theme-btn" type="button" aria-label="Cambiar tema claro u oscuro">Tema</button>
+  </header>
+  <main id="viewport"></main>
+  <nav id="navbar" aria-label="Navegación de diapositivas">
+    <button class="navbtn" id="btn-prev" type="button">← Anterior</button>
+    <div id="dots"></div>
+    <button class="navbtn primary" id="btn-next" type="button">Siguiente →</button>
+  </nav>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+// =========================================================
+// DATOS GENERADOS Y VERIFICADOS CONTRA MySQL 
+// =========================================================
+const Q = {"T_aplicaciones": "SELECT * FROM aplicaciones;", "T_desarrolladores": "SELECT * FROM desarrolladores;", "T_usuarios": "SELECT * FROM usuarios;", "T_descargas": "SELECT * FROM descargas ORDER BY usuario_id, app_id;", "T_favoritas": "SELECT * FROM favoritas ORDER BY usuario_id, app_id;", "VERIF": "SELECT\n  (SELECT COUNT(*) FROM desarrolladores) AS desarrolladores,\n  (SELECT COUNT(*) FROM aplicaciones)    AS aplicaciones,\n  (SELECT COUNT(*) FROM usuarios)        AS usuarios,\n  (SELECT COUNT(*) FROM descargas)       AS descargas,\n  (SELECT COUNT(*) FROM favoritas)       AS favoritas;", "D1": "SELECT 7 / 2 AS division, 7 DIV 2 AS division_entera, 7 % 2 AS residuo;", "D2": "SELECT nombre, categoria\nFROM aplicaciones\nWHERE categoria = 'juegos';   -- en minúscula", "D3": "SELECT nombre || ' - ' || ciudad AS intento\nFROM usuarios\nWHERE id <= 3;", "F0": "SELECT nombre, UPPER(nombre) AS en_mayusculas\nFROM aplicaciones\nWHERE id <= 4;", "F0b": "SELECT COUNT(*) AS total_apps\nFROM aplicaciones;", "S1": "SELECT nombre,\n       UPPER(nombre) AS mayusculas,\n       LOWER(nombre) AS minusculas\nFROM usuarios\nWHERE ciudad = 'Pereira';", "S2": "SELECT DISTINCT UPPER(categoria) AS categoria\nFROM aplicaciones\nORDER BY categoria;", "S3": "SELECT nombre, LOWER(email) AS correo\nFROM desarrolladores\nWHERE UPPER(pais) = 'COLOMBIA';", "C1": "SELECT CONCAT(nombre, ' vive en ', ciudad) AS frase\nFROM usuarios\nWHERE id <= 4;", "C2": "SELECT CONCAT(nombre, ' (', categoria, ')') AS app\nFROM aplicaciones\nWHERE precio > 0;", "C3": "SELECT nombre,\n       CONCAT(nombre, ' <', email, '>') AS contacto\nFROM usuarios\nWHERE ciudad IN ('Barranquilla', 'Pereira');", "C4": "SELECT nombre,\n       CONCAT_WS(' | ', nombre, ciudad, email) AS ficha\nFROM usuarios\nWHERE ciudad IN ('Barranquilla', 'Pereira');", "B1": "SELECT nombre,\n       SUBSTRING(nombre, 1, 4) AS primeras_4,\n       SUBSTRING(nombre, 5)    AS desde_la_5\nFROM aplicaciones\nWHERE id IN (1, 3, 10);", "B2": "SELECT nombre, email,\n       SUBSTRING(email, -2) AS pais_dominio\nFROM desarrolladores;", "B3": "SELECT nombre,\n       SUBSTRING(categoria, 1, 3) AS abreviatura\nFROM aplicaciones\nWHERE id <= 5;", "X1": "SELECT nombre,\n       CHAR_LENGTH(nombre) AS letras\nFROM aplicaciones\nORDER BY letras DESC, nombre\nLIMIT 4;", "X2": "SELECT ciudad,\n       LENGTH(ciudad)      AS bytes,\n       CHAR_LENGTH(ciudad) AS caracteres\nFROM usuarios\nWHERE id IN (1, 2, 4);", "X3": "SELECT email,\n       REPLACE(email, '@mail.com', '@tiendaapp.co') AS nuevo_email\nFROM usuarios\nWHERE ciudad = 'Bogotá';", "X4": "SELECT CONCAT('[', '   TiendaApp   ', ']')       AS original,\n       CONCAT('[', TRIM('   TiendaApp   '), ']') AS con_trim;", "N1": "SELECT nombre, categoria,\n       CONCAT(UPPER(SUBSTRING(categoria, 1, 3)), '-', id) AS codigo\nFROM aplicaciones\nWHERE id <= 6;", "N1a": "SELECT SUBSTRING('Juegos', 1, 3) AS paso1;", "N1b": "SELECT UPPER(SUBSTRING('Juegos', 1, 3)) AS paso2;", "N1c": "SELECT CONCAT(UPPER(SUBSTRING('Juegos', 1, 3)), '-', 1) AS paso3;", "LAB0": "SELECT 4.37 AS x,\n       CEILING(4.37)     AS ceiling,\n       FLOOR(4.37)       AS floor,\n       ROUND(4.37)       AS round_0,\n       ROUND(4.37, 1)    AS round_1,\n       TRUNCATE(4.37, 0) AS truncate_0,\n       TRUNCATE(4.37, 1) AS truncate_1;", "LAB1": "SELECT 4.5 AS x,\n       CEILING(4.5)     AS ceiling,\n       FLOOR(4.5)       AS floor,\n       ROUND(4.5)       AS round_0,\n       ROUND(4.5, 1)    AS round_1,\n       TRUNCATE(4.5, 0) AS truncate_0,\n       TRUNCATE(4.5, 1) AS truncate_1;", "LAB2": "SELECT 4.65 AS x,\n       CEILING(4.65)     AS ceiling,\n       FLOOR(4.65)       AS floor,\n       ROUND(4.65)       AS round_0,\n       ROUND(4.65, 1)    AS round_1,\n       TRUNCATE(4.65, 0) AS truncate_0,\n       TRUNCATE(4.65, 1) AS truncate_1;", "LAB3": "SELECT -2.5 AS x,\n       CEILING(-2.5)     AS ceiling,\n       FLOOR(-2.5)       AS floor,\n       ROUND(-2.5)       AS round_0,\n       ROUND(-2.5, 1)    AS round_1,\n       TRUNCATE(-2.5, 0) AS truncate_0,\n       TRUNCATE(-2.5, 1) AS truncate_1;", "LAB4": "SELECT -4.37 AS x,\n       CEILING(-4.37)     AS ceiling,\n       FLOOR(-4.37)       AS floor,\n       ROUND(-4.37)       AS round_0,\n       ROUND(-4.37, 1)    AS round_1,\n       TRUNCATE(-4.37, 0) AS truncate_0,\n       TRUNCATE(-4.37, 1) AS truncate_1;", "LAB5": "SELECT 1250.8 AS x,\n       CEILING(1250.8)     AS ceiling,\n       FLOOR(1250.8)       AS floor,\n       ROUND(1250.8)       AS round_0,\n       ROUND(1250.8, 1)    AS round_1,\n       TRUNCATE(1250.8, 0) AS truncate_0,\n       TRUNCATE(1250.8, 1) AS truncate_1;", "LAB6": "SELECT 0.49 AS x,\n       CEILING(0.49)     AS ceiling,\n       FLOOR(0.49)       AS floor,\n       ROUND(0.49)       AS round_0,\n       ROUND(0.49, 1)    AS round_1,\n       TRUNCATE(0.49, 0) AS truncate_0,\n       TRUNCATE(0.49, 1) AS truncate_1;", "M1": "SELECT nombre, calificacion,\n       CEILING(calificacion) AS techo,\n       FLOOR(calificacion)   AS piso\nFROM aplicaciones\nWHERE categoria = 'Juegos';", "M2": "SELECT nombre, descargas,\n       CEILING(descargas / 10000) AS servidores\nFROM aplicaciones\nWHERE descargas > 10000;", "M3": "SELECT nombre, precio,\n       precio * 1.19           AS con_iva,\n       ROUND(precio * 1.19, 2) AS con_iva_redondeado\nFROM aplicaciones\nWHERE precio > 0;", "M4": "SELECT nombre, descargas,\n       ROUND(descargas, -3) AS aprox_miles\nFROM aplicaciones\nWHERE id <= 5;", "M5": "SELECT nombre, precio,\n       ROUND(precio, 1)    AS con_round,\n       TRUNCATE(precio, 1) AS con_truncate,\n       TRUNCATE(precio, 0) AS dolares_completos\nFROM aplicaciones\nWHERE precio > 0;", "M6": "SELECT ABS(-15)   AS absoluto,\n       MOD(17, 5)  AS residuo,\n       17 DIV 5    AS cociente;", "G1": "SELECT UPPER(categoria) AS categoria,\n       ROUND(AVG(calificacion), 1) AS promedio\nFROM aplicaciones\nGROUP BY categoria\nORDER BY promedio DESC;", "G2": "SELECT categoria,\n       ROUND(SUM(precio * descargas), -3) AS ingresos_aprox\nFROM aplicaciones\nWHERE precio > 0\nGROUP BY categoria\nORDER BY categoria;", "W1": "SELECT nombre\nFROM aplicaciones\nWHERE CHAR_LENGTH(nombre) > 8;", "W2": "SELECT nombre, ciudad\nFROM usuarios\nWHERE SUBSTRING(nombre, 1, 1) IN ('S', 'V');", "W3": "SELECT nombre, precio\nFROM aplicaciones\nWHERE FLOOR(precio) = 1;", "E1": "SELECT TRUNCATE(4.5678) AS resultado;", "E2": "SELECT SUBSTRING('TiendaApp', 0, 3) AS resultado;", "E3": "SELECT nombre, CONCAT('Correo: ', email) AS dato\nFROM usuarios\nWHERE id IN (5, 6);", "E4": "SELECT ROUND(4.5678, 2, 1) AS resultado;", "I1": "-- Paso 1: apps de pago\nSELECT nombre, categoria, precio, descargas\nFROM aplicaciones\nWHERE precio > 0;", "I2": "-- Paso 2: código y precio con IVA\nSELECT CONCAT(UPPER(SUBSTRING(categoria, 1, 3)), '-', id) AS codigo,\n       nombre,\n       ROUND(precio * 1.19, 2) AS precio_iva\nFROM aplicaciones\nWHERE precio > 0;", "I3": "-- Paso 3: ingresos en miles (sin decimales)\nSELECT CONCAT(UPPER(SUBSTRING(categoria, 1, 3)), '-', id) AS codigo,\n       nombre,\n       ROUND(precio * 1.19, 2) AS precio_iva,\n       FLOOR(precio * descargas / 1000) AS ingresos_miles\nFROM aplicaciones\nWHERE precio > 0;", "I4": "-- Paso 4: ficha final ordenada por ingresos\nSELECT CONCAT(UPPER(SUBSTRING(categoria, 1, 3)), '-', id) AS codigo,\n       UPPER(nombre) AS app,\n       ROUND(precio * 1.19, 2) AS precio_iva,\n       CONCAT(FLOOR(precio * descargas / 1000), ' mil USD') AS ingresos\nFROM aplicaciones\nWHERE precio > 0\nORDER BY precio * descargas DESC;", "R1": "SELECT LOWER(nombre) AS app, UPPER(categoria) AS categoria\nFROM aplicaciones\nWHERE precio > 0;", "R2": "SELECT CONCAT(nombre, ' (', ciudad, ')') AS usuario\nFROM usuarios\nWHERE id >= 5;", "R3": "SELECT nombre, SUBSTRING(nombre, 1, 3) AS inicial\nFROM aplicaciones\nWHERE categoria = 'Social';", "R4": "SELECT nombre, calificacion,\n       ROUND(calificacion) AS estrellas\nFROM aplicaciones\nWHERE calificacion IS NOT NULL\n  AND categoria = 'Productividad';", "R5": "SELECT nombre, precio,\n       CEILING(precio) AS precio_entero\nFROM aplicaciones\nWHERE precio > 0;", "R6": "SELECT nombre, precio,\n       TRUNCATE(precio * 1.19, 1) AS iva_truncado\nFROM aplicaciones\nWHERE categoria IN ('Salud', 'Finanzas');", "P0": "SELECT UPPER('pereira') AS r;", "P1": "SELECT LOWER('Base De Datos') AS r;", "P2": "SELECT CONCAT('App', '-', 7) AS r;", "P3": "SELECT SUBSTRING('ZombieLab', 7) AS r;", "P4": "SELECT SUBSTRING('PresupuestoYa', 1, 11) AS r;", "P5": "SELECT CHAR_LENGTH('Bogotá') AS r;", "P6": "SELECT CEILING(3.01) AS r;", "P7": "SELECT FLOOR(3.99) AS r;", "P8": "SELECT ROUND(2.345, 2) AS r;", "P9": "SELECT TRUNCATE(2.349, 2) AS r;", "P10": "SELECT ROUND(-1.5) AS r;", "P11": "SELECT ROUND(27499, -3) AS r;"};
+const R = {"T_aplicaciones": {"cols": ["id", "nombre", "categoria", "precio", "calificacion", "descargas", "desarrollador_id"], "rows": [["1", "PixelRun", "Juegos", "0.00", "4.6", "15000", "1"], ["2", "FocoStudy", "Productividad", "2.99", "4.2", "3200", "3"], ["3", "ChatNova", "Social", "0.00", "3.8", "42000", "2"], ["4", "MapaFacil", "Navegacion", "1.99", "4.7", "8700", "3"], ["5", "SkyBattle", "Juegos", "0.00", "4.1", "27000", "1"], ["6", "NotasPlus", "Productividad", "0.00", "4.4", "5100", "2"], ["7", "RitmoFit", "Salud", "4.99", "4.5", "2600", "4"], ["8", "BiciRuta", "Navegacion", "0.00", "NULL", "950", "5"], ["9", "ZombieLab", "Juegos", "1.49", "3.5", "11000", "4"], ["10", "PresupuestoYa", "Finanzas", "3.99", "4.8", "1800", "3"], ["11", "FotoMix", "Social", "0.00", "4.0", "19500", "5"], ["12", "AulaViva", "Educacion", "0.00", "NULL", "400", "2"]]}, "T_desarrolladores": {"cols": ["id", "nombre", "pais", "email"], "rows": [["1", "PixelForge", "Colombia", "contacto@pixelforge.co"], ["2", "NubeSoft", "México", "hola@nubesoft.mx"], ["3", "AndinaApps", "Colombia", "info@andinaapps.co"], ["4", "BlueWave Studio", "Chile", "team@bluewave.cl"], ["5", "CódigoSur", "Argentina", "dev@codigosur.ar"]]}, "T_usuarios": {"cols": ["id", "nombre", "ciudad", "email"], "rows": [["1", "Laura Gómez", "Bogotá", "laura.gomez@mail.com"], ["2", "Santiago Ruiz", "Medellín", "santi.ruiz@mail.com"], ["3", "Valentina Díaz", "Pereira", "vale.diaz@mail.com"], ["4", "Mateo Herrera", "Cali", "mateo.h@mail.com"], ["5", "Camila Torres", "Bogotá", "cami.torres@mail.com"], ["6", "Andrés Pérez", "Barranquilla", "NULL"], ["7", "Sofía Castro", "Pereira", "sofia.castro@mail.com"], ["8", "Juan Morales", "Bogotá", "juan.morales@mail.com"]]}, "T_descargas": {"cols": ["usuario_id", "app_id"], "rows": [["1", "1"], ["1", "3"], ["1", "6"], ["2", "3"], ["2", "5"], ["2", "9"], ["3", "2"], ["3", "4"], ["3", "10"], ["4", "1"], ["4", "5"], ["5", "3"], ["5", "11"], ["7", "2"], ["7", "7"]]}, "T_favoritas": {"cols": ["usuario_id", "app_id"], "rows": [["1", "1"], ["1", "6"], ["2", "5"], ["3", "4"], ["3", "10"], ["5", "11"], ["7", "7"]]}, "VERIF": {"cols": ["desarrolladores", "aplicaciones", "usuarios", "descargas", "favoritas"], "rows": [["5", "12", "8", "15", "7"]]}, "D1": {"cols": ["division", "division_entera", "residuo"], "rows": [["3.5000", "3", "1"]]}, "D2": {"cols": ["nombre", "categoria"], "rows": [["PixelRun", "Juegos"], ["SkyBattle", "Juegos"], ["ZombieLab", "Juegos"]]}, "D3": {"cols": ["intento"], "rows": [["0"], ["0"], ["0"]]}, "F0": {"cols": ["nombre", "en_mayusculas"], "rows": [["PixelRun", "PIXELRUN"], ["FocoStudy", "FOCOSTUDY"], ["ChatNova", "CHATNOVA"], ["MapaFacil", "MAPAFACIL"]]}, "F0b": {"cols": ["total_apps"], "rows": [["12"]]}, "S1": {"cols": ["nombre", "mayusculas", "minusculas"], "rows": [["Valentina Díaz", "VALENTINA DÍAZ", "valentina díaz"], ["Sofía Castro", "SOFÍA CASTRO", "sofía castro"]]}, "S2": {"cols": ["categoria"], "rows": [["EDUCACION"], ["FINANZAS"], ["JUEGOS"], ["NAVEGACION"], ["PRODUCTIVIDAD"], ["SALUD"], ["SOCIAL"]]}, "S3": {"cols": ["nombre", "correo"], "rows": [["PixelForge", "contacto@pixelforge.co"], ["AndinaApps", "info@andinaapps.co"]]}, "C1": {"cols": ["frase"], "rows": [["Laura Gómez vive en Bogotá"], ["Santiago Ruiz vive en Medellín"], ["Valentina Díaz vive en Pereira"], ["Mateo Herrera vive en Cali"]]}, "C2": {"cols": ["app"], "rows": [["FocoStudy (Productividad)"], ["MapaFacil (Navegacion)"], ["RitmoFit (Salud)"], ["ZombieLab (Juegos)"], ["PresupuestoYa (Finanzas)"]]}, "C3": {"cols": ["nombre", "contacto"], "rows": [["Valentina Díaz", "Valentina Díaz <vale.diaz@mail.com>"], ["Andrés Pérez", "NULL"], ["Sofía Castro", "Sofía Castro <sofia.castro@mail.com>"]]}, "C4": {"cols": ["nombre", "ficha"], "rows": [["Valentina Díaz", "Valentina Díaz | Pereira | vale.diaz@mail.com"], ["Andrés Pérez", "Andrés Pérez | Barranquilla"], ["Sofía Castro", "Sofía Castro | Pereira | sofia.castro@mail.com"]]}, "B1": {"cols": ["nombre", "primeras_4", "desde_la_5"], "rows": [["PixelRun", "Pixe", "lRun"], ["ChatNova", "Chat", "Nova"], ["PresupuestoYa", "Pres", "upuestoYa"]]}, "B2": {"cols": ["nombre", "email", "pais_dominio"], "rows": [["PixelForge", "contacto@pixelforge.co", "co"], ["NubeSoft", "hola@nubesoft.mx", "mx"], ["AndinaApps", "info@andinaapps.co", "co"], ["BlueWave Studio", "team@bluewave.cl", "cl"], ["CódigoSur", "dev@codigosur.ar", "ar"]]}, "B3": {"cols": ["nombre", "abreviatura"], "rows": [["PixelRun", "Jue"], ["FocoStudy", "Pro"], ["ChatNova", "Soc"], ["MapaFacil", "Nav"], ["SkyBattle", "Jue"]]}, "X1": {"cols": ["nombre", "letras"], "rows": [["PresupuestoYa", "13"], ["FocoStudy", "9"], ["MapaFacil", "9"], ["NotasPlus", "9"]]}, "X2": {"cols": ["ciudad", "bytes", "caracteres"], "rows": [["Bogotá", "7", "6"], ["Medellín", "9", "8"], ["Cali", "4", "4"]]}, "X3": {"cols": ["email", "nuevo_email"], "rows": [["laura.gomez@mail.com", "laura.gomez@tiendaapp.co"], ["cami.torres@mail.com", "cami.torres@tiendaapp.co"], ["juan.morales@mail.com", "juan.morales@tiendaapp.co"]]}, "X4": {"cols": ["original", "con_trim"], "rows": [["[   TiendaApp   ]", "[TiendaApp]"]]}, "N1": {"cols": ["nombre", "categoria", "codigo"], "rows": [["PixelRun", "Juegos", "JUE-1"], ["FocoStudy", "Productividad", "PRO-2"], ["ChatNova", "Social", "SOC-3"], ["MapaFacil", "Navegacion", "NAV-4"], ["SkyBattle", "Juegos", "JUE-5"], ["NotasPlus", "Productividad", "PRO-6"]]}, "N1a": {"cols": ["paso1"], "rows": [["Jue"]]}, "N1b": {"cols": ["paso2"], "rows": [["JUE"]]}, "N1c": {"cols": ["paso3"], "rows": [["JUE-1"]]}, "LAB0": {"cols": ["x", "ceiling", "floor", "round_0", "round_1", "truncate_0", "truncate_1"], "rows": [["4.37", "5", "4", "4", "4.4", "4", "4.3"]]}, "LAB1": {"cols": ["x", "ceiling", "floor", "round_0", "round_1", "truncate_0", "truncate_1"], "rows": [["4.5", "5", "4", "5", "4.5", "4", "4.5"]]}, "LAB2": {"cols": ["x", "ceiling", "floor", "round_0", "round_1", "truncate_0", "truncate_1"], "rows": [["4.65", "5", "4", "5", "4.7", "4", "4.6"]]}, "LAB3": {"cols": ["x", "ceiling", "floor", "round_0", "round_1", "truncate_0", "truncate_1"], "rows": [["-2.5", "-2", "-3", "-3", "-2.5", "-2", "-2.5"]]}, "LAB4": {"cols": ["x", "ceiling", "floor", "round_0", "round_1", "truncate_0", "truncate_1"], "rows": [["-4.37", "-4", "-5", "-4", "-4.4", "-4", "-4.3"]]}, "LAB5": {"cols": ["x", "ceiling", "floor", "round_0", "round_1", "truncate_0", "truncate_1"], "rows": [["1250.8", "1251", "1250", "1251", "1250.8", "1250", "1250.8"]]}, "LAB6": {"cols": ["x", "ceiling", "floor", "round_0", "round_1", "truncate_0", "truncate_1"], "rows": [["0.49", "1", "0", "0", "0.5", "0", "0.4"]]}, "M1": {"cols": ["nombre", "calificacion", "techo", "piso"], "rows": [["PixelRun", "4.6", "5", "4"], ["SkyBattle", "4.1", "5", "4"], ["ZombieLab", "3.5", "4", "3"]]}, "M2": {"cols": ["nombre", "descargas", "servidores"], "rows": [["PixelRun", "15000", "2"], ["ChatNova", "42000", "5"], ["SkyBattle", "27000", "3"], ["ZombieLab", "11000", "2"], ["FotoMix", "19500", "2"]]}, "M3": {"cols": ["nombre", "precio", "con_iva", "con_iva_redondeado"], "rows": [["FocoStudy", "2.99", "3.5581", "3.56"], ["MapaFacil", "1.99", "2.3681", "2.37"], ["RitmoFit", "4.99", "5.9381", "5.94"], ["ZombieLab", "1.49", "1.7731", "1.77"], ["PresupuestoYa", "3.99", "4.7481", "4.75"]]}, "M4": {"cols": ["nombre", "descargas", "aprox_miles"], "rows": [["PixelRun", "15000", "15000"], ["FocoStudy", "3200", "3000"], ["ChatNova", "42000", "42000"], ["MapaFacil", "8700", "9000"], ["SkyBattle", "27000", "27000"]]}, "M5": {"cols": ["nombre", "precio", "con_round", "con_truncate", "dolares_completos"], "rows": [["FocoStudy", "2.99", "3.0", "2.9", "2"], ["MapaFacil", "1.99", "2.0", "1.9", "1"], ["RitmoFit", "4.99", "5.0", "4.9", "4"], ["ZombieLab", "1.49", "1.5", "1.4", "1"], ["PresupuestoYa", "3.99", "4.0", "3.9", "3"]]}, "M6": {"cols": ["absoluto", "residuo", "cociente"], "rows": [["15", "2", "3"]]}, "G1": {"cols": ["categoria", "promedio"], "rows": [["FINANZAS", "4.8"], ["NAVEGACION", "4.7"], ["SALUD", "4.5"], ["PRODUCTIVIDAD", "4.3"], ["JUEGOS", "4.1"], ["SOCIAL", "3.9"], ["EDUCACION", "NULL"]]}, "G2": {"cols": ["categoria", "ingresos_aprox"], "rows": [["Finanzas", "7000"], ["Juegos", "16000"], ["Navegacion", "17000"], ["Productividad", "10000"], ["Salud", "13000"]]}, "W1": {"cols": ["nombre"], "rows": [["FocoStudy"], ["MapaFacil"], ["SkyBattle"], ["NotasPlus"], ["ZombieLab"], ["PresupuestoYa"]]}, "W2": {"cols": ["nombre", "ciudad"], "rows": [["Santiago Ruiz", "Medellín"], ["Valentina Díaz", "Pereira"], ["Sofía Castro", "Pereira"]]}, "W3": {"cols": ["nombre", "precio"], "rows": [["MapaFacil", "1.99"], ["ZombieLab", "1.49"]]}, "E1": {"error": "ERROR 1064: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ') AS resultado' at line 1"}, "E2": {"cols": ["resultado"], "rows": [[""]]}, "E3": {"cols": ["nombre", "dato"], "rows": [["Camila Torres", "Correo: cami.torres@mail.com"], ["Andrés Pérez", "NULL"]]}, "E4": {"error": "ERROR 1582: Incorrect parameter count in the call to native function 'ROUND'"}, "I1": {"cols": ["nombre", "categoria", "precio", "descargas"], "rows": [["FocoStudy", "Productividad", "2.99", "3200"], ["MapaFacil", "Navegacion", "1.99", "8700"], ["RitmoFit", "Salud", "4.99", "2600"], ["ZombieLab", "Juegos", "1.49", "11000"], ["PresupuestoYa", "Finanzas", "3.99", "1800"]]}, "I2": {"cols": ["codigo", "nombre", "precio_iva"], "rows": [["PRO-2", "FocoStudy", "3.56"], ["NAV-4", "MapaFacil", "2.37"], ["SAL-7", "RitmoFit", "5.94"], ["JUE-9", "ZombieLab", "1.77"], ["FIN-10", "PresupuestoYa", "4.75"]]}, "I3": {"cols": ["codigo", "nombre", "precio_iva", "ingresos_miles"], "rows": [["PRO-2", "FocoStudy", "3.56", "9"], ["NAV-4", "MapaFacil", "2.37", "17"], ["SAL-7", "RitmoFit", "5.94", "12"], ["JUE-9", "ZombieLab", "1.77", "16"], ["FIN-10", "PresupuestoYa", "4.75", "7"]]}, "I4": {"cols": ["codigo", "app", "precio_iva", "ingresos"], "rows": [["NAV-4", "MAPAFACIL", "2.37", "17 mil USD"], ["JUE-9", "ZOMBIELAB", "1.77", "16 mil USD"], ["SAL-7", "RITMOFIT", "5.94", "12 mil USD"], ["PRO-2", "FOCOSTUDY", "3.56", "9 mil USD"], ["FIN-10", "PRESUPUESTOYA", "4.75", "7 mil USD"]]}, "R1": {"cols": ["app", "categoria"], "rows": [["focostudy", "PRODUCTIVIDAD"], ["mapafacil", "NAVEGACION"], ["ritmofit", "SALUD"], ["zombielab", "JUEGOS"], ["presupuestoya", "FINANZAS"]]}, "R2": {"cols": ["usuario"], "rows": [["Camila Torres (Bogotá)"], ["Andrés Pérez (Barranquilla)"], ["Sofía Castro (Pereira)"], ["Juan Morales (Bogotá)"]]}, "R3": {"cols": ["nombre", "inicial"], "rows": [["ChatNova", "Cha"], ["FotoMix", "Fot"]]}, "R4": {"cols": ["nombre", "calificacion", "estrellas"], "rows": [["FocoStudy", "4.2", "4"], ["NotasPlus", "4.4", "4"]]}, "R5": {"cols": ["nombre", "precio", "precio_entero"], "rows": [["FocoStudy", "2.99", "3"], ["MapaFacil", "1.99", "2"], ["RitmoFit", "4.99", "5"], ["ZombieLab", "1.49", "2"], ["PresupuestoYa", "3.99", "4"]]}, "R6": {"cols": ["nombre", "precio", "iva_truncado"], "rows": [["RitmoFit", "4.99", "5.9"], ["PresupuestoYa", "3.99", "4.7"]]}, "P0": {"cols": ["r"], "rows": [["PEREIRA"]]}, "P1": {"cols": ["r"], "rows": [["base de datos"]]}, "P2": {"cols": ["r"], "rows": [["App-7"]]}, "P3": {"cols": ["r"], "rows": [["Lab"]]}, "P4": {"cols": ["r"], "rows": [["Presupuesto"]]}, "P5": {"cols": ["r"], "rows": [["6"]]}, "P6": {"cols": ["r"], "rows": [["4"]]}, "P7": {"cols": ["r"], "rows": [["3"]]}, "P8": {"cols": ["r"], "rows": [["2.35"]]}, "P9": {"cols": ["r"], "rows": [["2.34"]]}, "P10": {"cols": ["r"], "rows": [["-2"]]}, "P11": {"cols": ["r"], "rows": [["27000"]]}};
+const SQL_SCRIPT = "-- =====================================================================\n--  IMPLEMENTACIÓN DE BASES DE DATOS — Programa DAM (SENA)\n--  Semana 3 · Funciones de cadena y matemáticas\n--  Base de datos del caso de estudio \"TiendaApp\" (5 tablas)\n--  MISMOS DATOS DE LA SEMANA 2\n--\n--  Plataforma: RunSQL (https://runsql.com) · Motor: MySQL 8.4\n--\n--  CÓMO CARGARLA EN RunSQL\n--  1. Entra a https://runsql.com y pulsa \"Run your SQL\" (o \"Go to app\").\n--  2. En la parte superior, en el selector de motor, elige \"MySQL 8.4\".\n--  3. Pulsa \"Import\" → \"From MySQL 8.4\".\n--  4. Copia TODO este archivo y pégalo en el recuadro de la derecha.\n--  5. Marca la casilla \"Clear DBML and table records\" (borra las tablas\n--     de ejemplo) y pulsa \"Apply\".\n--  6. RunSQL convierte el script en la estructura (panel 1 \"Define\n--     Database Structure\") y en los datos (panel 2 \"Define Data\").\n--  7. En el panel 3 \"Write SQL Query\" escribe la consulta de\n--     verificación del final de este archivo y pulsa \"Run\".\n--\n--  IMPORTANTE\n--  - Este archivo NO se ejecuta en el panel de consultas: se carga con\n--    Import. Solo contiene CREATE TABLE e INSERT.\n--  - Las filas que tienen un valor NULL (apps 8 y 12 sin calificación y\n--    el usuario 6 sin email) se insertan en un INSERT aparte que omite\n--    esa columna. Así RunSQL las guarda como NULL real. Si escribes la\n--    palabra NULL dentro del INSERT, el importador la convierte en el\n--    texto 'null' y la carga de datos falla.\n--  - Si en el panel 2 necesitas dejar una celda vacía como NULL, usa el\n--    botón \"Set null\"; no escribas la palabra null.\n-- =====================================================================\n\n-- ---------------------------------------------------------------------\n-- 1. desarrolladores: empresas que publican apps en la tienda\n-- ---------------------------------------------------------------------\nCREATE TABLE desarrolladores (\n  id      INT          PRIMARY KEY,\n  nombre  VARCHAR(50)  NOT NULL,\n  pais    VARCHAR(30)  NOT NULL,\n  email   VARCHAR(60)  NOT NULL\n);\n\nINSERT INTO desarrolladores (id, nombre, pais, email) VALUES\n  (1, 'PixelForge',      'Colombia',  'contacto@pixelforge.co'),\n  (2, 'NubeSoft',        'México',    'hola@nubesoft.mx'),\n  (3, 'AndinaApps',      'Colombia',  'info@andinaapps.co'),\n  (4, 'BlueWave Studio', 'Chile',     'team@bluewave.cl'),\n  (5, 'CódigoSur',       'Argentina', 'dev@codigosur.ar');\n\n-- ---------------------------------------------------------------------\n-- 2. aplicaciones: catálogo de la tienda\n--    precio en dólares (0.00 = gratuita)\n--    calificacion de 1.0 a 5.0 (NULL = aún no tiene calificaciones)\n-- ---------------------------------------------------------------------\nCREATE TABLE aplicaciones (\n  id               INT           PRIMARY KEY,\n  nombre           VARCHAR(50)   NOT NULL,\n  categoria        VARCHAR(30)   NOT NULL,\n  precio           DECIMAL(6,2)  NOT NULL DEFAULT 0,\n  calificacion     DECIMAL(2,1),\n  descargas        INT           NOT NULL DEFAULT 0,\n  desarrollador_id INT           NOT NULL,\n  FOREIGN KEY (desarrollador_id) REFERENCES desarrolladores(id)\n);\n\nINSERT INTO aplicaciones (id, nombre, categoria, precio, calificacion, descargas, desarrollador_id) VALUES\n  ( 1, 'PixelRun',      'Juegos',        0,    4.6,  15000, 1),\n  ( 2, 'FocoStudy',     'Productividad', 2.99, 4.2,   3200, 3),\n  ( 3, 'ChatNova',      'Social',        0,    3.8,  42000, 2),\n  ( 4, 'MapaFacil',     'Navegacion',    1.99, 4.7,   8700, 3),\n  ( 5, 'SkyBattle',     'Juegos',        0,    4.1,  27000, 1),\n  ( 6, 'NotasPlus',     'Productividad', 0,    4.4,   5100, 2),\n  ( 7, 'RitmoFit',      'Salud',         4.99, 4.5,   2600, 4),\n  ( 9, 'ZombieLab',     'Juegos',        1.49, 3.5,  11000, 4),\n  (10, 'PresupuestoYa', 'Finanzas',      3.99, 4.8,   1800, 3),\n  (11, 'FotoMix',       'Social',        0,    4.0,  19500, 5);\n\n-- Apps sin calificación (calificacion queda NULL porque se omite la columna)\nINSERT INTO aplicaciones (id, nombre, categoria, precio, descargas, desarrollador_id) VALUES\n  ( 8, 'BiciRuta',      'Navegacion',    0,    950, 5),\n  (12, 'AulaViva',      'Educacion',     0,    400, 2);\n\n-- ---------------------------------------------------------------------\n-- 3. usuarios: personas registradas en la tienda\n--    email NULL = el usuario no registró correo\n-- ---------------------------------------------------------------------\nCREATE TABLE usuarios (\n  id      INT          PRIMARY KEY,\n  nombre  VARCHAR(50)  NOT NULL,\n  ciudad  VARCHAR(30)  NOT NULL,\n  email   VARCHAR(60)\n);\n\nINSERT INTO usuarios (id, nombre, ciudad, email) VALUES\n  (1, 'Laura Gómez',    'Bogotá',       'laura.gomez@mail.com'),\n  (2, 'Santiago Ruiz',  'Medellín',     'santi.ruiz@mail.com'),\n  (3, 'Valentina Díaz', 'Pereira',      'vale.diaz@mail.com'),\n  (4, 'Mateo Herrera',  'Cali',         'mateo.h@mail.com'),\n  (5, 'Camila Torres',  'Bogotá',       'cami.torres@mail.com'),\n  (7, 'Sofía Castro',   'Pereira',      'sofia.castro@mail.com'),\n  (8, 'Juan Morales',   'Bogotá',       'juan.morales@mail.com');\n\n-- Usuario sin email (email queda NULL porque se omite la columna)\nINSERT INTO usuarios (id, nombre, ciudad) VALUES\n  (6, 'Andrés Pérez',   'Barranquilla');\n\n-- ---------------------------------------------------------------------\n-- 4. descargas: qué usuario descargó qué aplicación\n-- ---------------------------------------------------------------------\nCREATE TABLE descargas (\n  usuario_id INT NOT NULL,\n  app_id     INT NOT NULL,\n  PRIMARY KEY (usuario_id, app_id),\n  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),\n  FOREIGN KEY (app_id)     REFERENCES aplicaciones(id)\n);\n\nINSERT INTO descargas (usuario_id, app_id) VALUES\n  (1, 1), (1, 3), (1, 6),\n  (2, 3), (2, 5), (2, 9),\n  (3, 2), (3, 4), (3, 10),\n  (4, 1), (4, 5),\n  (5, 3), (5, 11),\n  (7, 2), (7, 7);\n\n-- ---------------------------------------------------------------------\n-- 5. favoritas: apps que cada usuario marcó como favoritas\n-- ---------------------------------------------------------------------\nCREATE TABLE favoritas (\n  usuario_id INT NOT NULL,\n  app_id     INT NOT NULL,\n  PRIMARY KEY (usuario_id, app_id),\n  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),\n  FOREIGN KEY (app_id)     REFERENCES aplicaciones(id)\n);\n\nINSERT INTO favoritas (usuario_id, app_id) VALUES\n  (1, 1), (1, 6),\n  (2, 5),\n  (3, 4), (3, 10),\n  (5, 11),\n  (7, 7);\n\n-- =====================================================================\n--  CONSULTA DE VERIFICACIÓN (cópiala en el panel 3 y pulsa Run)\n--\n--  SELECT\n--    (SELECT COUNT(*) FROM desarrolladores) AS desarrolladores,\n--    (SELECT COUNT(*) FROM aplicaciones)    AS aplicaciones,\n--    (SELECT COUNT(*) FROM usuarios)        AS usuarios,\n--    (SELECT COUNT(*) FROM descargas)       AS descargas,\n--    (SELECT COUNT(*) FROM favoritas)       AS favoritas;\n--\n--  Resultado esperado (una sola fila):\n--  desarrolladores = 5 | aplicaciones = 12 | usuarios = 8 |\n--  descargas = 15 | favoritas = 7\n-- =====================================================================\n";
+
+// =========================================================
+// UTILIDADES
+// =========================================================
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const KW = /^(SELECT|FROM|WHERE|AS|ORDER|BY|GROUP|HAVING|UNION|ALL|AND|OR|NOT|BETWEEN|IN|LIKE|IS|NULL|DESC|ASC|DISTINCT|LIMIT|DIV)$/i;
+const FN = /^(COUNT|SUM|AVG|MAX|MIN|UPPER|LOWER|CONCAT|CONCAT_WS|SUBSTRING|SUBSTR|CHAR_LENGTH|LENGTH|REPLACE|TRIM|CEILING|CEIL|FLOOR|ROUND|TRUNCATE|ABS|MOD|RIGHT)$/i;
+function hl(sql){
+  const re = /(--[^\n]*)|('(?:[^']|'')*')|([A-Za-z_][A-Za-z_0-9]*)|(\d+(?:\.\d+)?)|([\s\S])/g;
+  let out = '', m;
+  while((m = re.exec(sql))){
+    if(m[1]) out += `<span class="c">${esc(m[1])}</span>`;
+    else if(m[2]) out += `<span class="s">${esc(m[2])}</span>`;
+    else if(m[3]) out += KW.test(m[3]) ? `<span class="k">${esc(m[3])}</span>` : (FN.test(m[3]) ? `<span class="f">${esc(m[3])}</span>` : esc(m[3]));
+    else if(m[4]) out += `<span class="n">${esc(m[4])}</span>`;
+    else out += esc(m[5]);
+  }
+  return out;
+}
+function table(id, caption){
+  const r = R[id];
+  if(!r) return `<div class="err">Resultado no disponible (${esc(id)})</div>`;
+  if(r.error) return `<div class="err">Error (MySQL): ${esc(r.error.replace(/^ERROR \d+: /, ''))}</div>`;
+  const n = r.rows.length;
+  const cap = caption !== undefined ? caption : `${n} ${n===1?'fila':'filas'}`;
+  if(n===0) return `<div class="table-wrap"><table class="data"><caption>${cap}</caption><thead><tr>${r.cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody><tr><td colspan="${r.cols.length}" class="null">(sin filas)</td></tr></tbody></table></div>`;
+  return `<div class="table-wrap"><table class="data"><caption>${cap}</caption><thead><tr>${r.cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${
+    r.rows.map(row=>`<tr>${row.map(v=>v==='NULL'?`<td class="null">NULL</td>`:`<td>${esc(v)}</td>`).join('')}</tr>`).join('')
+  }</tbody></table></div>`;
+}
+let uid = 0;
+function ex(id, label, opts){
+  opts = opts || {};
+  const rid = 'rv' + (uid++);
+  const isErr = R[id] && R[id].error;
+  const btnTxt = isErr ? 'Ver qué pasa' : 'Ver resultado';
+  return `<div class="ex">
+    <div class="ex-head">${label ? `<span class="pill">${label}</span>` : '<span></span>'}
+      <div class="ex-actions">
+        <button class="mini" type="button" data-copy="${id}">Copiar</button>
+        <button class="reveal-btn" type="button" data-reveal="${rid}" data-show="${btnTxt}" data-hide="Ocultar">${opts.open?'Ocultar':btnTxt}</button>
+      </div>
+    </div>
+    <pre class="code">${hl(Q[id])}</pre>
+    <div class="reveal-box${opts.open?' show':''}" id="${rid}">${table(id)}${opts.after||''}</div>
+  </div>`;
+}
+let tg = 0;
+function tabs(items){
+  const g = 'tg' + (tg++);
+  return `<div class="tabset"><div class="tabs" role="tablist">${
+    items.map((it,i)=>`<button class="tab${i===0?' active':''}" type="button" role="tab" data-tabgroup="${g}" data-tabidx="${i}">${it[0]}</button>`).join('')
+  }</div>${
+    items.map((it,i)=>`<div class="tabpanel${i===0?' active':''}" data-tabgroup="${g}" data-tabidx="${i}">${it[1]}</div>`).join('')
+  }</div>`;
+}
+let sg = 0;
+function steps(items){
+  const g = 'sg' + (sg++);
+  return `<div class="steps">${
+    items.map((it,i)=>`<button class="stepbtn${i===0?' active':''}" type="button" data-stepgroup="${g}" data-stepidx="${i}">${it[0]}</button>`).join('')
+  }</div>${
+    items.map((it,i)=>`<div class="steppanel${i===0?' active':''}" data-stepgroup="${g}" data-stepidx="${i}">${it[1]}</div>`).join('')
+  }`;
+}
+function quiz(question, options, correct, okMsg, noMsg){
+  return `<div class="quiz card" data-quizroot data-correct="${correct}">
+    <div class="qtext">${question}</div>
+    ${options.map((o,i)=>`<button class="choice" type="button" data-idx="${i}">${o}</button>`).join('')}
+    <div class="feedback" data-ok="${esc(okMsg)}" data-no="${esc(noMsg)}"></div>
+  </div>`;
+}
+function reto(id, enunciado){
+  const rid = 'rv' + (uid++);
+  return `<div class="reto"><p class="enun">${enunciado}</p>
+    <div class="actbar"><button class="reveal-btn" type="button" data-reveal="${rid}" data-show="Ver solución" data-hide="Ocultar solución">Ver solución</button></div>
+    <div class="reveal-box" id="${rid}">
+      <div class="ex-head"><span class="pill">Solución posible</span><div class="ex-actions"><button class="mini" type="button" data-copy="${id}">Copiar</button></div></div>
+      <pre class="code">${hl(Q[id])}</pre>${table(id)}</div></div>`;
+}
+
+
+// =========================================================
+// DIAPOSITIVAS
+// =========================================================
+const slides = [];
+const S = o => slides.push(o);
+
+// 1. Portada
+S({cls:'cover', eyebrow:'Implementación de Bases de Datos · Programa DAM (SENA) · Semana 3', title:'Funciones de cadena y funciones matemáticas',
+body:`
+<p class="lede">Transforma textos y números directamente desde tus consultas: mayúsculas, códigos, recortes, redondeos y cálculos listos para mostrar. Esta semana es práctica: cada función viene con ejemplos para copiar, laboratorios interactivos y retos.</p>
+<div class="grid3">
+  <div class="card"><h3>Trabajo autónomo</h3><p>Avanza a tu ritmo. Recorre los ejemplos, los laboratorios, los retos y la autoevaluación antes de la actividad evaluativa.</p></div>
+  <div class="card"><h3>Qué necesitas</h3><p>Navegador, <b>RunSQL</b> (runsql.com) con motor <b>MySQL 8.4</b>, el script <code>tiendaapp_semana3_mysql.sql</code>, el documento de apoyo y tu cuaderno.</p></div>
+  <div class="card"><h3>Cómo navegar</h3><p>Botones inferiores, teclas <span class="kbd">←</span> <span class="kbd">→</span> o deslizando en el celular.</p></div>
+</div>
+<div class="callout tip"><strong>Método de trabajo:</strong> copia cada ejemplo, <b>predice</b> el resultado antes de ejecutarlo en RunSQL y luego compáralo con <b>Ver resultado</b>. Los resultados que ves aquí se obtuvieron ejecutando cada consulta en MySQL.</div>
+`});
+
+// 2. Objetivos y ruta
+S({eyebrow:'Ruta de la semana', title:'¿Qué vas a lograr?',
+body:`
+<p class="lede">Al terminar serás capaz de:</p>
+<ul>
+  <li>Cambiar mayúsculas y minúsculas con <b>UPPER</b> y <b>LOWER</b>.</li>
+  <li>Unir textos y columnas con <b>CONCAT</b> y extraer partes de un texto con <b>SUBSTRING</b>.</li>
+  <li>Redondear hacia arriba, hacia abajo o al más cercano con <b>CEILING</b>, <b>FLOOR</b> y <b>ROUND</b>, y cortar decimales con <b>TRUNCATE</b>.</li>
+  <li>Anidar funciones y combinarlas con WHERE, ORDER BY, GROUP BY y funciones de agregación.</li>
+  <li>Reconocer y corregir los errores más comunes al usar funciones en MySQL.</li>
+</ul>
+<div class="agenda">
+  <div class="num">01</div><div>Nueva plataforma: RunSQL con MySQL (mismos datos de TiendaApp)</div><div class="min">parte 1</div>
+  <div class="num">02</div><div>Funciones de cadena + laboratorio SUBSTRING</div><div class="min">parte 2</div>
+  <div class="num">03</div><div>Funciones matemáticas + laboratorio de redondeo</div><div class="min">parte 3</div>
+  <div class="num">04</div><div>Funciones en consultas completas, errores comunes e integradora</div><div class="min">parte 4</div>
+  <div class="num">05</div><div>Retos prácticos, predice el resultado y autoevaluación</div><div class="min">parte 5</div>
+  <div class="num">06</div><div>Actividad evaluativa: 10 consultas SQL</div><div class="min">entrega</div>
+</div>
+`});
+
+// 3. Nuevo motor
+S({section:true, eyebrow:'01 · Nueva plataforma', title:'Esta semana trabajamos en RunSQL con MySQL',
+body:`
+<p class="lede">En SQLite, funciones como <code>CEILING</code>, <code>FLOOR</code> o <code>TRUNC</code> solo existen si el motor se compiló con las funciones matemáticas, y <code>CONCAT</code> solo en versiones recientes. <b>MySQL</b> las incluye de forma nativa. Lo usaremos en <b>RunSQL</b> (runsql.com), que ofrece MySQL 8.4 y no limita la cantidad de consultas.</p>
+<div class="grid2">
+  <div class="card">
+    <h3>Cargar la base de datos</h3>
+    <ol style="margin:0;padding-left:20px;line-height:1.7;font-size:15px;">
+      <li>Entra a <b>runsql.com</b> y pulsa <b>Run your SQL</b>.</li>
+      <li>Arriba, en el selector de motor, elige <b>MySQL 8.4</b>.</li>
+      <li>Pulsa <b>Import</b> → <b>From MySQL 8.4</b>.</li>
+      <li>Abre <code>tiendaapp_semana3_mysql.sql</code>, copia todo y pégalo en el recuadro (o usa el botón de abajo).</li>
+      <li>Marca <b>Clear DBML and table records</b> y pulsa <b>Apply</b>.</li>
+      <li>En el panel 3 (<b>Write SQL Query</b>) ejecuta la consulta de verificación con <b>Run</b>.</li>
+    </ol>
+    <div class="actbar" style="margin-top:10px;"><button class="mini" type="button" data-copy="__SCRIPT__">Copiar script completo</button></div>
+  </div>
+  <div class="card">
+    <h3>Verificación</h3>
+    ${ex('VERIF','Consulta de verificación')}
+  </div>
+</div>
+`});
+
+// 3b. Cómo funciona RunSQL
+S({eyebrow:'01 · Nueva plataforma', title:'Cómo funciona RunSQL',
+body:`
+<p class="lede">RunSQL no ejecuta el script de creación en el editor de consultas. La base de datos se arma a partir de su <b>estructura</b>: al importar el script, RunSQL lo convierte en los paneles 1 y 2.</p>
+<div class="grid3">
+  <div class="card"><h3>1 · Define Database Structure</h3><p>Las tablas y columnas, escritas en <b>DBML</b> (un lenguaje sencillo para describir tablas). Se genera solo al importar el script.</p></div>
+  <div class="card"><h3>2 · Define Data</h3><p>Las filas de cada tabla, en una cuadrícula tipo hoja de cálculo. Una pestaña por tabla.</p></div>
+  <div class="card"><h3>3 · Write SQL Query</h3><p>Aquí escribes tus consultas y pulsas <b>Run</b>. El resultado aparece en <b>Query Result</b>.</p></div>
+</div>
+<div class="grid2">
+  <div class="callout tip"><strong>Una consulta a la vez:</strong> si el editor tiene varias consultas, <b>selecciona</b> la que quieres y el botón cambia a <b>Run Selected</b>. Con varias consultas sin seleccionar, MySQL responde con error de sintaxis.</div>
+  <div class="callout warn"><strong>No escribas la palabra null en la cuadrícula:</strong> se guarda como texto y la carga falla. Para dejar una celda en NULL usa el botón <b>Set null</b>. Si algo se daña, vuelve a importar el script.</div>
+</div>
+`});
+
+// 4. Mismos datos
+S({eyebrow:'01 · Nuevo motor', title:'Los mismos datos de la semana 2',
+body:`
+<p class="lede">Las 5 tablas, sus columnas y sus filas son idénticas. Solo cambian los <b>tipos de dato</b>, porque MySQL usa otros nombres.</p>
+<div class="table-wrap"><table class="data ops"><caption>Equivalencia de tipos</caption>
+<thead><tr><th>SQLite (semana 2)</th><th>MySQL (semana 3)</th><th>Dónde se usa</th></tr></thead><tbody>
+<tr><td>INTEGER</td><td>INT</td><td>id, descargas, claves foráneas</td></tr>
+<tr><td>TEXT</td><td>VARCHAR(n)</td><td>nombre, categoria, ciudad, email… (n = máximo de caracteres)</td></tr>
+<tr><td>REAL</td><td>DECIMAL(6,2)</td><td>precio: hasta 6 dígitos, 2 de ellos decimales → se ve <code>0.00</code>, <code>2.99</code></td></tr>
+<tr><td>REAL</td><td>DECIMAL(2,1)</td><td>calificacion: 2 dígitos, 1 decimal → <code>4.6</code>, <code>4.0</code></td></tr>
+</tbody></table></div>
+${tabs([
+  ['aplicaciones', table('T_aplicaciones','aplicaciones · precio en dólares (0.00 = gratuita)')],
+  ['desarrolladores', table('T_desarrolladores','desarrolladores')],
+  ['usuarios', table('T_usuarios','usuarios')],
+  ['descargas', table('T_descargas','descargas (usuario_id, app_id)')],
+  ['favoritas', table('T_favoritas','favoritas (usuario_id, app_id)')]
+])}
+`});
+
+// 5. Diferencias
+S({eyebrow:'01 · Nuevo motor', title:'Tres diferencias que debes conocer',
+body:`
+<p class="lede">La mayoría de lo que aprendiste funciona igual. Estas tres diferencias sí cambian resultados:</p>
+${tabs([
+  ['1. La división', `${ex('D1','')}<div class="callout tip">En SQLite <code>7 / 2</code> daba <b>3</b>. En MySQL <code>/</code> siempre da el resultado con decimales (<b>3.5000</b>). Para la división entera se usa <code>DIV</code>.</div>`],
+  ['2. Mayúsculas en comparaciones', `${ex('D2','')}<div class="callout tip">En la semana 2 esta consulta devolvía 0 filas. Con la configuración de MySQL en RunSQL las comparaciones de texto <b>no distinguen mayúsculas</b>: <code>'juegos'</code> encuentra <code>'Juegos'</code>.</div>`],
+  ['3. El operador ||', `${ex('D3','')}<div class="callout warn">En MySQL <code>||</code> <b>no une textos</b>: es el operador lógico OR. Por eso devuelve 0 en lugar de un texto. Para unir textos usa siempre <code>CONCAT()</code>.</div>`]
+])}
+`});
+
+// 6. Qué es una función
+S({section:true, eyebrow:'02 · Funciones de cadena', title:'¿Qué es una función en SQL?',
+body:`
+<p class="lede">Una función recibe uno o más <b>argumentos</b> entre paréntesis y <b>devuelve un valor</b>. No modifica la tabla: solo cambia lo que ves en el resultado.</p>
+<div class="anatomy">
+  <div class="op">UPPER<small>nombre de la función</small></div>
+  <div>(<small>abre</small></div>
+  <div>nombre<small>argumento: columna, texto o número</small></div>
+  <div>)<small>cierra</small></div>
+  <div>→ 'PIXELRUN'<small>valor devuelto</small></div>
+</div>
+<div class="grid2">
+  <div class="card"><h3>Funciones de fila (esta semana)</h3><p style="margin-bottom:8px;">Se aplican a <b>cada fila</b>: entran 4 filas, salen 4 filas.</p>${ex('F0','',{open:true})}</div>
+  <div class="card"><h3>Funciones de agregación (semana 1)</h3><p style="margin-bottom:8px;">Resumen <b>muchas filas en una</b>: entran 12 filas, sale 1.</p>${ex('F0b','',{open:true})}</div>
+</div>
+<div class="callout note"><strong>Dónde se pueden usar:</strong> en el <code>SELECT</code> (para mostrar), en el <code>WHERE</code> (para filtrar) y en el <code>ORDER BY</code> (para ordenar). Ponle siempre un <b>alias</b> con <code>AS</code> a la columna calculada.</div>
+`});
+
+// 7. UPPER / LOWER
+S({eyebrow:'02 · Funciones de cadena', title:'UPPER y LOWER: mayúsculas y minúsculas',
+body:`
+<div class="grid2">
+  <div class="card"><h3><code>UPPER(texto)</code></h3><p>Convierte todas las letras a <b>MAYÚSCULAS</b>. Respeta las tildes: <code>'Díaz'</code> → <code>'DÍAZ'</code>.</p></div>
+  <div class="card"><h3><code>LOWER(texto)</code></h3><p>Convierte todas las letras a <b>minúsculas</b>. Los números y símbolos no cambian.</p></div>
+</div>
+${tabs([
+  ['Básico', ex('S1','Nivel 1 · usuarios de Pereira')],
+  ['Con DISTINCT', ex('S2','Nivel 2 · categorías en mayúsculas')],
+  ['En el WHERE', ex('S3','Nivel 3 · filtrar sin importar cómo esté escrito')]
+])}
+<div class="callout tip"><strong>Para qué sirven en una app:</strong> mostrar encabezados uniformes, normalizar correos (siempre en minúscula) y comparar textos escritos de formas distintas.</div>
+`});
+
+// 8. CONCAT
+S({eyebrow:'02 · Funciones de cadena', title:'CONCAT: unir textos y columnas',
+body:`
+<p class="lede"><code>CONCAT(valor1, valor2, …)</code> une todos sus argumentos en un solo texto, en el orden en que los escribes. Los espacios y signos van entre comillas simples.</p>
+${tabs([
+  ['Frase', ex('C1','Nivel 1 · construir una frase')],
+  ['Con signos', ex('C2','Nivel 2 · nombre (categoría)')],
+  ['⚠ Con NULL', ex('C3','Nivel 3 · ¿qué pasa con un email NULL?') + `<div class="callout warn">Si <b>un solo</b> argumento es NULL, <code>CONCAT</code> devuelve <b>NULL</b> completo: Andrés Pérez no tiene email.</div>`],
+  ['CONCAT_WS', ex('C4','Complemento · separador y NULL') + `<div class="callout tip"><code>CONCAT_WS(separador, v1, v2, …)</code> pone el separador entre cada valor y <b>omite los NULL</b>. WS significa <i>with separator</i>.</div>`]
+])}
+`});
+
+// 9. SUBSTRING
+S({eyebrow:'02 · Funciones de cadena', title:'SUBSTRING: extraer una parte del texto',
+body:`
+<pre class="code">${hl("SUBSTRING(texto, inicio)            -- desde 'inicio' hasta el final\nSUBSTRING(texto, inicio, cantidad)  -- 'cantidad' caracteres desde 'inicio'")}</pre>
+<div class="grid2">
+  <div class="callout tip"><strong>Las posiciones empiezan en 1</strong>, no en 0. En <code>'PixelRun'</code>, la P es la posición 1.</div>
+  <div class="callout note"><strong>Inicio negativo:</strong> cuenta desde el final. <code>SUBSTRING(email, -2)</code> devuelve los 2 últimos caracteres.</div>
+</div>
+${tabs([
+  ['Desde el inicio', ex('B1','Nivel 1 · primeras 4 y desde la 5')],
+  ['Abreviar', ex('B3','Nivel 2 · abreviatura de categoría')],
+  ['Desde el final', ex('B2','Nivel 3 · dominio de país del correo')]
+])}
+<p class="center-note">También existe <code>SUBSTR</code>: en MySQL es exactamente la misma función.</p>
+`});
+
+// 10. Laboratorio SUBSTRING
+S({eyebrow:'02 · Laboratorio interactivo', title:'Laboratorio: juega con SUBSTRING',
+body:`
+<p class="lede">Elige un texto y cambia <b>inicio</b> y <b>cantidad</b>. Observa qué caracteres se seleccionan. Deja la cantidad vacía para tomar hasta el final.</p>
+<div class="card lab">
+  <div class="labctl">
+    <label>Texto <select id="sub-text">
+      <option>PixelRun</option><option>PresupuestoYa</option><option>Bogotá</option><option>contacto@pixelforge.co</option><option>Valentina Díaz</option>
+    </select></label>
+    <label>Inicio <input id="sub-start" type="number" value="1" step="1"></label>
+    <label>Cantidad <input id="sub-len" type="number" value="4" step="1" placeholder="(vacío)"></label>
+  </div>
+  <div id="sub-boxes" class="charrow" aria-hidden="true"></div>
+  <pre class="code" id="sub-sql"></pre>
+  <div class="subres">Resultado: <span id="sub-out" class="mono"></span></div>
+</div>
+<div class="grid2">
+  <div class="callout tip"><strong>Prueba:</strong> inicio <code>-2</code> con cantidad vacía sobre el correo. ¿Qué obtienes?</div>
+  <div class="callout warn"><strong>Prueba:</strong> inicio <code>0</code>. MySQL devuelve un texto vacío porque no existe la posición 0.</div>
+</div>
+`});
+
+// 11. Complementarias de cadena
+S({eyebrow:'02 · Funciones de cadena', title:'Funciones complementarias de texto',
+body:`
+<p class="lede">No son el centro de la semana, pero te ayudarán en los retos y en tu proyecto.</p>
+${tabs([
+  ['CHAR_LENGTH', ex('X1','Contar caracteres')],
+  ['LENGTH vs CHAR_LENGTH', ex('X2','¿Por qué Bogotá mide 7?') + `<div class="callout note"><code>LENGTH</code> cuenta <b>bytes</b> y <code>CHAR_LENGTH</code> cuenta <b>caracteres</b>. Las letras con tilde ocupan 2 bytes en utf8mb4. Para contar letras usa <code>CHAR_LENGTH</code>.</div>`],
+  ['REPLACE', ex('X3','Reemplazar un fragmento') + `<p class="center-note"><code>REPLACE(texto, buscar, reemplazo)</code> cambia <b>todas</b> las apariciones. Solo afecta el resultado, no la tabla.</p>`],
+  ['TRIM', ex('X4','Quitar espacios de los extremos')]
+])}
+`});
+
+// 12. Anidar
+S({eyebrow:'02 · Funciones de cadena', title:'Funciones anidadas: de adentro hacia afuera',
+body:`
+<p class="lede">El resultado de una función puede ser el argumento de otra. MySQL resuelve primero la función <b>más interna</b>. Recorre los pasos:</p>
+${steps([
+  ['Paso 1 · SUBSTRING', `${ex('N1a','',{open:true})}<p>Se toman las 3 primeras letras: <code>'Jue'</code>.</p>`],
+  ['Paso 2 · UPPER', `${ex('N1b','',{open:true})}<p>Ese resultado pasa a UPPER: <code>'JUE'</code>.</p>`],
+  ['Paso 3 · CONCAT', `${ex('N1c','',{open:true})}<p>CONCAT une <code>'JUE'</code>, el guion y el número: <code>'JUE-1'</code>.</p>`],
+  ['Paso 4 · Con la tabla', `${ex('N1','Código de catálogo para cada app')}<p>Mismo patrón, pero con las columnas <code>categoria</code> e <code>id</code> de cada fila.</p>`]
+])}
+<div class="callout tip"><strong>Truco:</strong> cuenta los paréntesis. Cada <code>(</code> debe tener su <code>)</code>. Si te pierdes, construye la expresión por partes como en estos pasos.</div>
+`});
+
+// 13. Funciones matemáticas: resumen
+S({section:true, eyebrow:'03 · Funciones matemáticas', title:'Cuatro formas de quitar decimales',
+body:`
+<p class="lede">Todas reciben un número y devuelven otro número. La diferencia está en <b>hacia dónde</b> mueven el valor.</p>
+<div class="famgrid4">
+  <div class="famcard fam comp"><b>CEILING(x)</b><span class="mono">techo · hacia arriba</span><p>El entero más pequeño que es mayor o igual a x. <code>CEILING(4.1)</code> = 5. Alias: <code>CEIL</code>.</p></div>
+  <div class="famcard fam arit"><b>FLOOR(x)</b><span class="mono">piso · hacia abajo</span><p>El entero más grande que es menor o igual a x. <code>FLOOR(4.9)</code> = 4.</p></div>
+  <div class="famcard fam logi"><b>ROUND(x, d)</b><span class="mono">al más cercano</span><p>Redondea a <i>d</i> decimales; desde 5 sube. <code>ROUND(4.65, 1)</code> = 4.7. Sin <i>d</i> redondea a entero.</p></div>
+  <div class="famcard fam espe"><b>TRUNCATE(x, d)</b><span class="mono">cortar</span><p>Deja <i>d</i> decimales y <b>descarta</b> el resto sin redondear. <code>TRUNCATE(4.65, 1)</code> = 4.6. La <i>d</i> es obligatoria.</p></div>
+</div>
+<div class="callout note"><strong>Nombres en otros motores:</strong> la planeación menciona TRUNC; en MySQL (y MariaDB) la función se llama <code>TRUNCATE(x, d)</code>. PostgreSQL y Oracle usan <code>TRUNC</code>.</div>
+`});
+
+// 14. Laboratorio numérico
+S({eyebrow:'03 · Laboratorio interactivo', title:'Laboratorio: ¿a dónde va cada número?',
+body:`
+<p class="lede">Elige un valor. Predice los seis resultados y luego pulsa <b>Mostrar resultados</b>. Todos los valores se calcularon en MySQL.</p>
+<div class="setbtns" id="lab-btns"></div>
+<div class="card lab">
+  <svg id="lab-line" class="numline" viewBox="0 0 520 90" role="img" aria-label="Recta numérica"></svg>
+  <pre class="code" id="lab-sql"></pre>
+  <div class="actbar"><button class="reveal-btn" type="button" id="lab-show">Mostrar resultados</button></div>
+  <div id="lab-res"></div>
+</div>
+<div class="callout warn"><strong>Fíjate en los negativos:</strong> con -4.37, FLOOR baja a -5 (más pequeño) y CEILING sube a -4. TRUNCATE siempre se acerca a cero.</div>
+`});
+
+// 15. CEILING / FLOOR
+S({eyebrow:'03 · Funciones matemáticas', title:'CEILING y FLOOR en casos reales',
+body:`
+${tabs([
+  ['Estrellas', ex('M1','Nivel 1 · techo y piso de la calificación')],
+  ['Servidores', ex('M2','Nivel 2 · ¿cuántos servidores de 10 000 descargas?') + `<div class="callout tip">CEILING es la función correcta cuando <b>no puedes quedarte corto</b>: 42 000 descargas necesitan 5 servidores, no 4.2 ni 4.</div>`]
+])}
+<div class="grid2">
+  <div class="callout note"><strong>Usa CEILING</strong> cuando necesitas completar: cajas, servidores, buses, páginas de resultados.</div>
+  <div class="callout note"><strong>Usa FLOOR</strong> cuando solo cuentan las unidades completas: estrellas llenas, dólares completos, años cumplidos.</div>
+</div>
+`});
+
+// 16. ROUND
+S({eyebrow:'03 · Funciones matemáticas', title:'ROUND: redondear al valor más cercano',
+body:`
+<pre class="code">${hl("ROUND(x)       -- a entero\nROUND(x, 2)    -- a 2 decimales\nROUND(x, -3)   -- a miles (decimales negativos redondean a la izquierda del punto)")}</pre>
+${tabs([
+  ['Precio con IVA', ex('M3','Nivel 1 · 19 % de IVA con 2 decimales') + `<div class="callout tip">Sin ROUND, <code>precio * 1.19</code> muestra 4 decimales. En dinero se muestran 2.</div>`],
+  ['Decimales negativos', ex('M4','Nivel 2 · aproximar descargas a miles')]
+])}
+<div class="callout note"><strong>La regla del 5:</strong> si el dígito que se elimina es 5 o más, sube; si es menor, se queda. <code>ROUND(4.45, 1)</code> = 4.5 y <code>ROUND(4.44, 1)</code> = 4.4.</div>
+`});
+
+// 17. TRUNCATE vs ROUND
+S({eyebrow:'03 · Funciones matemáticas', title:'TRUNCATE frente a ROUND',
+body:`
+<p class="lede"><code>TRUNCATE(x, d)</code> no mira el dígito siguiente: simplemente <b>corta</b>. Compara las columnas:</p>
+${ex('M5','Mismo precio, tres tratamientos', {open:true})}
+<div class="table-wrap"><table class="data ops"><caption>Resumen con x = 2.99</caption>
+<thead><tr><th>Expresión</th><th>Resultado</th><th>¿Por qué?</th></tr></thead><tbody>
+<tr><td>ROUND(2.99, 1)</td><td>3.0</td><td>el 9 eliminado es ≥ 5, sube</td></tr>
+<tr><td>TRUNCATE(2.99, 1)</td><td>2.9</td><td>corta después del primer decimal</td></tr>
+<tr><td>TRUNCATE(2.99, 0)</td><td>2</td><td>solo la parte entera</td></tr>
+<tr><td>CEILING(2.99)</td><td>3</td><td>siguiente entero hacia arriba</td></tr>
+<tr><td>FLOOR(2.99)</td><td>2</td><td>entero hacia abajo</td></tr>
+</tbody></table></div>
+`});
+
+// 18. Complementarias matemáticas
+S({eyebrow:'03 · Funciones matemáticas', title:'Funciones matemáticas complementarias',
+body:`
+${ex('M6','ABS, MOD y DIV', {open:true})}
+<div class="grid3">
+  <div class="card"><h3><code>ABS(x)</code></h3><p>Valor absoluto: quita el signo negativo. Útil para diferencias.</p></div>
+  <div class="card"><h3><code>MOD(a, b)</code></h3><p>Residuo de la división. Igual que <code>a % b</code>. 17 = 5·3 + <b>2</b>.</p></div>
+  <div class="card"><h3><code>a DIV b</code></h3><p>Cociente entero. En MySQL <code>17 / 5</code> da 3.4000 y <code>17 DIV 5</code> da <b>3</b>.</p></div>
+</div>
+`});
+
+// 19. En consultas completas
+S({section:true, eyebrow:'04 · Consultas completas', title:'Funciones en WHERE, ORDER BY y con agregación',
+body:`
+<p class="lede">Las funciones se combinan con todo lo que ya sabes de las semanas 1 y 2.</p>
+${tabs([
+  ['WHERE + CHAR_LENGTH', ex('W1','Apps con nombre de más de 8 caracteres')],
+  ['WHERE + SUBSTRING', ex('W2','Usuarios cuyo nombre empieza por S o V')],
+  ['WHERE + FLOOR', ex('W3','Apps que cuestan entre 1.00 y 1.99')],
+  ['ROUND + AVG', ex('G1','Promedio de calificación por categoría') + `<div class="callout note">La función de agregación va <b>dentro</b> de ROUND: primero se calcula el promedio y luego se redondea. Educación da NULL porque su única app no tiene calificaciones.</div>`],
+  ['ROUND + SUM', ex('G2','Ingresos aproximados a miles por categoría')]
+])}
+`});
+
+// 20. Errores comunes
+S({eyebrow:'04 · Consultas completas', title:'Errores comunes (y cómo evitarlos)',
+body:`
+${tabs([
+  ['TRUNCATE sin decimales', ex('E1','') + `<div class="callout tip"><b>Solución:</b> <code>TRUNCATE</code> exige dos argumentos: <code>TRUNCATE(4.5678, 0)</code>.</div>`],
+  ['ROUND con 3 argumentos', ex('E4','') + `<div class="callout tip"><b>Solución:</b> ROUND recibe uno o dos argumentos. Revisa comas y paréntesis.</div>`],
+  ['Posición 0', ex('E2','') + `<div class="callout tip"><b>No es error, pero no devuelve nada:</b> las posiciones empiezan en 1. Usa <code>SUBSTRING('TiendaApp', 1, 3)</code>.</div>`],
+  ['CONCAT con NULL', ex('E3','') + `<div class="callout tip"><b>Solución:</b> filtra con <code>WHERE email IS NOT NULL</code> o usa <code>CONCAT_WS</code>.</div>`],
+  ['Unir con ||', ex('D3','') + `<div class="callout tip"><b>Solución:</b> en MySQL usa <code>CONCAT(nombre, ' - ', ciudad)</code>.</div>`]
+])}
+<p class="center-note">Los mensajes de error se muestran como los devuelve MySQL 8.4 en RunSQL.</p>
+`});
+
+// 21. Integradora
+S({eyebrow:'04 · Consultas completas', title:'Consulta integradora: ficha comercial',
+body:`
+<p class="lede">Reto: para las apps de pago, generar un <b>código</b>, el <b>precio con IVA</b> y los <b>ingresos en miles</b>, ordenado de mayor a menor ingreso. Construyámosla por pasos.</p>
+${steps([
+  ['Paso 1', ex('I1','Filtrar apps de pago')],
+  ['Paso 2', ex('I2','Código + precio con IVA')],
+  ['Paso 3', ex('I3','Ingresos en miles sin decimales')],
+  ['Paso 4', ex('I4','Ficha final')]
+])}
+<div class="callout note">En el paso 4 se ordena por la expresión <code>precio * descargas</code>. Puedes ordenar por cualquier expresión, aunque no aparezca en el SELECT.</div>
+`});
+
+// 22. Retos prácticos
+S({section:true, eyebrow:'05 · Práctica', title:'Retos prácticos',
+body:`
+<p class="lede">Escribe cada consulta en RunSQL <b>antes</b> de ver la solución. Si tu resultado coincide con el de la solución, el reto está logrado (puede haber más de una forma correcta).</p>
+${tabs([
+  ['Reto 1', reto('R1','Muestra el nombre de las apps de pago en minúsculas (alias <code>app</code>) y su categoría en mayúsculas (alias <code>categoria</code>).')],
+  ['Reto 2', reto('R2','Para los usuarios con id 5 o mayor, muestra una sola columna <code>usuario</code> con el formato <code>Nombre (Ciudad)</code>.')],
+  ['Reto 3', reto('R3','Muestra el nombre de las apps de la categoría Social y sus 3 primeras letras (alias <code>inicial</code>).')],
+  ['Reto 4', reto('R4','Para las apps de Productividad con calificación, muestra nombre, calificación y la calificación redondeada a entero (alias <code>estrellas</code>).')],
+  ['Reto 5', reto('R5','Para las apps de pago, muestra nombre, precio y el precio redondeado hacia arriba al dólar entero (alias <code>precio_entero</code>).')],
+  ['Reto 6', reto('R6','Para las apps de Salud y Finanzas, muestra nombre, precio y el precio con IVA (19 %) truncado a 1 decimal (alias <code>iva_truncado</code>).')]
+])}
+`});
+
+// 23. Predice el resultado
+S({eyebrow:'05 · Autoevaluación · Parte A', title:'Predice el resultado',
+body:`
+<p class="lede">Escribe lo que devuelve cada expresión <b>sin ejecutarla</b>. Luego pulsa <b>Revisar</b>. Escribe el texto sin comillas y respeta mayúsculas y minúsculas.</p>
+<div id="pred" class="predgrid"></div>
+<div class="actbar">
+  <button class="navbtn primary" type="button" id="pred-check">Revisar</button>
+  <button class="navbtn" type="button" id="pred-reset">Reiniciar</button>
+  <button class="navbtn" type="button" id="pred-solve">Ver respuestas</button>
+  <span class="score" id="pred-score"></span>
+</div>
+`});
+
+// 24. Autoevaluación final
+S({eyebrow:'05 · Autoevaluación · Parte B', title:'Autoevaluación: 10 preguntas',
+body:`
+<p class="lede">Responde todas las preguntas y pulsa <b>Calificar</b>. Verás tu puntaje y una explicación en cada pregunta. Esta autoevaluación <b>no se califica</b>: úsala para saber si estás listo para la actividad evaluativa.</p>
+<div id="auto" class="autolist"></div>
+<div class="actbar">
+  <button class="navbtn primary" type="button" id="auto-check">Calificar</button>
+  <button class="navbtn" type="button" id="auto-reset">Intentar de nuevo</button>
+  <span class="score" id="auto-score"></span>
+</div>
+<div class="feedback" id="auto-fb"></div>
+`});
+
+// 25. Resumen
+S({eyebrow:'Resumen', title:'Mapa de la semana',
+body:`
+<div class="table-wrap"><table class="data ops"><caption>Funciones de la semana 3 (MySQL)</caption>
+<thead><tr><th>Función</th><th>Qué hace</th><th>Ejemplo</th><th>Resultado</th></tr></thead><tbody>
+<tr><td>UPPER(t)</td><td>a mayúsculas</td><td><code>UPPER('bogotá')</code></td><td>BOGOTÁ</td></tr>
+<tr><td>LOWER(t)</td><td>a minúsculas</td><td><code>LOWER('RunSQL')</code></td><td>runsql</td></tr>
+<tr><td>CONCAT(a, b, …)</td><td>une textos (NULL → NULL)</td><td><code>CONCAT('App', '-', 7)</code></td><td>App-7</td></tr>
+<tr><td>SUBSTRING(t, i, n)</td><td>extrae n caracteres desde i</td><td><code>SUBSTRING('MapaFacil', 5, 3)</code></td><td>Fac</td></tr>
+<tr><td>CEILING(x)</td><td>entero hacia arriba</td><td><code>CEILING(4.1)</code></td><td>5</td></tr>
+<tr><td>FLOOR(x)</td><td>entero hacia abajo</td><td><code>FLOOR(4.9)</code></td><td>4</td></tr>
+<tr><td>ROUND(x, d)</td><td>redondea a d decimales</td><td><code>ROUND(3.456, 2)</code></td><td>3.46</td></tr>
+<tr><td>TRUNCATE(x, d)</td><td>corta a d decimales</td><td><code>TRUNCATE(3.456, 2)</code></td><td>3.45</td></tr>
+</tbody></table></div>
+<div class="callout note"><strong>📓 Para tu cuaderno:</strong> en el documento de apoyo encontrarás marcadas con 📓 las secciones que debes transcribir. Esta tabla es una de ellas.</div>
+`});
+
+// 26. Actividad evaluativa
+S({eyebrow:'Siguientes pasos', title:'Actividad evaluativa: 10 consultas SQL',
+body:`
+<div class="grid2">
+  <div class="card">
+    <h3>1. Profundiza primero</h3>
+    <p>Lee el <b>documento de apoyo de la semana 3</b>, transcribe las secciones 📓 en tu cuaderno y resuelve los ejercicios propuestos.</p>
+  </div>
+  <div class="card">
+    <h3>2. Resuelve las 10 consultas</h3>
+    <p>5 con funciones de cadena y 5 con funciones matemáticas, sobre TiendaApp en RunSQL (MySQL). El enunciado está en Classroom junto con la plantilla <code>plantilla_entrega_semana3.sql</code>.</p>
+  </div>
+  <div class="card">
+    <h3>3. Entrega en Classroom</h3>
+    <ul>
+      <li>El archivo <b>.sql</b> con las 10 consultas.</li>
+      <li>Un documento con las <b>10 capturas</b> de RunSQL (consulta + resultado).</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Cómo se califica</h3>
+    <p>Rúbrica de 5 criterios en escala de 1.0 a 5.0: consultas de cadena, consultas matemáticas, uso de funciones y sintaxis, evidencias y archivo .sql.</p>
+  </div>
+</div>
+`});
+
+// 27. Cierre
+S({section:true, eyebrow:'Cierre', title:'Nos vemos en la semana 4',
+body:`
+<p class="lede">Próximo tema: <b>funciones de fecha-hora y de sistema</b>. Seguiremos en RunSQL (MySQL) con TiendaApp, así que conserva tu script.</p>
+<p class="center-note" style="margin-top:16px;">Fin de la presentación · Semana 3 · Funciones de cadena y matemáticas</p>
+`});
+
+// =========================================================
+// RENDER Y NAVEGACIÓN
+// =========================================================
+const viewport = document.getElementById('viewport');
+const dotsEl = document.getElementById('dots');
+let current = 0;
+slides.forEach((s,i)=>{
+  const el = document.createElement('section');
+  el.className = 'slide' + (s.section ? ' section-slide' : '') + (s.cls ? ' '+s.cls : '');
+  el.id = 'slide-' + i;
+  el.setAttribute('aria-label', 'Diapositiva ' + (i+1) + ': ' + s.title);
+  el.innerHTML = `<div class="slide-inner">${s.eyebrow?`<div class="eyebrow">${s.eyebrow}</div>`:''}<h2>${s.title}</h2>${s.body}</div>`;
+  viewport.appendChild(el);
+  const d = document.createElement('button');
+  d.type = 'button';
+  d.className = 'dot' + (s.section ? ' section' : '');
+  d.setAttribute('aria-label', 'Ir a la diapositiva ' + (i+1));
+  d.addEventListener('click', ()=>goTo(i));
+  dotsEl.appendChild(d);
+});
+const total = slides.length;
+const pad = n => String(n).padStart(2,'0');
+function render(){
+  document.querySelectorAll('.slide').forEach((el,i)=>el.classList.toggle('active', i===current));
+  dotsEl.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active', i===current));
+  document.getElementById('counter').textContent = pad(current+1) + '/' + pad(total);
+  document.getElementById('progress-fill').style.width = (current/(total-1)*100) + '%';
+  document.getElementById('btn-prev').disabled = current===0;
+  document.getElementById('btn-next').disabled = current===total-1;
+  try{ history.replaceState(null,'','#'+(current+1)); }catch(e){}
+}
+function goTo(i){
+  const n = Math.max(0, Math.min(total-1, i));
+  if(n===current && document.querySelector('.slide.active')) return;
+  current = n; render();
+  const el = document.getElementById('slide-'+current); if(el) el.scrollTop = 0;
+}
+document.getElementById('btn-prev').addEventListener('click', ()=>goTo(current-1));
+document.getElementById('btn-next').addEventListener('click', ()=>goTo(current+1));
+document.addEventListener('keydown', e=>{
+  if(e.target.closest && e.target.closest('input,textarea,select')) return;
+  if(e.key==='ArrowRight' || e.key==='PageDown'){ e.preventDefault(); goTo(current+1); }
+  else if(e.key==='ArrowLeft' || e.key==='PageUp'){ e.preventDefault(); goTo(current-1); }
+  else if(e.key==='Home'){ goTo(0); } else if(e.key==='End'){ goTo(total-1); }
+});
+let touchX=null, touchY=null;
+viewport.addEventListener('touchstart', e=>{ touchX=e.touches[0].clientX; touchY=e.touches[0].clientY; }, {passive:true});
+viewport.addEventListener('touchend', e=>{
+  if(touchX===null) return;
+  const dx = e.changedTouches[0].clientX - touchX, dy = e.changedTouches[0].clientY - touchY;
+  const inScrollable = e.target.closest && e.target.closest('pre,.table-wrap,.pool,.bins');
+  if(!inScrollable && Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){ dx<0 ? goTo(current+1) : goTo(current-1); }
+  touchX=null;
+}, {passive:true});
+
+// tema
+document.getElementById('theme-btn').addEventListener('click', ()=>{
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+});
+
+// toast y copiar
+const toast = document.getElementById('toast');
+let toastT;
+function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(()=>toast.classList.remove('show'), 1800); }
+function copyText(txt){
+  const fallback = ()=>{
+    const ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly','');
+    ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+    let ok=false; try{ ok = document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    showToast(ok ? 'Copiado. Pégalo en RunSQL (panel 3, motor MySQL 8.4).' : 'No se pudo copiar: selecciona el texto manualmente.');
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(txt).then(()=>showToast('Copiado. Pégalo en RunSQL (panel 3, motor MySQL 8.4).'), fallback);
+  } else fallback();
+}
+
+
+// =========================================================
+// LABORATORIO SUBSTRING (misma lógica que MySQL, comprobada)
+// =========================================================
+function mariaSubstring(txt, start, len){
+  const ch = Array.from(txt), n = ch.length;
+  let i;
+  if(start > 0) i = start - 1;
+  else if(start < 0){ if(-start > n) return ''; i = n + start; }
+  else return '';
+  if(i >= n) return '';
+  if(len === null) return ch.slice(i).join('');
+  if(len <= 0) return '';
+  return ch.slice(i, i + len).join('');
+}
+function subUpdate(){
+  const txt = document.getElementById('sub-text').value;
+  const sv = document.getElementById('sub-start').value.trim();
+  const lv = document.getElementById('sub-len').value.trim();
+  const start = sv === '' ? 1 : parseInt(sv, 10);
+  const len = lv === '' ? null : parseInt(lv, 10);
+  const ch = Array.from(txt), n = ch.length;
+  const out = mariaSubstring(txt, start, len);
+  let from = -1, to = -1;
+  if(out !== ''){
+    from = start > 0 ? start - 1 : n + start;
+    to = from + Array.from(out).length - 1;
+  }
+  document.getElementById('sub-boxes').innerHTML = ch.map((c,k)=>`<div class="cbox${k>=from && k<=to ? ' on':''}"><b>${esc(c===' '?'␣':c)}</b><span>${k+1}</span><span class="neg">${k-n}</span></div>`).join('');
+  const sql = `SELECT SUBSTRING('${txt}', ${start}${len===null?'':', '+len}) AS resultado;`;
+  document.getElementById('sub-sql').innerHTML = hl(sql);
+  document.getElementById('sub-out').textContent = out === '' ? "'' (texto vacío)" : `'${out}'`;
+}
+
+// =========================================================
+// LABORATORIO NUMÉRICO (resultados precalculados en MySQL)
+// =========================================================
+const LABS = ["LAB0", "LAB1", "LAB2", "LAB3", "LAB4", "LAB5", "LAB6"];
+let labCur = 0;
+function labSelect(i){
+  labCur = i;
+  document.querySelectorAll('#lab-btns .setbtn').forEach((b,k)=>b.classList.toggle('active', k===i));
+  document.getElementById('lab-sql').innerHTML = hl(Q[LABS[i]]);
+  document.getElementById('lab-res').innerHTML = '';
+  document.getElementById('lab-show').textContent = 'Mostrar resultados';
+  const r = R[LABS[i]].rows[0];
+  const x = parseFloat(r[0]), fl = parseFloat(r[2]), ce = parseFloat(r[1]);
+  const lo = fl - 1, hi = ce + 1 + (fl===ce ? 1 : 0);
+  const X = v => 40 + (v - lo) / (hi - lo) * 440;
+  let ticks = '';
+  for(let t = lo; t <= hi; t++) ticks += `<line x1="${X(t)}" y1="44" x2="${X(t)}" y2="54" class="tk"/><text x="${X(t)}" y="72" text-anchor="middle" class="tl">${t}</text>`;
+  document.getElementById('lab-line').innerHTML =
+    `<line x1="30" y1="49" x2="490" y2="49" class="ax"/>${ticks}
+     <circle cx="${X(x)}" cy="49" r="6" class="pt"/><text x="${X(x)}" y="30" text-anchor="middle" class="px">x = ${esc(r[0])}</text>`;
+}
+function labShow(){
+  const box = document.getElementById('lab-res');
+  if(box.innerHTML){ box.innerHTML=''; document.getElementById('lab-show').textContent='Mostrar resultados'; return; }
+  box.innerHTML = table(LABS[labCur], 'Resultado en MySQL');
+  document.getElementById('lab-show').textContent = 'Ocultar';
+}
+
+// =========================================================
+// PARTE A: PREDICE EL RESULTADO
+// =========================================================
+const PRED = [["UPPER('pereira')", "PEREIRA"], ["LOWER('Base De Datos')", "base de datos"], ["CONCAT('App', '-', 7)", "App-7"], ["SUBSTRING('ZombieLab', 7)", "Lab"], ["SUBSTRING('PresupuestoYa', 1, 11)", "Presupuesto"], ["CHAR_LENGTH('Bogotá')", "6"], ["CEILING(3.01)", "4"], ["FLOOR(3.99)", "3"], ["ROUND(2.345, 2)", "2.35"], ["TRUNCATE(2.349, 2)", "2.34"], ["ROUND(-1.5)", "-2"], ["ROUND(27499, -3)", "27000"]]; // [expresión, resultado MySQL]
+const norm = s => String(s).trim().replace(/^['"](.*)['"]$/,'$1').trim();
+function predInit(){
+  document.getElementById('pred').innerHTML = PRED.map((p,i)=>`<div class="predrow" id="pr${i}">
+    <code class="pexp">${esc(p[0])}</code>
+    <input type="text" class="pin" id="pin${i}" aria-label="Resultado de ${esc(p[0])}" autocomplete="off" spellcheck="false">
+    <span class="pmark" id="pm${i}"></span></div>`).join('');
+  document.getElementById('pred-score').textContent='';
+}
+function predCheck(){
+  let ok = 0;
+  PRED.forEach((p,i)=>{
+    const v = norm(document.getElementById('pin'+i).value);
+    const row = document.getElementById('pr'+i), m = document.getElementById('pm'+i);
+    row.classList.remove('ok','bad');
+    if(v === ''){ m.textContent = 'sin responder'; return; }
+    if(v === p[1]){ ok++; row.classList.add('ok'); m.textContent = '✓'; }
+    else { row.classList.add('bad'); m.textContent = '✗ revisa'; }
+  });
+  document.getElementById('pred-score').textContent = `${ok} / ${PRED.length} correctas`;
+}
+function predSolve(){
+  PRED.forEach((p,i)=>{ document.getElementById('pm'+i).textContent = 'Respuesta: ' + p[1]; });
+}
+
+// =========================================================
+// PARTE B: AUTOEVALUACIÓN (10 preguntas)
+// =========================================================
+const AUTO = [{"q": "¿Qué devuelve <code>SELECT UPPER('bogotá');</code> en MySQL?", "o": ["<code>BOGOTA</code>", "<code>BOGOTÁ</code>", "<code>Bogotá</code>", "Un error: las tildes no se pueden convertir"], "c": 1, "e": "UPPER convierte todas las letras a mayúsculas, incluidas las que llevan tilde: <code>BOGOTÁ</code>."}, {"q": "¿Qué devuelve <code>CONCAT('Hola', NULL, 'Mundo')</code>?", "o": ["<code>HolaMundo</code>", "<code>Hola Mundo</code>", "<code>NULL</code>", "<code>HolaNULLMundo</code>"], "c": 2, "e": "Si un argumento de CONCAT es NULL, todo el resultado es NULL. Para omitir los NULL se usa CONCAT_WS."}, {"q": "¿Qué devuelve <code>SUBSTRING('MapaFacil', 5, 3)</code>?", "o": ["<code>Fac</code>", "<code>aFa</code>", "<code>acil</code>", "<code>Faci</code>"], "c": 0, "e": "Desde la posición 5 (la F) se toman 3 caracteres: <code>Fac</code>. Las posiciones empiezan en 1."}, {"q": "¿Qué expresión devuelve las 2 últimas letras de <code>email</code> (por ejemplo, <code>co</code> en <code>contacto@pixelforge.co</code>)?", "o": ["<code>SUBSTRING(email, 2)</code>", "<code>SUBSTRING(email, 1, 2)</code>", "<code>SUBSTRING(email, -2)</code>", "<code>SUBSTRING(email, 0, 2)</code>"], "c": 2, "e": "Un inicio negativo cuenta desde el final: <code>SUBSTRING(email, -2)</code> devuelve <code>co</code>. La posición 0 devuelve un texto vacío."}, {"q": "En MySQL, ¿qué produce <code>SELECT nombre || ' - ' || ciudad FROM usuarios;</code>?", "o": ["<code>Laura Gómez - Bogotá</code> en cada fila", "Un error de sintaxis", "<code>0</code> en cada fila, porque <code>||</code> es el operador lógico OR", "<code>NULL</code> en cada fila"], "c": 2, "e": "En la configuración de MySQL que usa RunSQL, <code>||</code> es OR lógico, no concatenación. Para unir textos usa <code>CONCAT</code>."}, {"q": "¿Cuáles son los resultados de <code>CEILING(4.1)</code> y <code>FLOOR(4.9)</code>?", "o": ["4 y 5", "5 y 4", "4 y 4", "5 y 5"], "c": 1, "e": "CEILING sube al siguiente entero (5) y FLOOR baja al entero anterior (4), sin importar qué tan cerca esté el decimal."}, {"q": "¿Cuáles son los resultados de <code>ROUND(3.456, 2)</code> y <code>TRUNCATE(3.456, 2)</code>?", "o": ["3.46 y 3.46", "3.45 y 3.46", "3.46 y 3.45", "3.5 y 3.4"], "c": 2, "e": "ROUND mira el dígito eliminado (6 ≥ 5, sube a 3.46). TRUNCATE solo corta (3.45)."}, {"q": "¿Qué devuelve <code>ROUND(8700, -3)</code>?", "o": ["8700", "8000", "9000", "8700.000"], "c": 2, "e": "Con decimales negativos se redondea a la izquierda del punto: -3 redondea a miles. 8700 está más cerca de 9000."}, {"q": "¿Qué expresión muestra el precio con IVA del 19 % con exactamente 2 decimales? (para FocoStudy, precio 2.99, debe dar 3.56)", "o": ["<code>ROUND(precio * 1.19, 2)</code>", "<code>TRUNCATE(precio, 2) * 1.19</code>", "<code>ROUND(precio) * 1.19</code>", "<code>ROUND(precio * 1.19)</code>"], "c": 0, "e": "Primero se calcula <code>precio * 1.19</code> (3.5581) y luego se redondea a 2 decimales: 3.56. Las otras opciones dan 3.5581, 3.57 y 4."}, {"q": "Cada servidor atiende 10 000 descargas y ChatNova tiene 42 000. ¿Qué expresión calcula los servidores necesarios?", "o": ["<code>FLOOR(42000 / 10000)</code>", "<code>ROUND(42000 / 10000)</code>", "<code>CEILING(42000 / 10000)</code>", "<code>TRUNCATE(42000 / 10000, 0)</code>"], "c": 2, "e": "Se necesitan 4.2 servidores, así que hacen falta 5: CEILING redondea hacia arriba. Las demás opciones dan 4 y dejarían descargas sin atender."}];
+function autoInit(){
+  document.getElementById('auto').innerHTML = AUTO.map((q,i)=>`<fieldset class="aq" id="aq${i}">
+    <legend><span class="anum">${i+1}</span> ${q.q}</legend>
+    ${q.o.map((o,k)=>`<label class="aopt"><input type="radio" name="aq${i}" value="${k}"> <span>${o}</span></label>`).join('')}
+    <div class="aexp" id="ax${i}"></div>
+  </fieldset>`).join('');
+  document.getElementById('auto-score').textContent='';
+  const fb = document.getElementById('auto-fb'); fb.className='feedback'; fb.textContent='';
+}
+function autoCheck(){
+  let ok = 0, blank = 0;
+  AUTO.forEach((q,i)=>{
+    const sel = document.querySelector(`input[name="aq${i}"]:checked`);
+    const fs = document.getElementById('aq'+i), ex = document.getElementById('ax'+i);
+    fs.classList.remove('ok','bad');
+    fs.querySelectorAll('.aopt').forEach((l,k)=>l.classList.toggle('right', k===q.c));
+    if(!sel){ blank++; fs.classList.add('bad'); ex.innerHTML = '<b>Sin responder.</b> ' + q.e; return; }
+    if(+sel.value === q.c){ ok++; fs.classList.add('ok'); ex.innerHTML = '<b>¡Correcto!</b> ' + q.e; }
+    else { fs.classList.add('bad'); ex.innerHTML = '<b>Incorrecto.</b> ' + q.e; }
+  });
+  document.getElementById('auto-score').textContent = `${ok} / ${AUTO.length} correctas`;
+  const fb = document.getElementById('auto-fb');
+  let msg;
+  if(ok >= 9) msg = 'Excelente dominio. Estás listo para la actividad evaluativa.';
+  else if(ok >= 7) msg = 'Buen nivel. Repasa las preguntas que fallaste antes de la actividad evaluativa.';
+  else if(ok >= 5) msg = 'Vas en camino. Vuelve a los laboratorios y a los retos prácticos, y repite la autoevaluación.';
+  else msg = 'Necesitas repasar. Estudia el documento de apoyo (secciones 📓), rehaz los ejemplos en RunSQL y lleva tus dudas al espacio de asesoría.';
+  if(blank) msg = `Dejaste ${blank} pregunta(s) sin responder. ` + msg;
+  fb.className = 'feedback show ' + (ok >= 7 ? 'ok' : 'no');
+  fb.textContent = msg;
+}
+
+
+// =========================================================
+// EVENTOS (delegación)
+// =========================================================
+document.addEventListener('click', e=>{
+  const t = e.target;
+  const cp = t.closest('[data-copy]');
+  if(cp){ const k = cp.dataset.copy; copyText(k==='__SCRIPT__' ? SQL_SCRIPT : Q[k]); return; }
+  const rv = t.closest('[data-reveal]');
+  if(rv){ const box = document.getElementById(rv.dataset.reveal); const on = box.classList.toggle('show'); rv.textContent = on ? rv.dataset.hide : rv.dataset.show; return; }
+  const tab = t.closest('.tab');
+  if(tab){ const g=tab.dataset.tabgroup, i=tab.dataset.tabidx;
+    document.querySelectorAll(`.tab[data-tabgroup="${g}"]`).forEach(b=>b.classList.toggle('active', b===tab));
+    document.querySelectorAll(`.tabpanel[data-tabgroup="${g}"]`).forEach(p=>p.classList.toggle('active', p.dataset.tabidx===i)); return; }
+  const sb = t.closest('.stepbtn');
+  if(sb){ const g=sb.dataset.stepgroup, i=sb.dataset.stepidx;
+    document.querySelectorAll(`.stepbtn[data-stepgroup="${g}"]`).forEach(b=>b.classList.toggle('active', b===sb));
+    document.querySelectorAll(`.steppanel[data-stepgroup="${g}"]`).forEach(p=>p.classList.toggle('active', p.dataset.stepidx===i)); return; }
+  const lb = t.closest('#lab-btns .setbtn');
+  if(lb){ labSelect(+lb.dataset.i); return; }
+  if(t.id==='lab-show'){ labShow(); return; }
+  if(t.id==='pred-check'){ predCheck(); return; }
+  if(t.id==='pred-reset'){ predInit(); return; }
+  if(t.id==='pred-solve'){ predSolve(); return; }
+  if(t.id==='auto-check'){ autoCheck(); return; }
+  if(t.id==='auto-reset'){ autoInit(); document.getElementById('auto').scrollIntoView({block:'start'}); return; }
+});
+['sub-text','sub-start','sub-len'].forEach(id=>{ const el=document.getElementById(id); el.addEventListener('input', subUpdate); el.addEventListener('change', subUpdate); });
+document.getElementById('lab-btns').innerHTML = LABS.map((k,i)=>`<button class="setbtn" type="button" data-i="${i}">${esc(R[k].rows[0][0])}</button>`).join('');
+
+subUpdate();
+labSelect(0);
+predInit();
+autoInit();
+const h = parseInt((location.hash||'').slice(1),10);
+current = (h>=1 && h<=total) ? h-1 : 0;
+render();
+})();
+</script>
+</body>
+</html>
