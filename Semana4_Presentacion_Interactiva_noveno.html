@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semana 4 — Voltaje, corriente, resistencia y Ley de Ohm</title>
+<style>
+  :root{
+    --accent:#1F5C99;
+    --accent-light:#EAF2FA;
+    --accent-dark:#123A61;
+    --ink:#22252A;
+    --ink-soft:#565B63;
+    --line:#E1E4E8;
+    --bg:#F7F9FB;
+    --card:#FFFFFF;
+    --ok:#1E8E5A;
+    --ok-bg:#E7F6EE;
+    --bad:#B42318;
+    --bad-bg:#FDECEA;
+    --warn:#B5560B;
+    --warn-bg:#FBECDD;
+    --note:#6B4E00;
+    --note-bg:#FFF6D6;
+    --radius:14px;
+    /* colores de las categorías de bloques de micro:bit en Tinkercad */
+    --k-ctl:#FFAB19;
+    --k-out:#4C97FF;
+    --k-inp:#9966FF;
+    --k-math:#40BF4A;
+    --k-var:#D65CD6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;
+    padding-bottom:84px;
+  }
+  /* ---------- barra superior ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg,var(--accent-dark),var(--accent));
+    color:#fff;padding:10px 16px 12px;
+    box-shadow:0 2px 10px rgba(15,40,70,.18);
+  }
+  .topbar-inner{max-width:960px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;}
+  .topbar .t-title{font-weight:700;font-size:15px;flex:1 1 260px;}
+  .topbar .t-title small{display:block;font-weight:400;opacity:.85;font-size:12px;letter-spacing:.04em;}
+  .topbar .t-prog{flex:1 1 240px;min-width:200px;}
+  .bar-track{background:rgba(255,255,255,.25);border-radius:999px;height:10px;overflow:hidden;}
+  .bar-fill{background:#fff;height:100%;width:0%;transition:width .35s ease;}
+  .t-prog .lbl{font-size:12px;opacity:.92;margin-top:4px;display:flex;justify-content:space-between;gap:8px;}
+
+  .wrap{max-width:960px;margin:0 auto;padding:22px 16px 20px;}
+
+  /* ---------- diapositivas ---------- */
+  .slide{display:none;animation:fade .25s ease;}
+  .slide.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:28px 30px 24px;box-shadow:0 4px 14px rgba(15,40,70,.05);
+  }
+  .eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--accent);font-weight:700;margin-bottom:4px;}
+  h1{font-size:30px;line-height:1.2;margin:0 0 10px;color:var(--accent-dark);}
+  h2{font-size:24px;line-height:1.25;margin:0 0 12px;color:var(--accent-dark);}
+  h3{font-size:17px;margin:18px 0 8px;color:var(--ink);}
+  p{margin:0 0 12px;}
+  .lead{font-size:17px;color:var(--ink-soft);}
+  .muted{color:var(--ink-soft);font-size:14px;}
+  a{color:var(--accent);}
+
+  .hero{
+    background:linear-gradient(160deg,var(--accent-dark),var(--accent));
+    color:#fff;border-radius:var(--radius);padding:40px 30px;text-align:center;
+  }
+  .hero h1{color:#fff;font-size:32px;}
+  .hero p{opacity:.93;max-width:660px;margin:0 auto 12px;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px;}
+  .badge{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);padding:5px 13px;border-radius:999px;font-size:13px;}
+
+  .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;}
+  .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;}
+  @media (max-width:760px){
+    .grid2,.grid3{grid-template-columns:1fr;}
+    .card{padding:22px 18px 20px;}
+    h1{font-size:26px;} h2{font-size:21px;}
+  }
+
+  .box{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:#FBFCFD;}
+  .box h3{margin-top:0;}
+  .tip{background:var(--accent-light);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--accent-dark);margin:14px 0;}
+  .tip > b:first-child{display:block;margin-bottom:2px;}
+  .warn{background:var(--warn-bg);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--warn);margin:14px 0;}
+  .warn > b:first-child{display:block;margin-bottom:2px;}
+  .note{background:var(--note-bg);border:1.5px dashed #D9B84A;border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--note);margin:14px 0;}
+  .note b.h{display:block;margin-bottom:4px;}
+  .men{border-left:5px solid var(--accent);background:var(--card);border-radius:10px;padding:14px 18px;margin:16px 0;font-size:14.5px;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+
+  ol.steps-list{padding-left:22px;margin:8px 0 12px;}
+  ol.steps-list li{margin:7px 0;}
+  ul.clean{padding-left:20px;margin:8px 0 12px;}
+  ul.clean li{margin:5px 0;}
+
+  .kbd{display:inline-block;background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:0 7px;font-size:13px;font-weight:600;color:var(--ink);}
+  .ui{display:inline-block;background:#fff;border:1.5px solid var(--accent);color:var(--accent-dark);border-radius:7px;padding:0 8px;font-size:13.5px;font-weight:600;white-space:nowrap;}
+  .ui.g{border-color:#DADCE0;color:#3C4043;}
+  code{background:#F1F3F5;border-radius:5px;padding:1px 6px;font-size:13.5px;}
+
+  /* ---------- botones ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;
+    background:var(--accent);color:#fff;text-decoration:none;
+    padding:10px 16px;border-radius:9px;font-size:14px;font-weight:600;font-family:inherit;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn:focus-visible{outline:3px solid #9CC3EA;outline-offset:2px;}
+  .btn.secondary{background:#fff;color:var(--accent);border:1.5px solid var(--accent);}
+  .btn.small{padding:6px 11px;font-size:13px;}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;}
+  .btn-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+
+  /* ---------- tareas ---------- */
+  .tasks{margin:16px 0 4px;border:1px dashed #BFD3E8;border-radius:12px;padding:6px 14px;background:#FAFCFE;}
+  .task{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--line);}
+  .task:first-of-type{border-top:none;}
+  .task input{margin-top:4px;width:18px;height:18px;accent-color:var(--ok);flex:0 0 auto;cursor:pointer;}
+  .task label{cursor:pointer;font-size:14.5px;}
+  .task label span{display:block;color:var(--ink-soft);font-size:13px;}
+  .task.auto label::after{content:" (se marca sola al completar)";color:var(--ink-soft);font-size:12px;font-weight:400;}
+
+  /* ---------- pestañas ---------- */
+  .seg{display:inline-flex;border:1.5px solid var(--accent);border-radius:9px;overflow:hidden;margin-bottom:8px;flex-wrap:wrap;}
+  .seg button{border:none;background:#fff;color:var(--accent);padding:8px 14px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px;}
+  .seg button.on{background:var(--accent);color:#fff;}
+
+  /* ---------- preguntas rápidas ---------- */
+  .qq{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0;background:#fff;}
+  .qq .q{font-weight:600;margin-bottom:8px;}
+  .qq .opts{display:flex;flex-direction:column;gap:6px;}
+  .qq .opt{
+    text-align:left;border:1.5px solid var(--line);background:#FBFCFD;border-radius:9px;padding:9px 12px;
+    font-size:14.5px;cursor:pointer;font-family:inherit;color:var(--ink);
+  }
+  .qq .opt:hover{border-color:var(--accent);}
+  .qq .opt.right{border-color:var(--ok);background:var(--ok-bg);}
+  .qq .opt.wrong{border-color:var(--bad);background:var(--bad-bg);}
+  .qq .fb{display:none;margin-top:8px;font-size:14px;border-radius:8px;padding:9px 12px;}
+  .qq .fb.show{display:block;}
+  .qq .fb.ok{background:var(--ok-bg);color:#135C3B;}
+  .qq .fb.no{background:var(--bad-bg);color:#8A1C13;}
+
+  /* ---------- maqueta de pantallas (cuentas) ---------- */
+  .mock{border:1px solid var(--line);border-radius:12px;background:#3D6FD1;padding:16px;}
+  .mock .panel{background:#F1F3F5;border-radius:10px;max-width:320px;margin:0 auto;padding:14px 16px;text-align:center;font-size:13.5px;}
+  .mock .panel .ttl{font-weight:700;font-size:16px;margin-bottom:6px;}
+  .mock .panel .sub{color:var(--ink-soft);margin:6px 0 8px;}
+  .mock .mb{display:block;width:100%;border-radius:6px;padding:7px 8px;margin:6px 0;font-weight:600;font-size:13px;border:1px solid transparent;}
+  .mock .b1{background:#4A90D9;color:#fff;}
+  .mock .b2{background:#5CB85C;color:#fff;}
+  .mock .b3{background:#5D7FD6;color:#fff;}
+  .mock .b4{background:#fff;color:#3C4043;border-color:#DADCE0;}
+  .mock .b5{background:#111;color:#fff;}
+  .mock .lnk{color:#1F4FB5;font-weight:700;}
+  .mock .hl{outline:3px solid #FFD84D;outline-offset:2px;}
+
+  /* ---------- interfaz de Tinkercad (maqueta con puntos) ---------- */
+  .tk{position:relative;border:1px solid #CBD2D9;border-radius:12px;overflow:hidden;background:#F4F6F8;font-size:12.5px;user-select:none;}
+  .tk .tbar{display:flex;align-items:center;gap:8px;background:#fff;border-bottom:1px solid #E1E4E8;padding:8px 10px;}
+  .tk .logo{display:grid;grid-template-columns:repeat(3,9px);gap:1px;}
+  .tk .logo i{width:9px;height:9px;display:block;}
+  .tk .name{border:1px solid #CBD2D9;border-radius:999px;padding:3px 10px;font-weight:600;}
+  .tk .circ{margin-left:auto;border:1.5px solid #1F5C99;color:#1F5C99;border-radius:999px;padding:3px 10px;font-weight:600;}
+  .tk .ava{width:26px;height:26px;border-radius:50%;background:#6A8DD6;}
+  .tk .tools{display:flex;align-items:center;gap:6px;background:#fff;border-bottom:1px solid #E1E4E8;padding:6px 10px;flex-wrap:wrap;}
+  .tk .ic{width:22px;height:22px;border-radius:5px;background:#EEF1F4;display:inline-flex;align-items:center;justify-content:center;color:#6B7280;font-size:12px;}
+  .tk .tbtn{border:1px solid #CBD2D9;border-radius:6px;padding:3px 9px;font-weight:600;background:#fff;}
+  .tk .tbtn.sim{border-color:#2E9E4F;}
+  .tk .body{display:grid;grid-template-columns:1fr 190px;min-height:250px;}
+  .tk .canvas{position:relative;padding:14px;}
+  .tk .mini-mb{width:120px;height:92px;border-radius:12px;background:#1E1F22;margin:28px auto 0;position:relative;box-shadow:inset 0 0 0 2px #333;}
+  .tk .mini-mb::after{content:"0   1   2  3V GND";position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:9px;color:#C9A227;letter-spacing:.5px;}
+  .tk .side{border-left:1px solid #E1E4E8;background:#fff;padding:8px;}
+  .tk .side .ddx{border:1px solid #CBD2D9;border-radius:6px;padding:4px 8px;margin-bottom:6px;}
+  .tk .side .srch{border:1px solid #CBD2D9;border-radius:6px;padding:4px 8px;color:#9AA0A6;margin-bottom:8px;}
+  .tk .side .parts{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+  .tk .side .parts span{background:#F4F6F8;border-radius:6px;text-align:center;padding:6px 2px;font-size:10.5px;}
+  .tk .fit{position:absolute;left:10px;top:10px;width:24px;height:24px;border-radius:50%;border:1px solid #CBD2D9;background:#fff;}
+  .hs{position:relative;flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:#E8590C;color:#fff;font-weight:700;font-size:13px;border:2px solid #fff;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);display:inline-flex;vertical-align:middle;align-items:center;justify-content:center;animation:pulse 1.8s infinite;font-family:inherit;padding:0;}
+  .hs.seen{background:#1E8E5A;animation:none;}
+  .hs.cur{outline:3px solid #FFD84D;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(232,89,12,.55);}70%{box-shadow:0 0 0 10px rgba(232,89,12,0);}100%{box-shadow:0 0 0 0 rgba(232,89,12,0);}}
+  .hs-info{min-height:96px;margin-top:10px;}
+  @media (max-width:760px){ .tk .body{grid-template-columns:1fr 130px;} .tk .side .parts{grid-template-columns:1fr 1fr;} }
+
+  /* ---------- bloques estilo Tinkercad (imitación visual) ---------- */
+  .code{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:13px;color:#fff;line-height:1.35;overflow-x:auto;padding:4px 0;}
+  .tb{border-radius:6px;padding:6px 10px;margin:3px 0;display:block;width:max-content;max-width:100%;font-weight:600;transition:box-shadow .15s, filter .15s;}
+  .tb.hat{border-radius:16px 16px 6px 6px;padding-top:9px;}
+  .tb.ctl{background:var(--k-ctl);}
+  .tb.out{background:var(--k-out);}
+  .tb.inp{background:var(--k-inp);}
+  .tb.mth{background:var(--k-math);}
+  .tb.var{background:var(--k-var);}
+  .tb .in{margin:6px 0 2px 12px;border-left:3px solid rgba(255,255,255,.45);padding-left:8px;}
+  .tb .lbl{display:block;margin-top:6px;}
+  .pv{display:inline-block;background:#fff;color:#22252A;border-radius:999px;padding:0 9px;margin:0 3px;font-weight:600;}
+  .pr{display:inline-block;border-radius:999px;padding:0 9px;margin:0 3px;border:2px solid rgba(255,255,255,.7);}
+  .pr.var{background:var(--k-var);} .pr.inp{background:var(--k-inp);}
+  .hx{display:inline-block;background:var(--k-math);border:2px solid rgba(255,255,255,.7);padding:0 10px;margin:0 3px;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 50%,calc(100% - 8px) 100%,8px 100%,0 50%);}
+  .dd{display:inline-block;background:rgba(0,0,0,.15);border-radius:5px;padding:0 6px;margin:0 2px;}
+  .dd::after{content:" ▾";font-size:10px;}
+  .tb.run{box-shadow:0 0 0 3px #FFE14D, 0 0 12px 2px rgba(255,200,0,.8);}
+  .cmt{color:var(--ink-soft);font-size:12.5px;font-weight:400;font-style:italic;margin:2px 0 0 2px;}
+
+  /* ---------- micro:bit simulada ---------- */
+  .sim-area{display:grid;grid-template-columns:270px 1fr;gap:18px;align-items:start;}
+  @media (max-width:760px){.sim-area{grid-template-columns:1fr;}}
+  .mb{
+    background:#23262B;border-radius:18px;padding:18px 14px 14px;width:250px;margin:0 auto;
+    box-shadow:inset 0 0 0 3px #3A3F46,0 6px 16px rgba(0,0,0,.15);color:#fff;
+  }
+  .mb-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .mb-screen{display:grid;grid-template-columns:repeat(5,22px);grid-template-rows:repeat(5,22px);gap:6px;padding:8px;background:#15171A;border-radius:8px;}
+  .led{width:22px;height:22px;border-radius:4px;background:#3A1E1E;transition:background .08s, box-shadow .08s;}
+  .led.on{background:#FF3B30;box-shadow:0 0 8px #FF3B30;}
+  .mb-btn{
+    width:38px;height:38px;border-radius:50%;border:3px solid #9AA0A6;background:#111;color:#fff;
+    font-weight:700;cursor:pointer;font-family:inherit;font-size:14px;
+  }
+  .mb-btn:active{transform:scale(.94);background:#333;}
+  .mb-btn[disabled]{opacity:.35;cursor:not-allowed;}
+  .mb-pins{display:flex;justify-content:space-between;margin-top:12px;padding:6px 6px 0;border-top:2px solid #C9A227;font-size:11px;color:#C9A227;}
+  .sensor{margin-top:12px;background:#fff;color:var(--ink);border-radius:10px;padding:10px 12px;border:1px solid var(--line);font-size:13.5px;}
+  .sensor input[type=range]{width:100%;accent-color:#E8590C;}
+  .sensor .val{font-weight:700;color:#C2410C;}
+  .sim-log{font-size:13.5px;color:var(--ink-soft);margin-top:8px;min-height:22px;text-align:center;}
+
+  /* ---------- caja de variable ---------- */
+  .varbox{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:10px 0;}
+  .vb{width:130px;border:3px solid var(--k-var);border-radius:12px;background:#FCEFFC;text-align:center;padding:8px 6px;}
+  .vb .vn{font-size:13px;font-weight:700;color:#8E2A8E;}
+  .vb .vv{font-size:40px;font-weight:800;color:#5C1A5C;line-height:1.1;transition:transform .2s;}
+  .vb .vv.pop{transform:scale(1.25);}
+  .watch{display:inline-flex;gap:14px;flex-wrap:wrap;background:#FCEFFC;border:1.5px solid var(--k-var);border-radius:10px;padding:6px 12px;font-size:14px;margin-top:8px;}
+  .watch b{color:#8E2A8E;}
+
+  /* ---------- traza de cuenta regresiva ---------- */
+  table.simple{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0;}
+  table.simple th, table.simple td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top;}
+  table.simple th{background:var(--accent-light);color:var(--accent-dark);}
+  table.simple tr.nowrow td{background:#FFF6D6;}
+  .trace-wrap{max-height:230px;overflow:auto;border-radius:8px;}
+
+  /* ---------- semáforo ---------- */
+  .tl-wrap{display:flex;gap:18px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
+  .tl{background:#2B2F36;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;box-shadow:inset 0 0 0 3px #444;}
+  .lamp{width:46px;height:46px;border-radius:50%;opacity:.22;transition:opacity .08s, box-shadow .08s;}
+  .lamp.r{background:#FF3B30;} .lamp.y{background:#FFC400;} .lamp.g{background:#22C55E;}
+  .lamp.on{opacity:1;}
+  .lamp.r.on{box-shadow:0 0 16px #FF3B30;} .lamp.y.on{box-shadow:0 0 16px #FFC400;} .lamp.g.on{box-shadow:0 0 16px #22C55E;}
+  .tl-lbl{font-size:11px;color:#C9A227;text-align:center;margin-top:-6px;}
+  .mode{display:inline-block;border-radius:999px;padding:2px 12px;font-weight:700;font-size:13px;}
+  .mode.dia{background:#FFF1C2;color:#8A5A00;} .mode.noche{background:#1F2A44;color:#E6ECFF;}
+
+  /* ---------- esquema de conexiones (SVG) ---------- */
+  .schem{width:100%;max-width:560px;height:auto;display:block;margin:6px auto;}
+
+  /* ---------- navegación inferior ---------- */
+  .nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);
+    box-shadow:0 -4px 14px rgba(15,40,70,.06);padding:10px 16px;
+  }
+  .nav-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:10px;}
+  .nav select{flex:1;min-width:0;font-family:inherit;font-size:14px;padding:9px 10px;border-radius:9px;border:1.5px solid var(--line);background:#fff;}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:18px;}
+  .dots span{width:8px;height:8px;border-radius:50%;background:#D5DCE3;}
+  .dots span.seen{background:#9CC3EA;}
+  .dots span.cur{background:var(--accent);transform:scale(1.3);}
+  footer.close{text-align:center;padding:18px 10px 0;color:var(--ink-soft);font-size:12.5px;}
+
+  /* ---------- semana 4: circuito abierto/cerrado ---------- */
+  .circ-demo{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .circ-demo svg{width:100%;max-width:420px;height:auto;}
+  .wire{stroke:#2F9E44;stroke-width:4;fill:none;stroke-linecap:round;}
+  .wire.flow{stroke-dasharray:8 8;animation:flow .8s linear infinite;}
+  @keyframes flow{to{stroke-dashoffset:-16;}}
+  .ledbulb{fill:#5A2020;transition:fill .15s, filter .15s;}
+  .ledbulb.on{fill:#FF3B30;filter:drop-shadow(0 0 8px #FF3B30);}
+  .ledbulb.dim{fill:#C9463F;filter:drop-shadow(0 0 3px #FF3B30);}
+
+  /* ---------- tarjetas de magnitudes ---------- */
+  .mag{border-radius:12px;padding:14px 16px;border:1.5px solid var(--line);background:#FBFCFD;}
+  .mag h3{margin:0 0 6px;}
+  .mag .big{font-size:26px;font-weight:800;}
+  .mag.v{border-color:#E8590C;} .mag.v .big{color:#C2410C;}
+  .mag.i{border-color:#1F5C99;} .mag.i .big{color:#1F5C99;}
+  .mag.r{border-color:#8A6D3B;} .mag.r .big{color:#6B4E00;}
+
+  /* ---------- triángulo de Ohm ---------- */
+  .tri-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .tri{width:220px;height:190px;position:relative;}
+  .tri svg{width:100%;height:100%;}
+  .tri-btn{position:absolute;width:62px;height:52px;border:none;background:transparent;cursor:pointer;font-size:30px;font-weight:800;font-family:inherit;border-radius:10px;}
+  .tri-btn:hover,.tri-btn:focus-visible{background:rgba(31,92,153,.10);outline:none;}
+  .tri-btn.cov{background:#22252A;color:#22252A !important;}
+  .formula{font-size:22px;font-weight:800;color:var(--accent-dark);min-height:34px;text-align:center;}
+  .calc{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .calc label{font-size:13.5px;font-weight:600;display:block;margin-bottom:3px;}
+  .calc select{width:100%;font-family:inherit;font-size:14px;padding:8px 10px;border-radius:9px;border:1.5px solid var(--line);background:#fff;}
+  .calc-out{margin-top:10px;background:var(--accent-light);border-radius:10px;padding:12px 14px;font-size:15px;color:var(--accent-dark);}
+  .calc-out .res{font-size:24px;font-weight:800;}
+  .meter{height:14px;border-radius:999px;background:#E6EBF0;overflow:hidden;margin-top:8px;}
+  .meter i{display:block;height:100%;background:linear-gradient(90deg,#1F5C99,#4C97FF);width:0;transition:width .3s;}
+
+  /* ---------- símbolos ---------- */
+  .sym{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;}
+  .sym svg{width:120px;height:56px;}
+  .sym b{margin-top:4px;}
+
+  /* ---------- esquema paso a paso ---------- */
+  .seg-path{stroke:#9AA3AD;stroke-width:4;fill:none;transition:stroke .2s;}
+  .seg-path.lit{stroke:#E8590C;}
+  .step-note{min-height:56px;}
+
+  /* ---------- protoboard interactiva ---------- */
+  .bb-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px;}
+  .bb{display:block;margin:0 auto;}
+  .bb .hole{fill:#3A3F46;cursor:pointer;}
+  .bb .hole:hover{fill:#E8590C;}
+  .bb .hole.hi{fill:#22C55E;}
+  .bb .hole.sel{fill:#E8590C;}
+  .bb-info{margin-top:10px;min-height:48px;}
+
+  /* ---------- multímetro dibujado ---------- */
+  .mm{display:inline-flex;align-items:center;gap:8px;background:#F4B63F;border-radius:10px;padding:8px 10px;box-shadow:inset 0 0 0 2px #C98F1C;}
+  .mm .scr{background:#DDE3D8;border-radius:5px;padding:4px 10px;font-weight:800;font-size:20px;min-width:118px;text-align:right;font-family:ui-monospace,Menlo,Consolas,monospace;color:#22252A;}
+  .mm .md{display:flex;flex-direction:column;gap:3px;}
+  .mm .md span{width:18px;height:18px;border-radius:50%;border:1.5px solid #6B4E00;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;color:#6B4E00;background:#FBD98A;}
+  .mm .md span.on{background:#22252A;color:#fff;border-color:#22252A;}
+
+  /* ---------- hoja de registro ---------- */
+  table.reg input{width:100%;min-width:90px;font-family:inherit;font-size:14px;padding:6px 8px;border-radius:7px;border:1.5px solid var(--line);}
+  table.reg td{vertical-align:middle;}
+
+  /* ---------- ejercicios ---------- */
+  .ex-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+  .pill{display:inline-block;border-radius:999px;padding:2px 12px;font-size:12.5px;font-weight:700;}
+  .pill.src{background:#FFF1C2;color:#8A5A00;}
+  .pill.ctl{background:#E7F0FF;color:#1F4FB5;}
+  .pred{background:#F3F0FF;border:1.5px dashed #9966FF;border-radius:10px;padding:12px 14px;margin:12px 0;font-size:14.5px;color:#3F2A7A;}
+  .pred > b:first-child{display:block;margin-bottom:4px;}
+  .pred input{width:80px;font-family:inherit;font-size:14px;padding:4px 6px;border-radius:6px;border:1.5px solid #B9A3FF;margin:0 4px;}
+  .pred .ok{color:var(--ok);font-weight:700;} .pred .no{color:var(--bad);font-weight:700;}
+  .measure{background:#FFF6D6;border:1.5px solid #D9B84A;border-radius:10px;padding:12px 14px;margin:12px 0;font-size:14.5px;color:#6B4E00;}
+  .measure > b:first-child{display:block;margin-bottom:4px;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="t-title"><small>SEMANA 4 · GRADO 9°</small>Electrónica básica I: voltaje, corriente, resistencia y Ley de Ohm</div>
+    <div class="t-prog">
+      <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+      <div class="lbl"><span id="progressLabel">0 de 0 tareas</span><span id="slideLabel">Diapositiva 1</span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="deck">
+
+<!-- ===================== 1. PORTADA ===================== -->
+<section class="slide" data-title="Portada">
+  <div class="hero">
+    <div class="eyebrow" style="color:#fff;opacity:.85">Plan de 10 semanas · Electrónica básica</div>
+    <h1>Semana 4 — Voltaje, corriente, resistencia y Ley de Ohm</h1>
+    <p>Esta semana descubres qué pasa <b>dentro</b> de un circuito. Aprendes a calcular con <b>V = I × R</b>, a usar la <b>protoboard</b> y el <b>multímetro</b>, y compruebas todo en Tinkercad con tu <b>micro:bit</b>.</p>
+    <div class="badge-row">
+      <span class="badge">Nivel: básico</span>
+      <span class="badge">Duración estimada: 120–150 min</span>
+      <span class="badge">Trabajo autónomo</span>
+      <span class="badge">Solo simuladores</span>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3 style="margin-top:0">🎯 Objetivo de la semana</h3>
+    <p>Comprender qué son el <b>voltaje</b>, la <b>corriente</b> y la <b>resistencia</b>, usar la <b>Ley de Ohm</b> con números sencillos y comprobarla en Tinkercad armando circuitos con la micro:bit, una protoboard y el multímetro.</p>
+    <div class="men"><b>Evidencia de aprendizaje (MEN, grados 8°–9°):</b><br><i>"Represento gráficamente mediante software especializado los sistemas internos de productos tecnológicos contemporáneos (sistema eléctrico, sistema electrónico...)."</i><br><span class="muted">Componentes: Tecnología, Informática y Sociedad · Solución de problemas con T&amp;I</span></div>
+    <p class="muted">Usa los botones <span class="kbd">Siguiente →</span> y <span class="kbd">← Anterior</span> de la parte de abajo, o las flechas del teclado.</p>
+  </div>
+</section>
+
+<!-- ===================== 2. RUTA ===================== -->
+<section class="slide" data-title="Tu ruta de la semana">
+  <div class="card">
+    <div class="eyebrow">Antes de empezar</div>
+    <h2>Tu ruta de la semana</h2>
+    <p>Avanza a tu ritmo. Primero aprendes los conceptos con ejemplos que puedes probar aquí mismo; después haces el <b>taller</b> en Tinkercad y, al final, respondes el <b>formulario</b>.</p>
+    <div class="grid3">
+      <div class="box"><h3>1️⃣ Conceptos</h3><p class="muted">Diapositivas 3 a 12: circuito, voltaje, corriente, resistencia, Ley de Ohm, componentes, protoboard, multímetro y seguridad. Las preguntas rápidas <b>no tienen nota</b>.</p></div>
+      <div class="box"><h3>2️⃣ Taller en Tinkercad</h3><p class="muted">Diapositivas 13 a 18: <b>5 circuitos</b> que armas y mides. Anota tus mediciones en la <b>hoja de registro</b> de tu cuaderno.</p></div>
+      <div class="box"><h3>3️⃣ Formulario</h3><p class="muted"><b>10 preguntas</b> sobre lo que armaste y mediste en el taller. <b>Es la nota de la semana.</b></p></div>
+    </div>
+    <div class="tip"><b>El documento de lectura</b>Tiene todo explicado con más detalle, incluido el taller completo (sección 10). Las partes con <b>📓 PARA TU CUADERNO</b> se copian en el cuaderno.</div>
+    <div class="warn"><b>Sin taller no hay formulario</b>Las preguntas del formulario piden los valores que <b>tú mediste</b> en Tinkercad. Si no haces los 5 ejercicios, no podrás responderlo.</div>
+    <div class="note"><b class="h">La barra de progreso no se guarda</b>Si cierras o recargas la página, las casillas y lo que escribas aquí se borran. Es solo una ayuda para organizarte.</div>
+  </div>
+</section>
+
+<!-- ===================== 3. CIRCUITO ===================== -->
+<section class="slide" data-title="¿Qué es un circuito eléctrico?">
+  <div class="card">
+    <div class="eyebrow">Tema 1 · Circuito eléctrico · Actividad interactiva</div>
+    <h2>¿Qué es un circuito eléctrico?</h2>
+    <p>Un <b>circuito</b> es un <b>camino cerrado</b> por donde circula la electricidad. Si el camino se corta en algún punto, la electricidad no puede pasar.</p>
+    <div class="grid2">
+      <div>
+        <table class="simple">
+          <tr><th>Parte</th><th>¿Qué hace?</th></tr>
+          <tr><td><b>Fuente</b></td><td>Da el empuje. Aquí: la micro:bit.</td></tr>
+          <tr><td><b>Conductores</b></td><td>Cables y filas de la protoboard.</td></tr>
+          <tr><td><b>Carga</b></td><td>Usa la energía: el LED.</td></tr>
+          <tr><td><b>Retorno</b></td><td>Cierra el camino: el pin GND.</td></tr>
+        </table>
+        <p class="muted">Circuito <b>cerrado</b> → circula corriente. Circuito <b>abierto</b> → no circula.</p>
+      </div>
+      <div class="circ-demo">
+        <svg viewBox="0 0 420 240" role="img" aria-label="Circuito con micro:bit, resistencia, LED e interruptor">
+          <rect x="20" y="70" width="90" height="110" rx="12" fill="#23262B"/>
+          <text x="65" y="98" fill="#fff" font-size="13" text-anchor="middle" font-weight="700">micro:bit</text>
+          <text x="98" y="130" fill="#C9A227" font-size="12" text-anchor="end" font-weight="700">3V</text>
+          <text x="98" y="168" fill="#C9A227" font-size="12" text-anchor="end" font-weight="700">GND</text>
+          <path id="w1" class="wire" d="M110 125 H170"/>
+          <rect x="170" y="114" width="60" height="22" rx="6" fill="#E9D8B4" stroke="#8A6D3B"/>
+          <text x="200" y="129" font-size="11" text-anchor="middle" fill="#5B4A2A">220 Ω</text>
+          <path id="w2" class="wire" d="M230 125 H300"/>
+          <circle id="led3" class="ledbulb" cx="320" cy="125" r="18"/>
+          <text x="320" y="95" font-size="11" text-anchor="middle" fill="#555">LED</text>
+          <path id="w3" class="wire" d="M338 125 H390 V200 H300"/>
+          <g id="swGrp">
+            <circle cx="300" cy="200" r="4" fill="#333"/><circle cx="240" cy="200" r="4" fill="#333"/>
+            <line id="swArm" x1="300" y1="200" x2="240" y2="200" stroke="#333" stroke-width="4" stroke-linecap="round"/>
+          </g>
+          <text x="270" y="228" font-size="11" text-anchor="middle" fill="#555">interruptor</text>
+          <path id="w4" class="wire" d="M240 200 H160 V165 H110"/>
+        </svg>
+        <div class="btn-row"><button class="btn" type="button" id="swBtn">Abrir el interruptor</button></div>
+        <p class="sim-log" id="swLog">El circuito está <b>cerrado</b>: la corriente circula y el LED enciende.</p>
+      </div>
+    </div>
+    <div class="qq-group" data-set="circ" data-task="t-qq1"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-sw"><label for="t-sw"><b>Abrí y cerré el circuito</b></label></div>
+      <div class="task auto"><input type="checkbox" id="t-qq1"><label for="t-qq1"><b>Respondí bien la pregunta del circuito</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 4. MAGNITUDES ===================== -->
+<section class="slide" data-title="Voltaje, corriente y resistencia">
+  <div class="card">
+    <div class="eyebrow">Tema 2 · Las tres magnitudes</div>
+    <h2>Voltaje, corriente y resistencia</h2>
+    <p>Imagina <b>agua en una tubería</b>. Así se entienden las tres magnitudes más importantes de la electricidad:</p>
+    <div class="grid3">
+      <div class="mag v"><h3>⚡ Voltaje</h3><div class="big">V</div><p class="muted">El <b>empuje</b> (como la presión del agua). Se mide en <b>voltios (V)</b>.</p></div>
+      <div class="mag i"><h3>🌊 Corriente</h3><div class="big">I</div><p class="muted">La <b>cantidad</b> de electricidad que pasa cada segundo (como el agua que corre). Se mide en <b>amperios (A)</b> o <b>miliamperios (mA)</b>.</p></div>
+      <div class="mag r"><h3>🧱 Resistencia</h3><div class="big">R</div><p class="muted">La <b>oposición</b> al paso (como un tubo estrecho). Se mide en <b>ohmios (Ω)</b> o <b>kiloohmios (kΩ)</b>.</p></div>
+    </div>
+    <h3>Conversiones que vas a usar</h3>
+    <table class="simple">
+      <tr><th>Equivalencia</th><th>Ejemplos</th></tr>
+      <tr><td><b>1 A = 1000 mA</b></td><td>0.01 A = 10 mA · 0.0033 A = 3.3 mA</td></tr>
+      <tr><td><b>1 kΩ = 1000 Ω</b></td><td>2 kΩ = 2000 Ω · 330 Ω = 0.33 kΩ · 220 Ω = 0.22 kΩ</td></tr>
+    </table>
+    <div class="tip"><b>Más resistencia = menos corriente</b>Si el tubo es más estrecho, pasa menos agua. Si la resistencia es más grande, pasa menos corriente.</div>
+    <div class="note"><b class="h">Decimales con punto</b>Tinkercad escribe los decimales con <b>punto</b> (3.3 V). En este curso hacemos lo mismo.</div>
+    <div class="qq-group" data-set="mag" data-task="t-qq2"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-qq2"><label for="t-qq2"><b>Respondí bien las preguntas de magnitudes</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 5. LEY DE OHM ===================== -->
+<section class="slide" data-title="La Ley de Ohm">
+  <div class="card">
+    <div class="eyebrow">Tema 3 · Ley de Ohm · Actividad interactiva</div>
+    <h2>La Ley de Ohm: V = I × R</h2>
+    <div class="grid2">
+      <div class="tri-wrap">
+        <p style="margin:0">Haz clic en la letra que quieres <b>encontrar</b>: se tapa y queda la fórmula.</p>
+        <div class="tri">
+          <svg viewBox="0 0 220 190" aria-hidden="true">
+            <polygon points="110,6 214,184 6,184" fill="#EAF2FA" stroke="#1F5C99" stroke-width="3"/>
+            <line x1="58" y1="100" x2="162" y2="100" stroke="#1F5C99" stroke-width="3"/>
+            <line x1="110" y1="100" x2="110" y2="184" stroke="#1F5C99" stroke-width="3"/>
+          </svg>
+          <button class="tri-btn" type="button" data-t="V" style="left:79px;top:40px;color:#C2410C">V</button>
+          <button class="tri-btn" type="button" data-t="I" style="left:40px;top:118px;color:#1F5C99">I</button>
+          <button class="tri-btn" type="button" data-t="R" style="left:118px;top:118px;color:#6B4E00">R</button>
+        </div>
+        <div class="formula" id="triOut">V = I × R</div>
+        <p class="muted" id="triTxt" style="text-align:center">voltaje = corriente × resistencia</p>
+      </div>
+      <div>
+        <h3 style="margin-top:0">El truco de las unidades</h3>
+        <ul class="clean">
+          <li><b>V ÷ kΩ = mA</b> → 6 V ÷ 2 kΩ = 3 mA</li>
+          <li><b>mA × kΩ = V</b> → 2 mA × 4 kΩ = 8 V</li>
+        </ul>
+        <h3>Calculadora de corriente</h3>
+        <div class="calc">
+          <div><label for="cV">Voltaje de la fuente</label>
+            <select id="cV"><option value="3.3">3.3 V (micro:bit)</option><option value="1.5">1.5 V (pila AA)</option><option value="6">6 V</option><option value="9">9 V (pila)</option></select></div>
+          <div><label for="cR">Resistencia</label>
+            <select id="cR"><option value="0.22">220 Ω = 0.22 kΩ</option><option value="0.33">330 Ω = 0.33 kΩ</option><option value="1" selected>1 kΩ</option><option value="2">2 kΩ</option><option value="3">3 kΩ</option><option value="10">10 kΩ</option></select></div>
+        </div>
+        <div class="calc-out" id="cOut"></div>
+        <div class="meter" aria-hidden="true"><i id="cBar"></i></div>
+        <p class="muted" style="margin-top:6px">La barra muestra cuánta corriente pasa. Cambia la resistencia y mira qué pasa.</p>
+      </div>
+    </div>
+    <div class="warn"><b>Calculado no es igual a medido</b>En el taller vas a <b>calcular</b> y luego a <b>medir</b>. Los valores medidos suelen quedar muy cerca de los calculados, pero no siempre idénticos. En el formulario te preguntan el <b>valor medido</b>.</div>
+    <div class="qq-group" data-set="ohm" data-task="t-qq3"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-tri"><label for="t-tri"><b>Usé el triángulo con las tres letras</b></label></div>
+      <div class="task auto"><input type="checkbox" id="t-calc"><label for="t-calc"><b>Probé la calculadora con al menos 4 combinaciones</b></label></div>
+      <div class="task auto"><input type="checkbox" id="t-qq3"><label for="t-qq3"><b>Respondí bien las preguntas de la Ley de Ohm</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 6. EJEMPLOS RESUELTOS ===================== -->
+<section class="slide" data-title="Ejemplos resueltos paso a paso">
+  <div class="card">
+    <div class="eyebrow">Tema 3 · Ley de Ohm · Ejemplos guiados</div>
+    <h2>Ejemplos resueltos paso a paso</h2>
+    <div class="seg" id="exSeg">
+      <button type="button" class="on" data-p="0">1 · Corriente</button>
+      <button type="button" data-p="1">2 · Voltaje</button>
+      <button type="button" data-p="2">3 · Resistencia</button>
+      <button type="button" data-p="3">4 · En serie</button>
+    </div>
+    <div class="exp" data-p="0">
+      <p><b>Problema:</b> una fuente de <b>6 V</b> alimenta una resistencia de <b>2 kΩ</b>. ¿Cuánta corriente pasa?</p>
+      <ol class="steps-list"><li>Lo que sé: V = 6 V · R = 2 kΩ. Busco <b>I</b>.</li><li>Fórmula (tapo la I en el triángulo): <b>I = V ÷ R</b>.</li><li>Cuenta: 6 ÷ 2 = <b>3 mA</b> (V ÷ kΩ = mA).</li></ol>
+    </div>
+    <div class="exp" data-p="1" style="display:none">
+      <p><b>Problema:</b> por una resistencia de <b>4 kΩ</b> pasan <b>2 mA</b>. ¿Qué voltaje hay entre sus patas?</p>
+      <ol class="steps-list"><li>Lo que sé: I = 2 mA · R = 4 kΩ. Busco <b>V</b>.</li><li>Fórmula: <b>V = I × R</b>.</li><li>Cuenta: 2 × 4 = <b>8 V</b> (mA × kΩ = V).</li></ol>
+    </div>
+    <div class="exp" data-p="2" style="display:none">
+      <p><b>Problema:</b> una fuente de <b>5 V</b> hace pasar <b>1 mA</b>. ¿De cuánto es la resistencia?</p>
+      <ol class="steps-list"><li>Lo que sé: V = 5 V · I = 1 mA. Busco <b>R</b>.</li><li>Fórmula: <b>R = V ÷ I</b>.</li><li>Cuenta: 5 ÷ 1 = <b>5 kΩ</b> = 5000 Ω.</li></ol>
+    </div>
+    <div class="exp" data-p="3" style="display:none">
+      <p><b>Problema:</b> una fuente de <b>10 V</b> alimenta dos resistencias <b>en serie</b> (una detrás de la otra): <b>1 kΩ</b> y <b>4 kΩ</b>.</p>
+      <ol class="steps-list">
+        <li>En serie las resistencias <b>se suman</b>: R total = 1 + 4 = <b>5 kΩ</b>.</li>
+        <li>Corriente: I = 10 ÷ 5 = <b>2 mA</b>. Es la <b>misma</b> en las dos resistencias.</li>
+        <li>Voltaje en la de 4 kΩ: 2 × 4 = <b>8 V</b>. En la de 1 kΩ: 2 × 1 = <b>2 V</b>.</li>
+        <li>Comprobación: 8 V + 2 V = 10 V, el voltaje de la fuente. ✔</li>
+      </ol>
+    </div>
+    <div class="box" style="margin-top:14px">
+      <h3>✍️ Ahora tú (no tiene nota)</h3>
+      <p style="margin-bottom:6px">Una fuente de <b>9 V</b> y una resistencia de <b>3 kΩ</b>. ¿Cuántos mA pasan?</p>
+      <div class="btn-row" style="align-items:center"><input id="myI" type="number" step="0.01" style="width:110px;font-family:inherit;font-size:15px;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line)"> <span>mA</span> <button class="btn small" type="button" id="myIBtn">Revisar</button></div>
+      <p class="sim-log" id="myILog" style="text-align:left"></p>
+    </div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-exs"><label for="t-exs"><b>Revisé los 4 ejemplos</b></label></div>
+      <div class="task auto"><input type="checkbox" id="t-my"><label for="t-my"><b>Resolví bien el ejercicio "Ahora tú"</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 7. COMPONENTES ===================== -->
+<section class="slide" data-title="Componentes y símbolos">
+  <div class="card">
+    <div class="eyebrow">Tema 4 · Componentes</div>
+    <h2>Los componentes de esta semana y sus símbolos</h2>
+    <p>En un <b>esquema</b> cada componente se dibuja con un <b>símbolo</b>. Estos son los que vas a usar:</p>
+    <div class="grid3">
+      <div class="box sym">
+        <svg viewBox="0 0 120 56"><rect x="30" y="8" width="60" height="40" rx="8" fill="#23262B"/><text x="60" y="33" fill="#C9A227" font-size="11" text-anchor="middle" font-weight="700">3V · GND</text></svg>
+        <b>micro:bit</b><span class="muted">Fuente y cerebro. <b>3V</b> = + · <b>GND</b> = −</span>
+      </div>
+      <div class="box sym">
+        <svg viewBox="0 0 120 56"><polyline points="4,28 30,28 36,16 46,40 56,16 66,40 76,16 86,40 90,28 116,28" fill="none" stroke="#22252A" stroke-width="3"/></svg>
+        <b>Resistencia</b><span class="muted">Limita la corriente. <b>No</b> tiene polaridad.</span>
+      </div>
+      <div class="box sym">
+        <svg viewBox="0 0 120 56"><line x1="4" y1="30" x2="44" y2="30" stroke="#22252A" stroke-width="3"/><polygon points="44,14 44,46 72,30" fill="#22252A"/><line x1="74" y1="14" x2="74" y2="46" stroke="#22252A" stroke-width="3"/><line x1="74" y1="30" x2="116" y2="30" stroke="#22252A" stroke-width="3"/><line x1="62" y1="10" x2="72" y2="0" stroke="#E8590C" stroke-width="2"/><line x1="72" y1="12" x2="82" y2="2" stroke="#E8590C" stroke-width="2"/></svg>
+        <b>LED</b><span class="muted">Tiene polaridad: <b>ánodo (+)</b> pata doblada · <b>cátodo (−)</b> pata recta.</span>
+      </div>
+      <div class="box sym">
+        <svg viewBox="0 0 120 56"><circle cx="60" cy="28" r="20" fill="#fff" stroke="#22252A" stroke-width="3"/><text x="60" y="36" font-size="22" text-anchor="middle" font-weight="800" fill="#C2410C">V</text><line x1="4" y1="28" x2="40" y2="28" stroke="#22252A" stroke-width="3"/><line x1="80" y1="28" x2="116" y2="28" stroke="#22252A" stroke-width="3"/></svg>
+        <b>Voltímetro</b><span class="muted">Multímetro en modo <b>Voltaje</b>.</span>
+      </div>
+      <div class="box sym">
+        <svg viewBox="0 0 120 56"><circle cx="60" cy="28" r="20" fill="#fff" stroke="#22252A" stroke-width="3"/><text x="60" y="36" font-size="22" text-anchor="middle" font-weight="800" fill="#1F5C99">A</text><line x1="4" y1="28" x2="40" y2="28" stroke="#22252A" stroke-width="3"/><line x1="80" y1="28" x2="116" y2="28" stroke="#22252A" stroke-width="3"/></svg>
+        <b>Amperímetro</b><span class="muted">Multímetro en modo <b>Amperaje</b>.</span>
+      </div>
+      <div class="box sym">
+        <svg viewBox="0 0 120 56"><line x1="60" y1="2" x2="60" y2="26" stroke="#22252A" stroke-width="3"/><line x1="36" y1="26" x2="84" y2="26" stroke="#22252A" stroke-width="3"/><line x1="44" y1="36" x2="76" y2="36" stroke="#22252A" stroke-width="3"/><line x1="52" y1="46" x2="68" y2="46" stroke="#22252A" stroke-width="3"/></svg>
+        <b>GND (tierra)</b><span class="muted">Regreso de la corriente: el negativo.</span>
+      </div>
+    </div>
+    <div class="warn"><b>El LED siempre con resistencia</b>El LED solo deja pasar corriente del <b>ánodo</b> al <b>cátodo</b>: si lo conectas al revés, no enciende. Y siempre va con una <b>resistencia en serie</b>; sin ella, en la vida real se dañaría.</div>
+    <div class="tip"><b>¿Cuál es el ánodo en Tinkercad?</b>Pasa el mouse sobre una pata del LED: Tinkercad te dice si es el <b>Ánodo</b> o el <b>Cátodo</b>.</div>
+    <div class="qq-group" data-set="comp" data-task="t-qq4"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-qq4"><label for="t-qq4"><b>Respondí bien las preguntas de componentes</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 8. LEER UN ESQUEMA ===================== -->
+<section class="slide" data-title="Leer un esquema">
+  <div class="card">
+    <div class="eyebrow">Tema 4 · Leer un circuito · Actividad interactiva</div>
+    <h2>Leer un esquema: sigue el camino de la corriente</h2>
+    <p>Un <b>esquema</b> no muestra cómo se ven los componentes, sino <b>cómo están conectados</b>. Presiona <b>Siguiente paso</b> y sigue el camino con la vista.</p>
+    <svg class="schem" viewBox="0 0 560 220" role="img" aria-label="Esquema: P0, resistencia de 220 ohmios, LED y GND">
+      <rect x="14" y="30" width="110" height="160" rx="14" fill="#23262B"/>
+      <text x="69" y="56" fill="#fff" font-size="13" text-anchor="middle" font-weight="700">micro:bit</text>
+      <circle cx="124" cy="80" r="8" fill="#C9A227"/><text x="102" y="84" fill="#C9A227" font-size="12" font-weight="700" text-anchor="end">P0</text>
+      <circle cx="124" cy="170" r="8" fill="#C9A227"/><text x="102" y="174" fill="#C9A227" font-size="12" font-weight="700" text-anchor="end">GND</text>
+      <path class="seg-path" data-s="1" d="M132 80 H200"/>
+      <polyline class="seg-path" data-s="2" points="200,80 214,80 222,66 238,94 254,66 270,94 286,66 294,80 310,80"/>
+      <text x="255" y="118" font-size="12" text-anchor="middle" fill="#5B4A2A">220 Ω</text>
+      <path class="seg-path" data-s="3" d="M310 80 H360"/>
+      <polygon class="seg-path" data-s="4" points="360,62 360,98 392,80" style="fill:none"/>
+      <line class="seg-path" data-s="4" x1="394" y1="62" x2="394" y2="98"/>
+      <text x="376" y="52" font-size="12" text-anchor="middle" fill="#555">LED</text>
+      <text x="352" y="118" font-size="11" fill="#555">ánodo</text><text x="392" y="118" font-size="11" fill="#555">cátodo</text>
+      <path class="seg-path" data-s="5" d="M394 80 H480 V170 H132"/>
+    </svg>
+    <div class="box step-note" id="schNote"><b>Paso 0.</b> Presiona <b>Siguiente paso</b>.</div>
+    <div class="btn-row"><button class="btn" type="button" id="schNext">Siguiente paso</button><button class="btn secondary" type="button" id="schReset">Reiniciar</button></div>
+    <div class="tip"><b>En serie</b>Cuando los componentes están uno detrás del otro en un <b>solo camino</b>, están <b>en serie</b>. Por todos pasa <b>la misma corriente</b>.</div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-sch"><label for="t-sch"><b>Seguí el camino completo de la corriente</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 9. PROTOBOARD ===================== -->
+<section class="slide" data-title="La protoboard">
+  <div class="card">
+    <div class="eyebrow">Tema 5 · Protoboard · Actividad interactiva</div>
+    <h2>La protoboard (placa de pruebas)</h2>
+    <p>Sirve para armar circuitos <b>sin soldar</b>: metes las patas de los componentes en los agujeros. En Tinkercad se llama <b>Placa de pruebas pequeña</b> (lista <b>Básico</b>). <b>Haz clic en un agujero</b> para ver en verde qué otros agujeros están conectados con él.</p>
+    <div class="bb-wrap"><svg class="bb" id="bb" aria-label="Protoboard interactiva"></svg></div>
+    <div class="box bb-info" id="bbInfo"><b>Haz clic en un agujero.</b> Prueba uno de un carril (arriba o abajo) y uno de la parte central.</div>
+    <div class="grid2" style="margin-top:12px">
+      <div class="tip" style="margin:0"><b>Filas numeradas</b>Los 5 agujeros de un mismo número (de <i>a</i> a <i>e</i>) están conectados. Lo mismo de <i>f</i> a <i>j</i>. El <b>canal central</b> separa las dos mitades.</div>
+      <div class="tip" style="margin:0"><b>Carriles de alimentación</b>Van a lo largo de la placa. Usamos el de la <b>línea roja para el +</b> y el de la <b>línea azul para el −</b>.</div>
+    </div>
+    <div class="warn"><b>Error típico</b>Poner las dos patas de un componente en la <b>misma fila numerada</b>: quedan conectadas entre sí y la corriente no pasa por el componente.</div>
+    <div class="qq-group" data-set="proto" data-task="t-qq5"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-bb"><label for="t-bb"><b>Exploré un carril y una fila de cada mitad</b></label></div>
+      <div class="task auto"><input type="checkbox" id="t-qq5"><label for="t-qq5"><b>Respondí bien las preguntas de la protoboard</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 10. MULTÍMETRO ===================== -->
+<section class="slide" data-title="El multímetro">
+  <div class="card">
+    <div class="eyebrow">Tema 6 · Multímetro</div>
+    <h2>El multímetro: el instrumento para medir</h2>
+    <p>En Tinkercad escribe <b>multímetro</b> en <b>Buscar</b> y arrástralo. Haz clic en él para elegir el <b>Modo</b>: <b>Amperaje</b>, <b>Voltaje</b> o <b>Resistencia</b>. Tiene dos puntas: <b>roja = Positivo (+)</b> y <b>negra = Negativo (−)</b>.</p>
+    <div class="seg" id="mmSeg">
+      <button type="button" class="on" data-p="0">Medir VOLTAJE</button>
+      <button type="button" data-p="1">Medir CORRIENTE</button>
+    </div>
+    <div class="mmp" data-p="0">
+      <div class="grid2">
+        <div>
+          <ul class="clean">
+            <li>Modo: <b>Voltaje</b>.</li>
+            <li>Se conecta <b>en paralelo</b>: una punta a <b>cada lado</b> del componente o de la fuente.</li>
+            <li>El circuito <b>no se abre</b>.</li>
+            <li>Punta <b>roja</b> en el lado que viene del +; punta <b>negra</b> en el otro lado.</li>
+          </ul>
+          <div class="mm"><div class="scr">—.— V</div><div class="md"><span>A</span><span class="on">V</span><span>R</span></div></div>
+        </div>
+        <svg class="schem" viewBox="0 0 320 170" role="img" aria-label="Voltímetro en paralelo con un LED">
+          <line x1="10" y1="60" x2="70" y2="60" stroke="#2F9E44" stroke-width="3"/>
+          <polyline points="70,60 80,60 86,48 98,72 110,48 122,72 128,60 140,60" fill="none" stroke="#22252A" stroke-width="3"/>
+          <line x1="140" y1="60" x2="180" y2="60" stroke="#2F9E44" stroke-width="3"/>
+          <polygon points="180,46 180,74 204,60" fill="#FF3B30"/><line x1="206" y1="46" x2="206" y2="74" stroke="#22252A" stroke-width="3"/>
+          <line x1="206" y1="60" x2="310" y2="60" stroke="#2F9E44" stroke-width="3"/>
+          <line x1="170" y1="60" x2="170" y2="130" stroke="#D32F2F" stroke-width="3"/>
+          <line x1="222" y1="60" x2="222" y2="130" stroke="#22252A" stroke-width="3"/>
+          <circle cx="196" cy="130" r="20" fill="#fff" stroke="#22252A" stroke-width="3"/><text x="196" y="138" font-size="20" text-anchor="middle" font-weight="800" fill="#C2410C">V</text>
+          <line x1="170" y1="130" x2="176" y2="130" stroke="#D32F2F" stroke-width="3"/><line x1="216" y1="130" x2="222" y2="130" stroke="#22252A" stroke-width="3"/>
+          <text x="160" y="24" font-size="12" text-anchor="middle" fill="#555">una punta a cada lado del LED</text>
+        </svg>
+      </div>
+    </div>
+    <div class="mmp" data-p="1" style="display:none">
+      <div class="grid2">
+        <div>
+          <ul class="clean">
+            <li>Modo: <b>Amperaje</b>.</li>
+            <li>Se conecta <b>en serie</b>: abres el camino y pones el multímetro <b>en medio</b>.</li>
+            <li>La corriente entra por la punta <b>roja</b> y sale por la <b>negra</b>.</li>
+          </ul>
+          <div class="mm"><div class="scr">—.— mA</div><div class="md"><span class="on">A</span><span>V</span><span>R</span></div></div>
+        </div>
+        <svg class="schem" viewBox="0 0 320 170" role="img" aria-label="Amperímetro en serie con una resistencia">
+          <line x1="10" y1="80" x2="60" y2="80" stroke="#2F9E44" stroke-width="3"/>
+          <polyline points="60,80 70,80 76,68 88,92 100,68 112,92 118,80 130,80" fill="none" stroke="#22252A" stroke-width="3"/>
+          <line x1="130" y1="80" x2="166" y2="80" stroke="#D32F2F" stroke-width="3"/>
+          <circle cx="186" cy="80" r="20" fill="#fff" stroke="#22252A" stroke-width="3"/><text x="186" y="88" font-size="20" text-anchor="middle" font-weight="800" fill="#1F5C99">A</text>
+          <line x1="206" y1="80" x2="310" y2="80" stroke="#22252A" stroke-width="3"/>
+          <text x="186" y="130" font-size="12" text-anchor="middle" fill="#555">el multímetro queda EN MEDIO</text>
+          <text x="186" y="146" font-size="12" text-anchor="middle" fill="#555">del camino de la corriente</text>
+        </svg>
+      </div>
+    </div>
+    <div class="warn"><b>¡Nunca en Amperaje entre + y − sin nada en medio!</b>Eso es un <b>cortocircuito</b>. Siempre debe haber una resistencia (u otro componente) en el camino.</div>
+    <div class="tip"><b>Los valores aparecen solo con la simulación en marcha</b>Presiona <span class="ui">Iniciar simulación</span> para ver la medición. Para cambiar algo, primero <span class="ui">Detener simulación</span>.</div>
+    <div class="qq-group" data-set="multi" data-task="t-qq6"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-mm"><label for="t-mm"><b>Vi las dos formas de medir</b></label></div>
+      <div class="task auto"><input type="checkbox" id="t-qq6"><label for="t-qq6"><b>Respondí bien las preguntas del multímetro</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 11. MICRO:BIT ===================== -->
+<section class="slide" data-title="La micro:bit: fuente y controladora">
+  <div class="card">
+    <div class="eyebrow">Tema 7 · micro:bit · Actividad interactiva</div>
+    <h2>La micro:bit: fuente de energía y controladora</h2>
+    <table class="simple">
+      <tr><th>Papel</th><th>Pines</th><th>¿Cómo funciona?</th><th>Ejercicios</th></tr>
+      <tr><td><span class="pill src">Fuente</span></td><td><b>3V</b> (+) y <b>GND</b> (−)</td><td>Mientras la simulación está en marcha, <b>3V siempre</b> entrega voltaje. No necesita programa.</td><td>1, 2 y 5</td></tr>
+      <tr><td><span class="pill ctl">Controladora</span></td><td><b>P0</b> (+) y <b>GND</b> (−)</td><td>P0 entrega voltaje <b>solo</b> cuando el programa lo pone en <b>ALTA</b>. Con <b>BAJA</b> lo apaga.</td><td>3 y 4</td></tr>
+    </table>
+    <div class="sim-area" style="margin-top:12px">
+      <div>
+        <div id="mbP0"></div>
+        <div style="text-align:center;margin-top:10px">
+          <svg viewBox="0 0 200 60" width="200" height="60" aria-hidden="true"><text x="10" y="36" font-size="13" font-weight="700" fill="#C9A227">P0</text><line x1="32" y1="31" x2="70" y2="31" stroke="#2F9E44" stroke-width="3"/><rect x="70" y="21" width="44" height="20" rx="5" fill="#E9D8B4" stroke="#8A6D3B"/><line x1="114" y1="31" x2="140" y2="31" stroke="#2F9E44" stroke-width="3"/><circle id="p0led" class="ledbulb" cx="156" cy="31" r="14"/><line x1="170" y1="31" x2="195" y2="31" stroke="#22252A" stroke-width="3"/></svg>
+        </div>
+        <p class="sim-log" id="p0Log">Presiona A o B en la micro:bit.</p>
+      </div>
+      <div>
+        <h3 style="margin-top:0">El programa</h3>
+        <div class="code" id="codeP0">
+          <span class="tb out hat" data-b="a">con el botón <span class="dd">A</span> <span class="dd">pressed</span>
+            <span class="in"><span class="tb out" data-b="a1">escribir de forma digital el pin <span class="dd">P0</span> en <span class="dd">ALTA</span></span></span>
+          </span>
+          <span class="tb out hat" data-b="b" style="margin-top:10px">con el botón <span class="dd">B</span> <span class="dd">pressed</span>
+            <span class="in"><span class="tb out" data-b="b1">escribir de forma digital el pin <span class="dd">P0</span> en <span class="dd">BAJA</span></span></span>
+          </span>
+        </div>
+        <p class="muted">Dónde están: <b>con el botón A pressed</b> en <b>Básico</b>; <b>escribir de forma digital…</b> en <b>Salida</b>. Para el botón B, arrastra otro bloque de botón y cambia la A por B en su menú.</p>
+      </div>
+    </div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-p0"><label for="t-p0"><b>Encendí y apagué el LED con A y B</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 12. SEGURIDAD ===================== -->
+<section class="slide" data-title="Normas de seguridad eléctrica">
+  <div class="card">
+    <div class="eyebrow">Tema 8 · Tecnología y sociedad</div>
+    <h2>Normas de seguridad eléctrica</h2>
+    <p>En el simulador no hay peligro. En la <b>vida real</b>, la electricidad puede causar quemaduras, incendios y lesiones graves. Estos hábitos te protegen:</p>
+    <div class="grid2">
+      <ol class="steps-list">
+        <li><b>Nunca</b> experimentes con los <b>tomacorrientes</b> (en Colombia son de 110–120 V).</li>
+        <li><b>No</b> manipules aparatos eléctricos con las <b>manos mojadas</b> ni cerca del agua.</li>
+        <li><b>Desconecta</b> antes de cambiar el circuito. En Tinkercad: <b>Detener simulación</b>.</li>
+        <li><b>Evita los cortocircuitos:</b> nunca unas + y − directamente.</li>
+      </ol>
+      <ol class="steps-list" start="5">
+        <li>Pon siempre una <b>resistencia</b> en serie con el LED.</li>
+        <li>Revisa la <b>polaridad</b> (+ y −) antes de energizar.</li>
+        <li>Si algo <b>se calienta</b> o huele a quemado: desconecta y avisa a un adulto.</li>
+        <li><b>Revisa</b> el circuito con calma antes de encenderlo.</li>
+      </ol>
+    </div>
+    <div class="qq-group" data-set="seg" data-task="t-qq7"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-qq7"><label for="t-qq7"><b>Respondí bien las preguntas de seguridad</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 13. TALLER: INSTRUCCIONES ===================== -->
+<section class="slide" data-title="Taller: cómo trabajar">
+  <div class="card">
+    <div class="eyebrow">Taller práctico · Instrucciones</div>
+    <h2>Taller: 5 circuitos en Tinkercad</h2>
+    <p>Ahora comprobarás en Tinkercad todo lo que aprendiste. <b>Las 10 preguntas del formulario</b> preguntan por lo que armaste y lo que midió el multímetro.</p>
+    <div class="grid2">
+      <div>
+        <h3 style="margin-top:0">Para cada ejercicio</h3>
+        <ol class="steps-list">
+          <li><b>Calcula</b> la predicción (cuando se pida).</li>
+          <li><b>Arma</b> el circuito en la protoboard.</li>
+          <li><b>Revisa</b> las conexiones con el esquema.</li>
+          <li><b>Simula y mide</b> con el multímetro.</li>
+          <li><b>Anota</b> el valor medido tal como aparece.</li>
+        </ol>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Organización de los diseños</h3>
+        <ul class="clean">
+          <li><code>S4_E1_Apellido_Nombre</code> → Ejercicios 1 y 2</li>
+          <li><code>S4_E3_Apellido_Nombre</code> → Ejercicios 3 y 4</li>
+          <li><code>S4_E5_Apellido_Nombre</code> → Ejercicio 5</li>
+        </ul>
+        <p class="muted">Usa tu <b>cuenta institucional</b>. Esta semana no entregas enlaces: entregas el formulario.</p>
+      </div>
+    </div>
+    <h3>📓 Hoja de registro (cópiala en tu cuaderno)</h3>
+    <p class="muted">También puedes escribir aquí mientras trabajas (no se guarda). Usa <b>punto</b> para los decimales.</p>
+    <div style="overflow-x:auto">
+    <table class="simple reg">
+      <tr><th>#</th><th>¿Qué mido?</th><th>Calculado</th><th>Medido en Tinkercad</th></tr>
+      <tr><td>1</td><td>Voltaje entre carril + (3V) y carril − (GND)</td><td>cerca de 3.3 V</td><td><input data-r="1" aria-label="Medido 1"></td></tr>
+      <tr><td>2A</td><td>Corriente con <b>1 kΩ</b></td><td><input data-c="2A" aria-label="Calculado 2A"></td><td><input data-r="2A" aria-label="Medido 2A"></td></tr>
+      <tr><td>2B</td><td>Corriente con <b>330 Ω</b></td><td><input data-c="2B" aria-label="Calculado 2B"></td><td><input data-r="2B" aria-label="Medido 2B"></td></tr>
+      <tr><td>3A</td><td>Corriente del LED con <b>220 Ω</b> (encendido)</td><td>(se mide)</td><td><input data-r="3A" aria-label="Medido 3A"></td></tr>
+      <tr><td>3B</td><td>Voltaje en el LED con <b>220 Ω</b> (encendido)</td><td>(se mide)</td><td><input data-r="3B" aria-label="Medido 3B"></td></tr>
+      <tr><td>3C</td><td>Voltaje en la resistencia: I × 0.22 kΩ</td><td><input data-c="3C" aria-label="Calculado 3C"></td><td>—</td></tr>
+      <tr><td>3D</td><td>Corriente después de presionar <b>B</b></td><td>(se mide)</td><td><input data-r="3D" aria-label="Medido 3D"></td></tr>
+      <tr><td>4A</td><td>Corriente del LED con <b>1 kΩ</b></td><td>(se mide)</td><td><input data-r="4A" aria-label="Medido 4A"></td></tr>
+      <tr><td>4B</td><td>Voltaje en el LED con <b>1 kΩ</b></td><td>(se mide)</td><td><input data-r="4B" aria-label="Medido 4B"></td></tr>
+      <tr><td>5A</td><td>Corriente con <b>1 kΩ + 2 kΩ</b> en serie</td><td><input data-c="5A" aria-label="Calculado 5A"></td><td><input data-r="5A" aria-label="Medido 5A"></td></tr>
+      <tr><td>5B</td><td>Voltaje en la resistencia de <b>2 kΩ</b></td><td><input data-c="5B" aria-label="Calculado 5B"></td><td><input data-r="5B" aria-label="Medido 5B"></td></tr>
+    </table>
+    </div>
+    <div class="btn-row"><button class="btn secondary small" type="button" id="regCopy">Copiar mi registro</button><span class="muted" id="regMsg"></span></div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-reg"><label for="t-reg"><b>Copié la hoja de registro en mi cuaderno</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 14. EJERCICIO 1 ===================== -->
+<section class="slide" data-title="Ejercicio 1: la micro:bit como fuente">
+  <div class="card">
+    <div class="ex-head"><div class="eyebrow" style="margin:0">Taller · Ejercicio 1</div><span class="pill src">micro:bit = fuente</span></div>
+    <h2>🟢 Ejercicio 1 — La micro:bit como fuente de energía</h2>
+    <p><b>Meta:</b> medir el voltaje que entrega el pin <b>3V</b>. <b>Componentes:</b> 1 micro:bit · 1 Placa de pruebas pequeña · 1 multímetro.</p>
+    <div class="grid2">
+      <ol class="steps-list">
+        <li>Crea un circuito nuevo: <code>S4_E1_Apellido_Nombre</code>.</li>
+        <li>Arrastra la <b>micro:bit</b> y la <b>Placa de pruebas pequeña</b>. Deja la micro:bit <b>debajo</b> de la placa.</li>
+        <li>Cable del pin <b>3V</b> al carril de la <b>línea roja (+)</b> de abajo. Color <b>rojo</b>.</li>
+        <li>Cable del pin <b>GND</b> al carril de la <b>línea azul (−)</b> de abajo. Color <b>negro</b>.</li>
+        <li>Busca <b>multímetro</b>, arrástralo y elige <b>Modo: Voltaje</b>.</li>
+        <li>Punta <b>roja</b> → otro agujero del carril <b>+</b>. Punta <b>negra</b> → otro agujero del carril <b>−</b>.</li>
+        <li><span class="ui">Iniciar simulación</span>. Lee el voltaje y anótalo en la fila <b>1</b>. Luego <span class="ui">Detener simulación</span>.</li>
+      </ol>
+      <div>
+        <svg class="schem" viewBox="0 0 320 200" role="img" aria-label="Esquema del ejercicio 1">
+          <rect x="10" y="40" width="80" height="120" rx="12" fill="#23262B"/><text x="50" y="64" fill="#fff" font-size="12" text-anchor="middle" font-weight="700">micro:bit</text>
+          <text x="84" y="94" fill="#C9A227" font-size="11" text-anchor="end" font-weight="700">3V</text><text x="84" y="144" fill="#C9A227" font-size="11" text-anchor="end" font-weight="700">GND</text>
+          <line x1="90" y1="90" x2="300" y2="90" stroke="#D32F2F" stroke-width="4"/><text x="200" y="82" font-size="11" fill="#D32F2F" text-anchor="middle">carril +</text>
+          <line x1="90" y1="140" x2="300" y2="140" stroke="#1F5C99" stroke-width="4"/><text x="200" y="158" font-size="11" fill="#1F5C99" text-anchor="middle">carril −</text>
+          <line x1="250" y1="90" x2="250" y2="100" stroke="#D32F2F" stroke-width="3"/><line x1="250" y1="130" x2="250" y2="140" stroke="#22252A" stroke-width="3"/>
+          <circle cx="250" cy="115" r="16" fill="#fff" stroke="#22252A" stroke-width="3"/><text x="250" y="122" font-size="17" text-anchor="middle" font-weight="800" fill="#C2410C">V</text>
+          <text x="160" y="190" font-size="11" fill="#555" text-anchor="middle">multímetro en modo Voltaje (en paralelo)</text>
+        </svg>
+        <div class="measure"><b>📏 Anota en la fila 1</b>El voltaje que muestra el multímetro, <b>tal como aparece</b> (con sus decimales).</div>
+      </div>
+    </div>
+    <div class="tip"><b>Piensa</b>¿Conectaste el multímetro en serie o en paralelo? ¿Por qué?</div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-e1"><label for="t-e1"><b>Hice el Ejercicio 1 y anoté el voltaje medido</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 15. EJERCICIO 2 ===================== -->
+<section class="slide" data-title="Ejercicio 2: comprobando la Ley de Ohm">
+  <div class="card">
+    <div class="ex-head"><div class="eyebrow" style="margin:0">Taller · Ejercicio 2</div><span class="pill src">micro:bit = fuente</span></div>
+    <h2>🔵 Ejercicio 2 — Comprobando la Ley de Ohm</h2>
+    <p><b>Meta:</b> calcular la corriente con V = I × R y comprobarla. <b>Componentes:</b> el circuito del Ejercicio 1 · 1 resistencia · 1 multímetro más.</p>
+    <div class="pred"><b>🧮 Calcula primero (fila 2A)</b>I = 3.3 V ÷ 1 kΩ = <input id="p2a" type="number" step="0.01"> mA <button class="btn small" type="button" data-chk="p2a">Revisar</button> <span id="p2aMsg"></span></div>
+    <div class="grid2">
+      <div>
+        <h3 style="margin-top:0">Parte A — 1 kΩ</h3>
+        <ol class="steps-list">
+          <li>Arrastra una <b>Resistencia</b> y ponla <b>acostada</b> en la mitad de arriba de la placa: cada pata en una <b>fila numerada distinta</b>. Viene con <b>1 kΩ</b>: déjala así.</li>
+          <li>Cable del carril <b>+</b> a la fila de la <b>pata izquierda</b> de la resistencia.</li>
+          <li>Arrastra un <b>segundo multímetro</b> y elige <b>Modo: Amperaje</b>.</li>
+          <li>Punta <b>roja</b> → fila de la <b>pata derecha</b> de la resistencia. Punta <b>negra</b> → carril <b>−</b>.</li>
+          <li>Revisa el camino: <b>+ → resistencia → multímetro → −</b> (en serie).</li>
+          <li><span class="ui">Iniciar simulación</span>. Anota la corriente en la fila <b>2A</b>. <span class="ui">Detener simulación</span>.</li>
+        </ol>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Parte B — 330 Ω</h3>
+        <div class="pred" style="margin-top:0"><b>🧮 Calcula (fila 2B)</b>330 Ω = 0.33 kΩ → I = 3.3 ÷ 0.33 = <input id="p2b" type="number" step="0.01"> mA <button class="btn small" type="button" data-chk="p2b">Revisar</button> <span id="p2bMsg"></span></div>
+        <ol class="steps-list" start="7">
+          <li>Haz clic en la resistencia: escribe <b>330</b> y en la unidad elige <b>Ω</b>.</li>
+          <li><span class="ui">Iniciar simulación</span>. Anota la corriente en la fila <b>2B</b>. <span class="ui">Detener simulación</span>.</li>
+        </ol>
+        <svg class="schem" viewBox="0 0 320 110" role="img" aria-label="Esquema del ejercicio 2">
+          <text x="8" y="44" font-size="12" font-weight="700" fill="#D32F2F">+ (3V)</text>
+          <line x1="58" y1="40" x2="90" y2="40" stroke="#D32F2F" stroke-width="3"/>
+          <polyline points="90,40 100,40 106,28 118,52 130,28 142,52 148,40 160,40" fill="none" stroke="#22252A" stroke-width="3"/>
+          <text x="125" y="74" font-size="11" text-anchor="middle" fill="#5B4A2A">1 kΩ / 330 Ω</text>
+          <line x1="160" y1="40" x2="196" y2="40" stroke="#D32F2F" stroke-width="3"/>
+          <circle cx="214" cy="40" r="18" fill="#fff" stroke="#22252A" stroke-width="3"/><text x="214" y="47" font-size="17" text-anchor="middle" font-weight="800" fill="#1F5C99">A</text>
+          <line x1="232" y1="40" x2="270" y2="40" stroke="#22252A" stroke-width="3"/><text x="274" y="44" font-size="12" font-weight="700" fill="#1F5C99">− (GND)</text>
+          <text x="214" y="90" font-size="11" text-anchor="middle" fill="#555">Amperaje (en serie)</text>
+        </svg>
+      </div>
+    </div>
+    <div class="warn"><b>¡Cuidado!</b>El multímetro en Amperaje nunca va directo entre + y −: siempre con la resistencia en el camino.</div>
+    <div class="tip"><b>Piensa</b>¿Qué pasó con la corriente cuando la resistencia se hizo más pequeña? ¿Qué tan cerca quedó lo medido de lo calculado?</div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-e2"><label for="t-e2"><b>Hice el Ejercicio 2 y anoté las dos corrientes medidas</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 16. EJERCICIO 3 ===================== -->
+<section class="slide" data-title="Ejercicio 3: LED controlado por la micro:bit">
+  <div class="card">
+    <div class="ex-head"><div class="eyebrow" style="margin:0">Taller · Ejercicio 3</div><span class="pill ctl">micro:bit = controladora</span></div>
+    <h2>🟠 Ejercicio 3 — Un LED controlado por la micro:bit</h2>
+    <p><b>Componentes:</b> 1 micro:bit · 1 Placa de pruebas pequeña · 1 resistencia de <b>220 Ω</b> · 1 <b>LED rojo</b> (el color que trae Tinkercad) · 2 multímetros.</p>
+    <div class="seg" id="e3Seg">
+      <button type="button" class="on" data-p="0">1 · Circuito</button>
+      <button type="button" data-p="1">2 · Programa</button>
+      <button type="button" data-p="2">3 · Prueba y mide</button>
+    </div>
+    <div class="e3p" data-p="0">
+      <div class="grid2">
+        <ol class="steps-list">
+          <li>Circuito nuevo: <code>S4_E3_Apellido_Nombre</code>. Arrastra la <b>micro:bit</b> (debajo) y la <b>Placa de pruebas pequeña</b>.</li>
+          <li>Cable de <b>GND</b> al carril de la <b>línea azul (−)</b> de abajo (negro).</li>
+          <li><b>Resistencia</b>: cámbiala a <b>220</b> y unidad <b>Ω</b>. Ponla acostada en la mitad de arriba.</li>
+          <li>Cable del pin <b>0</b> a la fila de la <b>pata izquierda</b> de la resistencia.</li>
+          <li><b>LED</b>: ponlo en la placa. Pasa el mouse por sus patas. Muévelo para que el <b>ánodo</b> quede en la <b>misma fila</b> que la <b>pata derecha</b> de la resistencia. El <b>cátodo</b> queda en otra fila.</li>
+          <li><b>Multímetro 1</b> (Amperaje): roja → fila del <b>cátodo</b>; negra → carril <b>−</b>.</li>
+          <li><b>Multímetro 2</b> (Voltaje): roja → fila del <b>ánodo</b>; negra → fila del <b>cátodo</b>.</li>
+        </ol>
+        <svg class="schem" viewBox="0 0 320 170" role="img" aria-label="Esquema del ejercicio 3">
+          <text x="6" y="54" font-size="12" font-weight="700" fill="#C9A227">P0</text>
+          <line x1="28" y1="50" x2="54" y2="50" stroke="#2F9E44" stroke-width="3"/>
+          <polyline points="54,50 62,50 68,38 80,62 92,38 104,62 110,50 120,50" fill="none" stroke="#22252A" stroke-width="3"/>
+          <text x="86" y="84" font-size="11" text-anchor="middle" fill="#5B4A2A">220 Ω</text>
+          <line x1="120" y1="50" x2="150" y2="50" stroke="#2F9E44" stroke-width="3"/>
+          <polygon points="150,36 150,64 174,50" fill="#FF3B30"/><line x1="176" y1="36" x2="176" y2="64" stroke="#22252A" stroke-width="3"/>
+          <line x1="176" y1="50" x2="214" y2="50" stroke="#2F9E44" stroke-width="3"/>
+          <circle cx="232" cy="50" r="18" fill="#fff" stroke="#22252A" stroke-width="3"/><text x="232" y="57" font-size="17" text-anchor="middle" font-weight="800" fill="#1F5C99">A</text>
+          <line x1="250" y1="50" x2="280" y2="50" stroke="#22252A" stroke-width="3"/><text x="284" y="54" font-size="12" font-weight="700" fill="#1F5C99">GND</text>
+          <line x1="142" y1="50" x2="142" y2="120" stroke="#D32F2F" stroke-width="3"/><line x1="186" y1="50" x2="186" y2="120" stroke="#22252A" stroke-width="3"/>
+          <circle cx="164" cy="120" r="18" fill="#fff" stroke="#22252A" stroke-width="3"/><text x="164" y="127" font-size="17" text-anchor="middle" font-weight="800" fill="#C2410C">V</text>
+          <line x1="142" y1="120" x2="146" y2="120" stroke="#D32F2F" stroke-width="3"/><line x1="182" y1="120" x2="186" y2="120" stroke="#22252A" stroke-width="3"/>
+          <text x="164" y="160" font-size="11" text-anchor="middle" fill="#555">multímetro 2: voltaje del LED</text>
+        </svg>
+      </div>
+    </div>
+    <div class="e3p" data-p="1" style="display:none">
+      <div class="grid2">
+        <ol class="steps-list">
+          <li>Haz clic en <span class="ui">Código</span>. Verifica que diga <b>Bloques</b>.</li>
+          <li>De <b>Básico</b>, arrastra <b>con el botón A pressed</b>. Dentro pon, de <b>Salida</b>, <b>escribir de forma digital el pin P0 en ALTA</b>.</li>
+          <li>Arrastra otro <b>con el botón A pressed</b> y cambia la <b>A</b> por <b>B</b>. Dentro pon <b>escribir de forma digital el pin P0 en BAJA</b>.</li>
+        </ol>
+        <div class="code">
+          <span class="tb out hat">con el botón <span class="dd">A</span> <span class="dd">pressed</span><span class="in"><span class="tb out">escribir de forma digital el pin <span class="dd">P0</span> en <span class="dd">ALTA</span></span></span></span>
+          <span class="tb out hat" style="margin-top:10px">con el botón <span class="dd">B</span> <span class="dd">pressed</span><span class="in"><span class="tb out">escribir de forma digital el pin <span class="dd">P0</span> en <span class="dd">BAJA</span></span></span></span>
+        </div>
+      </div>
+    </div>
+    <div class="e3p" data-p="2" style="display:none">
+      <ol class="steps-list">
+        <li><span class="ui">Iniciar simulación</span>. Haz clic en el botón <b>A</b> de la micro:bit: el LED se <b>enciende</b>.</li>
+        <li>Con el LED encendido, anota la <b>corriente</b> (multímetro 1) en la fila <b>3A</b> y el <b>voltaje del LED</b> (multímetro 2) en la fila <b>3B</b>.</li>
+        <li>Presiona <b>B</b>: el LED se apaga. Anota lo que marca ahora el multímetro de corriente en la fila <b>3D</b>.</li>
+        <li><b>Calcula</b> el voltaje en la resistencia: V = (tu corriente 3A en mA) × 0.22 kΩ. Anótalo en la fila <b>3C</b>.</li>
+        <li><span class="ui">Detener simulación</span>.</li>
+      </ol>
+      <div class="measure"><b>📏 Anota en las filas 3A, 3B y 3D</b>Los valores exactamente como los muestra cada multímetro.</div>
+      <div class="tip"><b>Piensa</b>Si sumas el voltaje del LED (3B) y el de la resistencia (3C), ¿a qué número se acerca?</div>
+    </div>
+    <div class="warn"><b>¿El LED no enciende?</b>① ¿Presionaste A? ② ¿El ánodo comparte fila con la resistencia? ③ ¿El cátodo va al multímetro y luego a GND? ④ ¿El bloque dice P0?</div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-e3"><label for="t-e3"><b>Hice el Ejercicio 3 y anoté 3A, 3B, 3C y 3D</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 17. EJERCICIO 4 ===================== -->
+<section class="slide" data-title="Ejercicio 4: cambiando la resistencia">
+  <div class="card">
+    <div class="ex-head"><div class="eyebrow" style="margin:0">Taller · Ejercicio 4</div><span class="pill ctl">micro:bit = controladora</span></div>
+    <h2>🟣 Ejercicio 4 — ¿Qué pasa si cambio la resistencia?</h2>
+    <p><b>Meta:</b> comprobar que una resistencia más grande deja pasar menos corriente por el LED. Usa el <b>mismo circuito y programa</b> del Ejercicio 3.</p>
+    <ol class="steps-list">
+      <li>Revisa que ya anotaste los valores del Ejercicio 3.</li>
+      <li><span class="ui">Detener simulación</span>. Haz clic en la resistencia y cámbiala a <b>1</b> con la unidad <b>kΩ</b>.</li>
+      <li><b>Predice:</b> la resistencia pasó de 220 Ω a 1000 Ω. ¿La corriente subirá o bajará?</li>
+      <li><span class="ui">Iniciar simulación</span> y presiona <b>A</b>.</li>
+      <li>Anota la <b>corriente</b> (fila <b>4A</b>) y el <b>voltaje del LED</b> (fila <b>4B</b>).</li>
+      <li>Compara con el Ejercicio 3. Fíjate también en el LED de la simulación. <span class="ui">Detener simulación</span>.</li>
+    </ol>
+    <div class="box">
+      <h3>🤔 Tu predicción (no tiene nota)</h3>
+      <div class="btn-row">
+        <button class="btn secondary small" type="button" data-pr="up">La corriente subirá</button>
+        <button class="btn secondary small" type="button" data-pr="down">La corriente bajará</button>
+        <button class="btn secondary small" type="button" data-pr="same">Quedará igual</button>
+      </div>
+      <p class="sim-log" id="prLog" style="text-align:left"></p>
+    </div>
+    <div class="measure"><b>📏 Anota en las filas 4A y 4B</b>Los valores exactamente como los muestra cada multímetro.</div>
+    <div class="tip"><b>Piensa</b>Para proteger un LED, ¿conviene una resistencia muy pequeña o una adecuada? ¿Por qué?</div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-e4"><label for="t-e4"><b>Hice el Ejercicio 4 y anoté 4A y 4B</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 18. EJERCICIO 5 ===================== -->
+<section class="slide" data-title="Ejercicio 5: resistencias en serie">
+  <div class="card">
+    <div class="ex-head"><div class="eyebrow" style="margin:0">Taller · Ejercicio 5</div><span class="pill src">micro:bit = fuente</span></div>
+    <h2>🔴 Ejercicio 5 — Dos resistencias en serie</h2>
+    <p><b>Meta:</b> comprobar que en serie las resistencias se suman y que la corriente es la misma en todo el camino. <b>Componentes:</b> 1 micro:bit · 1 Placa de pruebas pequeña · 2 resistencias (<b>1 kΩ</b> y <b>2 kΩ</b>) · 2 multímetros.</p>
+    <div class="pred"><b>🧮 Calcula primero (filas 5A y 5B)</b>
+      R total = 1 + 2 = <input id="p5r" type="number" step="0.01"> kΩ <button class="btn small" type="button" data-chk="p5r">Revisar</button> <span id="p5rMsg"></span><br>
+      I = 3.3 ÷ R total = <input id="p5a" type="number" step="0.01"> mA <button class="btn small" type="button" data-chk="p5a">Revisar</button> <span id="p5aMsg"></span><br>
+      V en la de 2 kΩ = I × 2 = <input id="p5b" type="number" step="0.01"> V <button class="btn small" type="button" data-chk="p5b">Revisar</button> <span id="p5bMsg"></span>
+    </div>
+    <div class="grid2">
+      <ol class="steps-list">
+        <li>Circuito nuevo: <code>S4_E5_Apellido_Nombre</code>. Micro:bit y placa. <b>3V</b> al carril <b>+</b> (rojo) y <b>GND</b> al carril <b>−</b> (negro).</li>
+        <li><b>Resistencia 1</b> (déjala en 1 kΩ) acostada en la mitad de arriba.</li>
+        <li><b>Resistencia 2</b> a su derecha, cambiada a <b>2 kΩ</b>. Su <b>pata izquierda</b> en la <b>misma fila</b> que la <b>pata derecha</b> de la resistencia 1: quedan <b>en serie</b>.</li>
+        <li>Cable del carril <b>+</b> a la fila de la <b>pata izquierda</b> de la resistencia 1.</li>
+        <li><b>Multímetro 1</b> (Amperaje): roja → fila de la <b>pata derecha</b> de la resistencia 2; negra → carril <b>−</b>.</li>
+        <li><b>Multímetro 2</b> (Voltaje): roja → fila donde se <b>unen</b> las dos resistencias; negra → fila de la <b>pata derecha</b> de la resistencia 2.</li>
+        <li><span class="ui">Iniciar simulación</span>. Anota la corriente (<b>5A</b>) y el voltaje (<b>5B</b>). <span class="ui">Detener simulación</span>.</li>
+      </ol>
+      <svg class="schem" viewBox="0 0 320 170" role="img" aria-label="Esquema del ejercicio 5">
+        <text x="4" y="54" font-size="12" font-weight="700" fill="#D32F2F">+</text>
+        <line x1="16" y1="50" x2="36" y2="50" stroke="#D32F2F" stroke-width="3"/>
+        <polyline points="36,50 44,50 50,38 62,62 74,38 86,62 92,50 100,50" fill="none" stroke="#22252A" stroke-width="3"/>
+        <text x="68" y="84" font-size="11" text-anchor="middle" fill="#5B4A2A">1 kΩ</text>
+        <line x1="100" y1="50" x2="130" y2="50" stroke="#2F9E44" stroke-width="3"/>
+        <polyline points="130,50 138,50 144,38 156,62 168,38 180,62 186,50 194,50" fill="none" stroke="#22252A" stroke-width="3"/>
+        <text x="162" y="84" font-size="11" text-anchor="middle" fill="#5B4A2A">2 kΩ</text>
+        <line x1="194" y1="50" x2="226" y2="50" stroke="#2F9E44" stroke-width="3"/>
+        <circle cx="244" cy="50" r="18" fill="#fff" stroke="#22252A" stroke-width="3"/><text x="244" y="57" font-size="17" text-anchor="middle" font-weight="800" fill="#1F5C99">A</text>
+        <line x1="262" y1="50" x2="292" y2="50" stroke="#22252A" stroke-width="3"/><text x="296" y="54" font-size="12" font-weight="700" fill="#1F5C99">−</text>
+        <line x1="120" y1="50" x2="120" y2="120" stroke="#D32F2F" stroke-width="3"/><line x1="204" y1="50" x2="204" y2="120" stroke="#22252A" stroke-width="3"/>
+        <circle cx="162" cy="120" r="18" fill="#fff" stroke="#22252A" stroke-width="3"/><text x="162" y="127" font-size="17" text-anchor="middle" font-weight="800" fill="#C2410C">V</text>
+        <line x1="120" y1="120" x2="144" y2="120" stroke="#D32F2F" stroke-width="3"/><line x1="180" y1="120" x2="204" y2="120" stroke="#22252A" stroke-width="3"/>
+        <text x="162" y="160" font-size="11" text-anchor="middle" fill="#555">multímetro 2: voltaje en la de 2 kΩ</text>
+      </svg>
+    </div>
+    <div class="tip"><b>Piensa</b>¿La corriente de este circuito es mayor o menor que la del Ejercicio 2A (una sola resistencia de 1 kΩ)? ¿Por qué?</div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-e5"><label for="t-e5"><b>Hice el Ejercicio 5 y anoté 5A y 5B</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 19. FORMULARIO ===================== -->
+<section class="slide" data-title="El formulario y repaso final">
+  <div class="card">
+    <div class="eyebrow">Actividad evaluativa</div>
+    <h2>El formulario (la nota de la semana)</h2>
+    <ul class="clean">
+      <li><b>10 preguntas de selección múltiple</b>, 1 punto cada una.</li>
+      <li>Preguntan por lo que <b>armaste y mediste</b> en los 5 ejercicios. Varias opciones tienen números <b>parecidos</b>.</li>
+      <li>Ten a mano tu <b>hoja de registro</b>. Si la pregunta dice <i>"¿qué valor mostró el multímetro?"</i>, elige el <b>valor medido</b>, no el calculado.</li>
+      <li>Si tu valor no aparece entre las opciones, revisa el circuito: modo del multímetro, valor de la resistencia y filas de la protoboard.</li>
+    </ul>
+    <h3>✅ Lista de chequeo antes de responder</h3>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-c1"><label for="t-c1"><b>Hice los 5 ejercicios con mi cuenta institucional</b></label></div>
+      <div class="task"><input type="checkbox" id="t-c2"><label for="t-c2"><b>Usé Voltaje en paralelo y Amperaje en serie</b></label></div>
+      <div class="task"><input type="checkbox" id="t-c3"><label for="t-c3"><b>Las resistencias tienen los valores pedidos (1 kΩ, 330 Ω, 220 Ω, 2 kΩ)</b></label></div>
+      <div class="task"><input type="checkbox" id="t-c4"><label for="t-c4"><b>Mi hoja de registro tiene todos los valores medidos</b></label></div>
+    </div>
+    <h3>Repaso final (no tiene nota)</h3>
+    <div class="qq-group" data-set="final" data-task="t-qq8"></div>
+    <div class="tasks">
+      <div class="task auto"><input type="checkbox" id="t-qq8"><label for="t-qq8"><b>Respondí bien todo el repaso final</b></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 20. CIERRE ===================== -->
+<section class="slide" data-title="¿Y ahora qué sigue?">
+  <div class="card">
+    <div class="eyebrow">Cierre de la semana</div>
+    <h2>¿Y ahora qué sigue?</h2>
+    <p id="finalSummary" class="lead"></p>
+    <div class="grid2">
+      <div class="box"><h3>📖 1. Documento de lectura</h3><p class="muted">Repasa los temas y <b>copia en tu cuaderno</b> las partes marcadas con 📓.</p></div>
+      <div class="box"><h3>🛠️ 2. Taller (5 ejercicios)</h3><p class="muted">Arma y mide en Tinkercad. Anota todo en tu <b>hoja de registro</b>.</p></div>
+      <div class="box" style="grid-column:1/-1;border-color:var(--accent);background:var(--accent-light)">
+        <h3>📝 3. Formulario evaluativo (10 puntos)</h3>
+        <p style="margin:0">Respóndelo con tu hoja de registro. El trabajo es <b>individual</b>.</p>
+      </div>
+    </div>
+    <div class="tip"><b>La próxima semana</b>Electrónica básica II: conectarás <b>sensores</b> a la micro:bit para que tus circuitos respondan al entorno.</div>
+    <div class="dots" id="dots"></div>
+  </div>
+  <footer class="close">Semana 4 · Plan de 10 semanas — Pensamiento Computacional, Electrónica, Mecatrónica y Programación Física · Grado 9°</footer>
+</section>
+
+</main>
+
+<nav class="nav" aria-label="Navegación de diapositivas">
+  <div class="nav-inner">
+    <button class="btn secondary" type="button" id="prevBtn">← Anterior</button>
+    <select id="jump" aria-label="Ir a la diapositiva"></select>
+    <button class="btn" type="button" id="nextBtn">Siguiente →</button>
+  </div>
+</nav>
+
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   NAVEGACIÓN Y PROGRESO
+   ========================================================= */
+const slides = Array.from(document.querySelectorAll('.slide'));
+const jump = document.getElementById('jump');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const seen = new Set();
+let current = 0;
+
+slides.forEach((s,i)=>{
+  const o = document.createElement('option');
+  o.value = i; o.textContent = (i+1) + '. ' + s.dataset.title;
+  jump.appendChild(o);
+});
+
+function go(i){
+  if(i<0 || i>=slides.length) return;
+  slides[current].classList.remove('active');
+  current = i;
+  slides[current].classList.add('active');
+  seen.add(i);
+  jump.value = i;
+  prevBtn.disabled = i===0;
+  nextBtn.disabled = i===slides.length-1;
+  document.getElementById('slideLabel').textContent = 'Diapositiva ' + (i+1) + ' de ' + slides.length;
+  window.scrollTo({top:0, behavior:'smooth'});
+  renderDots(); updateProgress();
+}
+prevBtn.addEventListener('click',()=>go(current-1));
+nextBtn.addEventListener('click',()=>go(current+1));
+jump.addEventListener('change',()=>go(+jump.value));
+document.addEventListener('keydown',e=>{
+  const tag = (e.target.tagName||'').toLowerCase();
+  if(['input','select','textarea'].includes(tag)) return;
+  if(e.key==='ArrowRight') go(current+1);
+  if(e.key==='ArrowLeft') go(current-1);
+});
+
+function renderDots(){
+  const d = document.getElementById('dots'); if(!d) return; d.innerHTML='';
+  slides.forEach((_,i)=>{ const s=document.createElement('span'); if(seen.has(i)) s.className='seen'; if(i===current) s.className='cur'; d.appendChild(s); });
+}
+
+const taskBoxes = Array.from(document.querySelectorAll('.task input[type=checkbox]'));
+taskBoxes.forEach(cb=>cb.addEventListener('change',updateProgress));
+function updateProgress(){
+  const done = taskBoxes.filter(c=>c.checked).length;
+  const total = taskBoxes.length;
+  document.getElementById('barFill').style.width = Math.round(done/total*100) + '%';
+  document.getElementById('progressLabel').textContent = done + ' de ' + total + ' tareas completadas';
+  const fs = document.getElementById('finalSummary');
+  if(fs){
+    fs.textContent = done===total
+      ? '¡Excelente! Completaste las ' + total + ' tareas de la presentación. Ya puedes responder el formulario con tu hoja de registro.'
+      : 'Llevas ' + done + ' de ' + total + ' tareas de la presentación. Puedes volver a cualquier diapositiva con el menú de abajo antes de responder el formulario.';
+  }
+}
+function autoCheck(id){ const c=document.getElementById(id); if(c && !c.checked){ c.checked=true; updateProgress(); } }
+
+/* =========================================================
+   PESTAÑAS GENÉRICAS
+   ========================================================= */
+function tabs(segId, panelSel, onChange){
+  const seg=document.getElementById(segId); if(!seg) return;
+  const viewed=new Set(['0']);
+  seg.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    seg.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+    document.querySelectorAll(panelSel).forEach(p=>p.style.display = p.dataset.p===b.dataset.p ? '' : 'none');
+    viewed.add(b.dataset.p);
+    if(onChange) onChange(viewed, seg.querySelectorAll('button').length);
+  }));
+}
+tabs('exSeg','.exp',(v,n)=>{ if(v.size===n) autoCheck('t-exs'); });
+tabs('mmSeg','.mmp',(v,n)=>{ if(v.size===n) autoCheck('t-mm'); });
+tabs('e3Seg','.e3p');
+
+/* =========================================================
+   PREGUNTAS RÁPIDAS
+   ========================================================= */
+const QQ = {
+  circ:[
+    {q:'Un cable del circuito quedó suelto. ¿Qué pasa con el LED?', o:['Brilla más fuerte','No enciende porque el circuito quedó abierto','Enciende, pero más débil'], a:1, e:'Si el camino se corta, la corriente no puede circular: el circuito está abierto.'}
+  ],
+  mag:[
+    {q:'¿Qué magnitud es el "empuje" que da la fuente?', o:['Corriente','Voltaje','Resistencia'], a:1, e:'El voltaje es el empuje. Se mide en voltios (V).'},
+    {q:'¿Cuántos miliamperios son 0.02 A?', o:['2 mA','20 mA','200 mA'], a:1, e:'0.02 × 1000 = 20 mA.'},
+    {q:'¿Cuántos kiloohmios son 470 Ω?', o:['47 kΩ','4.7 kΩ','0.47 kΩ'], a:2, e:'470 ÷ 1000 = 0.47 kΩ.'}
+  ],
+  ohm:[
+    {q:'Una fuente de 8 V y una resistencia de 4 kΩ. ¿Cuánta corriente pasa?', o:['32 mA','2 mA','0.5 mA'], a:1, e:'I = V ÷ R = 8 ÷ 4 = 2 mA.'},
+    {q:'Por una resistencia de 3 kΩ pasan 2 mA. ¿Qué voltaje tiene entre sus patas?', o:['6 V','1.5 V','5 V'], a:0, e:'V = I × R = 2 × 3 = 6 V.'},
+    {q:'Si el voltaje no cambia y aumento la resistencia, la corriente…', o:['aumenta','disminuye','no cambia'], a:1, e:'Más resistencia = menos corriente (I = V ÷ R).'}
+  ],
+  comp:[
+    {q:'¿Cuál pata del LED es el ánodo (+)?', o:['La pata recta','La pata doblada','Cualquiera de las dos'], a:1, e:'Ánodo (+) = pata doblada. Cátodo (−) = pata recta. En Tinkercad, pasa el mouse por la pata para confirmarlo.'},
+    {q:'¿Qué pasa si conectas un LED al revés?', o:['Brilla más','No enciende porque no deja pasar la corriente','Se comporta como una resistencia'], a:1, e:'El LED es un diodo: solo deja pasar corriente del ánodo al cátodo.'},
+    {q:'¿La resistencia tiene polaridad (+ y −)?', o:['Sí, tiene un lado + y un lado −','No, da igual cómo la conectes'], a:1, e:'La resistencia no tiene polaridad.'}
+  ],
+  proto:[
+    {q:'Una pata está en el agujero 7a y un cable en el 7d. ¿Están conectados?', o:['Sí: misma fila numerada y misma mitad','No: tienen letras distintas'], a:0, e:'Los 5 agujeros de la fila 7 (de a a e) están conectados.'},
+    {q:'¿Está conectado el agujero 7c con el 7h?', o:['Sí: tienen el mismo número','No: el canal central los separa'], a:1, e:'La mitad de arriba (a–e) y la de abajo (f–j) están separadas por el canal central.'},
+    {q:'Metiste las dos patas de una resistencia en la misma fila numerada. ¿Qué pasa?', o:['Funciona igual','Queda puenteada: la corriente no pasa por ella','Su valor se duplica'], a:1, e:'Las dos patas quedan unidas por la protoboard y la corriente se va por ese atajo.'}
+  ],
+  multi:[
+    {q:'Para medir corriente, el multímetro se conecta…', o:['en paralelo','en serie','directo entre + y −'], a:1, e:'En serie: la corriente debe pasar por dentro del multímetro.'},
+    {q:'¿Qué modo eliges para medir el voltaje de un LED?', o:['Amperaje','Voltaje','Resistencia'], a:1, e:'Modo Voltaje, con una punta a cada lado del LED (en paralelo).'},
+    {q:'Conectaste todo, pero el multímetro no muestra ninguna medición. ¿Qué te faltó?', o:['Iniciar la simulación','Cambiar el color de los cables','Rotar el multímetro'], a:0, e:'Las mediciones aparecen solo con la simulación en marcha.'}
+  ],
+  seg:[
+    {q:'¿Qué debes hacer en Tinkercad antes de mover o cambiar un componente?', o:['Detener la simulación','Nada, se puede cambiar con la simulación en marcha','Cerrar Tinkercad'], a:0, e:'Igual que en la vida real: primero se desconecta, después se cambia.'},
+    {q:'¿Qué es un cortocircuito?', o:['Unir + y − directamente, sin nada en medio','Un cable muy corto','Un LED conectado al revés'], a:0, e:'Sin nada que limite la corriente, esta se vuelve muy grande y peligrosa.'},
+    {q:'Ves agua cerca de un cargador conectado al tomacorriente. ¿Qué haces?', o:['Lo muevo con las manos mojadas','Me alejo del agua y le aviso a un adulto','Le echo más agua para enfriarlo'], a:1, e:'Agua y electricidad son una combinación peligrosa. No lo toques con las manos mojadas y busca a un adulto.'}
+  ],
+  final:[
+    {q:'Una fuente de 5 V y una resistencia de 1 kΩ. ¿Qué corriente calculas?', o:['5 mA','0.2 mA','50 mA'], a:0, e:'I = 5 ÷ 1 = 5 mA.'},
+    {q:'En un circuito en serie, la corriente…', o:['es la misma en todos los componentes','es mayor en la primera resistencia','se reparte por mitades'], a:0, e:'En serie hay un solo camino: la misma corriente pasa por todo.'},
+    {q:'En la micro:bit, ¿qué pin entrega voltaje solo cuando el programa lo pone en ALTA?', o:['3V','P0','GND'], a:1, e:'3V entrega voltaje siempre; P0 depende del programa.'},
+    {q:'Si una pregunta del formulario dice "¿qué valor mostró el multímetro?", eliges…', o:['el valor calculado','el valor medido en Tinkercad','cualquier número parecido'], a:1, e:'Elige el valor que anotaste en tu hoja de registro, tal como lo mostró el multímetro.'}
+  ]
+};
+document.querySelectorAll('.qq-group').forEach(g=>{
+  const set = QQ[g.dataset.set]; if(!set) return;
+  const okSet = new Set();
+  set.forEach((it,qi)=>{
+    const box=document.createElement('div'); box.className='qq';
+    const q=document.createElement('div'); q.className='q'; q.textContent=(set.length>1?(qi+1)+'. ':'')+it.q; box.appendChild(q);
+    const opts=document.createElement('div'); opts.className='opts';
+    const fb=document.createElement('div'); fb.className='fb';
+    it.o.forEach((t,oi)=>{
+      const b=document.createElement('button'); b.type='button'; b.className='opt'; b.textContent=t;
+      b.addEventListener('click',()=>{
+        opts.querySelectorAll('.opt').forEach(x=>x.classList.remove('right','wrong'));
+        if(oi===it.a){ b.classList.add('right'); fb.className='fb show ok'; fb.textContent='✔ Correcto. '+it.e; okSet.add(qi); }
+        else { b.classList.add('wrong'); fb.className='fb show no'; fb.textContent='✘ No es esa. Vuelve a intentarlo.'; }
+        if(okSet.size===set.length && g.dataset.task) autoCheck(g.dataset.task);
+      });
+      opts.appendChild(b);
+    });
+    box.appendChild(opts); box.appendChild(fb); g.appendChild(box);
+  });
+});
+
+/* =========================================================
+   CIRCUITO ABIERTO / CERRADO
+   ========================================================= */
+let swClosed=true, swOpened=false, swReclosed=false;
+function drawSw(){
+  const arm=document.getElementById('swArm');
+  arm.setAttribute('x2', swClosed ? 240 : 250); arm.setAttribute('y2', swClosed ? 200 : 170);
+  document.getElementById('led3').classList.toggle('on', swClosed);
+  ['w1','w2','w3','w4'].forEach(id=>document.getElementById(id).classList.toggle('flow', swClosed));
+  document.getElementById('swBtn').textContent = swClosed ? 'Abrir el interruptor' : 'Cerrar el interruptor';
+  document.getElementById('swLog').innerHTML = swClosed
+    ? 'El circuito está <b>cerrado</b>: la corriente circula y el LED enciende.'
+    : 'El circuito está <b>abierto</b>: el camino está cortado, no circula corriente y el LED se apaga.';
+}
+document.getElementById('swBtn').addEventListener('click',()=>{
+  swClosed=!swClosed; if(!swClosed) swOpened=true; else if(swOpened) swReclosed=true;
+  drawSw(); if(swOpened && swReclosed) autoCheck('t-sw');
+});
+drawSw();
+
+/* =========================================================
+   TRIÁNGULO DE OHM
+   ========================================================= */
+const TRI={V:['V = I × R','voltaje = corriente × resistencia'],I:['I = V ÷ R','corriente = voltaje ÷ resistencia'],R:['R = V ÷ I','resistencia = voltaje ÷ corriente']};
+const triSeen=new Set();
+document.querySelectorAll('.tri-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tri-btn').forEach(x=>x.classList.remove('cov'));
+  b.classList.add('cov');
+  const k=b.dataset.t;
+  document.getElementById('triOut').textContent=TRI[k][0];
+  document.getElementById('triTxt').textContent='Tapaste la '+k+': '+TRI[k][1];
+  triSeen.add(k); if(triSeen.size===3) autoCheck('t-tri');
+}));
+
+/* =========================================================
+   CALCULADORA
+   ========================================================= */
+const cV=document.getElementById('cV'), cR=document.getElementById('cR');
+const combos=new Set();
+function fmt(n){ return (Math.round(n*100)/100).toString(); }
+function calc(){
+  const V=+cV.value, R=+cR.value, I=V/R;
+  const Rtxt = R<1 ? Math.round(R*1000)+' Ω = '+fmt(R)+' kΩ' : fmt(R)+' kΩ';
+  document.getElementById('cOut').innerHTML='I = V ÷ R = '+fmt(V)+' V ÷ '+Rtxt+'<br><span class="res">I = '+fmt(I)+' mA</span>';
+  document.getElementById('cBar').style.width = Math.min(100, I/41*100)+'%';
+  combos.add(cV.value+'|'+cR.value); if(combos.size>=4) autoCheck('t-calc');
+}
+cV.addEventListener('change',calc); cR.addEventListener('change',calc); calc(); combos.clear();
+
+/* ---------- ejercicio "Ahora tú" ---------- */
+document.getElementById('myIBtn').addEventListener('click',()=>{
+  const v=parseFloat(String(document.getElementById('myI').value).replace(',','.'));
+  const log=document.getElementById('myILog');
+  if(isNaN(v)){ log.textContent='Escribe un número.'; return; }
+  if(Math.abs(v-3)<0.01){ log.innerHTML='✔ ¡Correcto! I = 9 ÷ 3 = <b>3 mA</b>.'; autoCheck('t-my'); }
+  else if(Math.abs(v-27)<0.01){ log.textContent='✘ Multiplicaste. Para la corriente se divide: I = V ÷ R.'; }
+  else { log.textContent='✘ Revisa: I = V ÷ R. Divide el voltaje entre los kiloohmios.'; }
+});
+
+/* =========================================================
+   ESQUEMA PASO A PASO
+   ========================================================= */
+const SCH=[
+  '<b>Paso 0.</b> Presiona <b>Siguiente paso</b>.',
+  '<b>Paso 1.</b> La corriente sale del pin <b>P0</b> (cuando el programa lo pone en ALTA).',
+  '<b>Paso 2.</b> Atraviesa la <b>resistencia de 220 Ω</b>, que limita la corriente.',
+  '<b>Paso 3.</b> Llega al LED por el <b>ánodo</b> (la base del triángulo).',
+  '<b>Paso 4.</b> Atraviesa el <b>LED</b> y sale por el <b>cátodo</b> (la raya). El LED se enciende.',
+  '<b>Paso 5.</b> Regresa a <b>GND</b>. El camino está <b>cerrado</b>: es un circuito <b>en serie</b>.'
+];
+let schStep=0;
+function drawSch(){
+  document.querySelectorAll('.seg-path').forEach(p=>p.classList.toggle('lit', +p.dataset.s<=schStep));
+  document.getElementById('schNote').innerHTML=SCH[schStep];
+  document.getElementById('schNext').disabled = schStep>=5;
+  if(schStep>=5) autoCheck('t-sch');
+}
+document.getElementById('schNext').addEventListener('click',()=>{ if(schStep<5){ schStep++; drawSch(); } });
+document.getElementById('schReset').addEventListener('click',()=>{ schStep=0; drawSch(); });
+drawSch();
+
+/* =========================================================
+   PROTOBOARD INTERACTIVA
+   ========================================================= */
+(function(){
+  const svg=document.getElementById('bb'); const NS='http://www.w3.org/2000/svg';
+  const COLS=30, dx=18, x0=40;
+  const W=x0+COLS*dx+20, H=330; svg.setAttribute('viewBox','0 0 '+W+' '+H); svg.setAttribute('width',W); svg.setAttribute('height',H);
+  function el(t,a){ const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); svg.appendChild(e); return e; }
+  el('rect',{x:4,y:4,width:W-8,height:H-8,rx:10,fill:'#F1F2F4',stroke:'#D5D9DE'});
+  // carriles (dibujo simplificado)
+  const rails=[ {y:22,name:'−',line:'#1F5C99',ly:12}, {y:38,name:'+',line:'#D32F2F',ly:48},
+                {y:272,name:'+',line:'#D32F2F',ly:262}, {y:288,name:'−',line:'#1F5C99',ly:298} ];
+  rails.forEach((r,ri)=>{ el('line',{x1:x0-6,y1:r.ly,x2:x0+COLS*dx-6,y2:r.ly,stroke:r.line,'stroke-width':2});
+    const t=el('text',{x:18,y:r.y+4,'font-size':12,'font-weight':700,fill:r.line,'text-anchor':'middle'}); t.textContent=r.name; });
+  // números
+  for(let c=0;c<COLS;c++){ if((c+1)%5===0||c===0){ const t=el('text',{x:x0+c*dx,y:66,'font-size':9,fill:'#6B7280','text-anchor':'middle'}); t.textContent=c+1;
+    const t2=el('text',{x:x0+c*dx,y:254,'font-size':9,fill:'#6B7280','text-anchor':'middle'}); t2.textContent=c+1; } }
+  const letters='abcdefghij';
+  const rowY=[80,96,112,128,144, 172,188,204,220,236];
+  // canal
+  el('rect',{x:x0-8,y:152,width:COLS*dx,height:12,rx:4,fill:'#DADDE2'});
+  letters.split('').forEach((L,i)=>{ const t=el('text',{x:24,y:rowY[i]+4,'font-size':10,fill:'#6B7280','text-anchor':'middle'}); t.textContent=L; });
+  const holes=[];
+  function hole(x,y,grp,label){ const h=el('circle',{cx:x,cy:y,r:4.2,class:'hole',tabindex:0,role:'button','aria-label':label}); h.dataset.g=grp; h.dataset.l=label; holes.push(h); return h; }
+  rails.forEach((r,ri)=>{ for(let c=0;c<COLS;c++){ if(c%6===5) continue; hole(x0+c*dx, r.y, 'rail'+ri, 'carril '+r.name+(ri<2?' de arriba':' de abajo')); } });
+  for(let c=0;c<COLS;c++){ for(let i=0;i<10;i++){ hole(x0+c*dx,rowY[i],(i<5?'top':'bot')+(c+1),(c+1)+letters[i]); } }
+  const info=document.getElementById('bbInfo'); const explored=new Set();
+  function pick(h){
+    holes.forEach(x=>x.classList.remove('hi','sel'));
+    const g=h.dataset.g; holes.filter(x=>x.dataset.g===g).forEach(x=>x.classList.add('hi')); h.classList.add('sel');
+    if(g.startsWith('rail')){ info.innerHTML='<b>Agujero del '+h.dataset.l+'.</b> Todos los agujeros de este carril están conectados <b>a lo largo</b> de la placa. Aquí se conecta el '+(h.dataset.l.indexOf('+')>=0?'<b>+ (3V)</b>':'<b>− (GND)</b>')+'.'; explored.add('rail'); }
+    else { const n=g.replace(/\D/g,''); const top=g.startsWith('top');
+      info.innerHTML='<b>Agujero '+h.dataset.l+'.</b> Está conectado con los agujeros <b>'+n+(top?'a a '+n+'e':'f a '+n+'j')+'</b> (fila '+n+', mitad de '+(top?'arriba':'abajo')+'). <b>No</b> está conectado con la fila '+n+' de la otra mitad ni con otras filas.';
+      explored.add(top?'top':'bot'); }
+    if(explored.size===3) autoCheck('t-bb');
+  }
+  holes.forEach(h=>{ h.addEventListener('click',()=>pick(h)); h.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); pick(h);} }); });
+  const cap=el('text',{x:W/2,y:H-12,'font-size':10,fill:'#6B7280','text-anchor':'middle'}); cap.textContent='Dibujo simplificado de la Placa de pruebas pequeña (30 filas numeradas)';
+})();
+
+/* =========================================================
+   MICRO:BIT CON P0
+   ========================================================= */
+(function(){
+  const root=document.getElementById('mbP0'); root.classList.add('mb');
+  const row=document.createElement('div'); row.className='mb-row';
+  const A=document.createElement('button'); A.type='button'; A.className='mb-btn'; A.textContent='A'; A.setAttribute('aria-label','Botón A');
+  const B=document.createElement('button'); B.type='button'; B.className='mb-btn'; B.textContent='B'; B.setAttribute('aria-label','Botón B');
+  const scr=document.createElement('div'); scr.className='mb-screen';
+  const pat='00000 01010 00000 10001 01110'.replace(/ /g,'');
+  for(let i=0;i<25;i++){ const d=document.createElement('div'); d.className='led'+(pat[i]==='1'?' on':''); scr.appendChild(d); }
+  row.appendChild(A); row.appendChild(scr); row.appendChild(B); root.appendChild(row);
+  const pins=document.createElement('div'); pins.className='mb-pins'; pins.innerHTML='<span>0</span><span>1</span><span>2</span><span>3V</span><span>GND</span>'; root.appendChild(pins);
+  const led=document.getElementById('p0led'), log=document.getElementById('p0Log'); let usedA=false, usedB=false;
+  function hl(k){ document.querySelectorAll('#codeP0 .tb').forEach(x=>x.classList.remove('run')); if(k){ const b=document.querySelector('#codeP0 [data-b="'+k+'"]'); if(b) b.classList.add('run'); } }
+  A.addEventListener('click',()=>{ hl('a1'); led.classList.add('on'); log.innerHTML='Botón A → P0 en <b>ALTA</b>: el pin entrega voltaje y el LED <b>enciende</b>.'; usedA=true; if(usedA&&usedB) autoCheck('t-p0'); setTimeout(()=>hl(null),700); });
+  B.addEventListener('click',()=>{ hl('b1'); led.classList.remove('on'); log.innerHTML='Botón B → P0 en <b>BAJA</b>: el pin deja de entregar voltaje y el LED se <b>apaga</b>.'; usedB=true; if(usedA&&usedB) autoCheck('t-p0'); setTimeout(()=>hl(null),700); });
+})();
+
+/* =========================================================
+   PREDICCIONES DEL TALLER (valores calculados, no medidos)
+   ========================================================= */
+const PRED={p2a:[3.3,'mA','3.3 ÷ 1 = 3.3 mA'], p2b:[10,'mA','3.3 ÷ 0.33 = 10 mA'], p5r:[3,'kΩ','1 + 2 = 3 kΩ'], p5a:[1.1,'mA','3.3 ÷ 3 = 1.1 mA'], p5b:[2.2,'V','1.1 × 2 = 2.2 V']};
+document.querySelectorAll('[data-chk]').forEach(b=>b.addEventListener('click',()=>{
+  const id=b.dataset.chk, inp=document.getElementById(id), msg=document.getElementById(id+'Msg');
+  const v=parseFloat(String(inp.value).replace(',','.'));
+  if(isNaN(v)){ msg.innerHTML='<span class="no">Escribe un número.</span>'; return; }
+  const ok=Math.abs(v-PRED[id][0])<=0.051;
+  msg.innerHTML= ok ? '<span class="ok">✔ Bien calculado ('+PRED[id][2]+'). Ahora mídelo en Tinkercad.</span>' : '<span class="no">✘ Revisa la cuenta con la Ley de Ohm.</span>';
+}));
+
+/* ---------- predicción del ejercicio 4 ---------- */
+document.querySelectorAll('[data-pr]').forEach(b=>b.addEventListener('click',()=>{
+  const k=b.dataset.pr, log=document.getElementById('prLog');
+  log.innerHTML = k==='down'
+    ? '✔ Buena predicción: con el mismo voltaje, si la resistencia aumenta, la Ley de Ohm dice que la corriente <b>disminuye</b>. Compruébalo en Tinkercad.'
+    : '🤔 Revisa la Ley de Ohm: I = V ÷ R. ¿Qué le pasa a una división si el número de abajo se hace más grande? Compruébalo en Tinkercad.';
+}));
+
+/* =========================================================
+   HOJA DE REGISTRO: COPIAR
+   ========================================================= */
+document.getElementById('regCopy').addEventListener('click',()=>{
+  const rows=['1','2A','2B','3A','3B','3C','3D','4A','4B','5A','5B'];
+  const lines=['Semana 4 — Hoja de registro'];
+  rows.forEach(r=>{
+    const c=document.querySelector('[data-c="'+r+'"]'), m=document.querySelector('[data-r="'+r+'"]');
+    lines.push(r+': calculado = '+(c&&c.value?c.value:'—')+' | medido = '+(m&&m.value?m.value:'—'));
+  });
+  const text=lines.join('\n'); const msg=document.getElementById('regMsg');
+  try{
+    navigator.clipboard.writeText(text).then(()=>{ msg.textContent='Copiado. Pégalo en un documento o en tus notas.'; }, ()=>{ msg.textContent='No se pudo copiar. Cópialo a mano en tu cuaderno.'; });
+  }catch(e){ msg.textContent='No se pudo copiar. Cópialo a mano en tu cuaderno.'; }
+});
+
+/* ---------- inicio ---------- */
+go(0);
+})();
+</script>
+</body>
+</html>

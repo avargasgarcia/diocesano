@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fechas y NULL — Semana 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f4f5f8; --surface:#ffffff; --surface-2:#eceef3;
+  --ink:#1a2130; --ink-soft:#525b6b; --line:#d7dbe4;
+  --accent:#0e7c86; --accent-ink:#ffffff;
+  --amber:#b86e12; --amber-soft:#fbeedd;
+  --good:#1f7a4d; --bad:#b5342d;
+  --code-bg:#0f1720; --code-fg:#e6edf3; --code-key:#f2b846; --code-str:#7fd0c9; --code-com:#7c8899; --code-num:#c9a6ff;
+  --f-comp:#2f6fb5; --f-arit:#7a4fb0; --f-logi:#b86e12; --f-espe:#b0407a; --f-conj:#0e7c86;
+  --shadow:0 1px 2px rgba(20,25,40,.04), 0 8px 24px rgba(20,25,40,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1319; --surface:#161f28; --surface-2:#1d2733;
+    --ink:#e7ecf2; --ink-soft:#9aa7b6; --line:#2b3745;
+    --accent:#43c2c7; --accent-ink:#08181a;
+    --amber:#e7a94a; --amber-soft:#2a2013;
+    --good:#4fbd85; --bad:#e2695f;
+    --code-bg:#080d12; --code-com:#6b7684;
+    --f-comp:#6aa6e8; --f-arit:#b28be6; --f-logi:#e7a94a; --f-espe:#e07bb0; --f-conj:#43c2c7;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1319; --surface:#161f28; --surface-2:#1d2733;
+  --ink:#e7ecf2; --ink-soft:#9aa7b6; --line:#2b3745;
+  --accent:#43c2c7; --accent-ink:#08181a;
+  --amber:#e7a94a; --amber-soft:#2a2013;
+  --good:#4fbd85; --bad:#e2695f;
+  --code-bg:#080d12; --code-com:#6b7684;
+  --f-comp:#6aa6e8; --f-arit:#b28be6; --f-logi:#e7a94a; --f-espe:#e07bb0; --f-conj:#43c2c7;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg); color:var(--ink); font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif; overscroll-behavior:none;}
+h1,h2,h3{font-family:"IBM Plex Serif", Georgia, serif; text-wrap:balance; margin:0;}
+h3{font-size:19px; font-weight:600;}
+code,.mono{font-family:"IBM Plex Mono", ui-monospace, Consolas, monospace;}
+p code, li code, td code, .callout code{background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:0 5px; font-size:.92em;}
+
+/* ---------- shell ---------- */
+#deck{position:relative; height:100vh; height:100dvh; display:flex; flex-direction:column; overflow:hidden;}
+#topbar{display:flex; align-items:center; gap:14px; padding:10px 18px; border-bottom:1px solid var(--line); background:var(--surface); flex:0 0 auto;}
+#topbar .brand{font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.04em; color:var(--ink-soft); white-space:nowrap;}
+#progress-track{flex:1 1 auto; height:5px; background:var(--surface-2); border-radius:99px; overflow:hidden;}
+#progress-fill{height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--amber)); transition:width .35s ease;}
+#counter{font-family:"IBM Plex Mono"; font-size:12.5px; color:var(--ink-soft); white-space:nowrap; min-width:52px; text-align:right; font-variant-numeric:tabular-nums;}
+#theme-btn{font-family:"IBM Plex Mono"; font-size:12px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-soft); border-radius:8px; padding:5px 9px; cursor:pointer;}
+@media (max-width:560px){ #topbar .brand{display:none;} }
+#viewport{flex:1 1 auto; position:relative; overflow:hidden;}
+.slide{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; padding:clamp(20px,4vw,48px) clamp(16px,5vw,80px); opacity:0; transform:translateX(24px); pointer-events:none; transition:opacity .35s ease, transform .35s ease; overflow-y:auto; visibility:hidden;}
+.slide.active{opacity:1; transform:none; pointer-events:auto; visibility:visible;}
+@media (prefers-reduced-motion: reduce){ .slide{transition:none; transform:none;} }
+.slide-inner{width:100%; max-width:960px; margin:auto; display:flex; flex-direction:column; gap:18px;}
+.eyebrow{font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); font-weight:600;}
+.slide h2{font-size:clamp(26px,4vw,40px); font-weight:600; line-height:1.15;}
+.slide.cover h2{font-size:clamp(34px,6vw,58px);}
+.lede{font-size:17px; line-height:1.6; color:var(--ink-soft); max-width:72ch; margin:0;}
+.slide p{font-size:16px; line-height:1.65; max-width:72ch; margin:0;}
+.slide ul{margin:0; padding-left:20px; line-height:1.7; font-size:16px;}
+.slide.section-slide .slide-inner{border-left:4px solid var(--amber); padding-left:22px;}
+
+#navbar{flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 18px; border-top:1px solid var(--line); background:var(--surface);}
+.navbtn{font-family:"IBM Plex Sans"; font-weight:600; font-size:14px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:10px; padding:9px 16px; cursor:pointer;}
+.navbtn:hover{border-color:var(--accent);}
+.navbtn:disabled{opacity:.35; cursor:default;}
+.navbtn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+button:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+#dots{display:flex; gap:5px; flex-wrap:wrap; justify-content:center; max-width:56vw;}
+.dot{width:7px; height:7px; border-radius:99px; background:var(--line); border:none; padding:0; cursor:pointer;}
+.dot.section{background:var(--amber);}
+.dot.active{background:var(--accent); width:18px;}
+
+/* ---------- components ---------- */
+.card{background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:clamp(14px,2.2vw,24px);}
+.card h3{margin-bottom:8px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+@media (max-width:760px){ .grid2,.grid3{grid-template-columns:1fr;} }
+.grid2>*,.grid3>*,.venn-wrap>*,.tabpanel>*,.steppanel>*,.ex{min-width:0;}
+.pill{display:inline-flex; align-items:center; gap:6px; font-family:"IBM Plex Mono"; font-size:12px; font-weight:600; padding:3px 10px; border-radius:99px; background:var(--surface-2); color:var(--ink-soft); border:1px solid var(--line); white-space:nowrap;}
+
+pre.code{background:var(--code-bg); color:var(--code-fg); border-radius:12px; padding:14px 18px; overflow-x:auto; font-size:14.5px; line-height:1.6; margin:0; font-family:"IBM Plex Mono", ui-monospace, monospace;}
+.code .k{color:var(--code-key); font-weight:600;}
+.code .s{color:var(--code-str);}
+.code .c{color:var(--code-com); font-style:italic;}
+.code .n{color:var(--code-num);}
+
+.ex{display:flex; flex-direction:column; gap:8px;}
+.ex-head .pill{white-space:normal;}
+.ex-head{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;}
+.ex-actions{display:flex; gap:8px;}
+.mini{font-family:"IBM Plex Mono"; font-size:12.5px; font-weight:600; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:8px; padding:6px 11px; cursor:pointer;}
+.mini:hover{border-color:var(--accent);}
+.reveal-btn{font-family:"IBM Plex Mono"; font-size:12.5px; font-weight:600; background:var(--amber-soft); color:var(--amber); border:1px solid var(--amber); border-radius:8px; padding:6px 11px; cursor:pointer;}
+.reveal-box{display:none; border-left:3px solid var(--amber); background:var(--surface); border-radius:0 10px 10px 0; padding:10px 14px;}
+.reveal-box.show{display:block;}
+.err{font-family:"IBM Plex Mono"; font-size:13.5px; color:var(--bad); border:1px solid var(--bad); border-radius:8px; padding:8px 12px; background:color-mix(in srgb,var(--bad) 8%,var(--surface));}
+
+.table-wrap{overflow-x:auto;}
+table.data{border-collapse:collapse; width:100%; font-size:14px;}
+table.data caption{caption-side:top; text-align:left; font-family:"IBM Plex Mono"; font-size:12px; color:var(--ink-soft); padding-bottom:6px;}
+table.data th, table.data td{border:1px solid var(--line); padding:6px 10px; text-align:left; font-variant-numeric:tabular-nums; white-space:nowrap;}
+table.data th{background:var(--surface-2); font-family:"IBM Plex Mono"; font-weight:600; font-size:12.5px;}
+table.data td.null{color:var(--ink-soft); font-style:italic;}
+table.ops td:first-child{font-family:"IBM Plex Mono"; font-weight:600;}
+
+.tabs{display:flex; gap:6px; flex-wrap:wrap;}
+.tab{font-family:"IBM Plex Sans"; font-weight:600; font-size:14px; padding:8px 13px; border-radius:9px 9px 0 0; cursor:pointer; background:var(--surface-2); color:var(--ink-soft); border:1px solid var(--line); border-bottom:none;}
+.tab.active{background:var(--surface); color:var(--accent); border-color:var(--accent);}
+.tabpanel{display:none; border:1px solid var(--line); border-radius:0 10px 10px 10px; padding:16px; background:var(--surface); flex-direction:column; gap:12px;}
+.tabpanel.active{display:flex;}
+.tabset{display:flex; flex-direction:column;}
+
+.callout{border-radius:10px; padding:12px 16px; font-size:15px; line-height:1.6; border:1px solid var(--line); background:var(--surface);}
+.callout.warn{border-left:4px solid var(--bad);}
+.callout.tip{border-left:4px solid var(--accent);}
+.callout.note{border-left:4px solid var(--amber);}
+.callout strong{font-weight:600;}
+
+/* familias de operadores */
+.fam{--c:var(--accent);}
+.fam.comp{--c:var(--f-comp);} .fam.arit{--c:var(--f-arit);} .fam.logi{--c:var(--f-logi);} .fam.espe{--c:var(--f-espe);} .fam.conj{--c:var(--f-conj);}
+.famcard{border:1px solid var(--line); border-top:4px solid var(--c); border-radius:12px; padding:12px 14px; background:var(--surface);}
+.famcard b{display:block; color:var(--c); font-size:15px; margin-bottom:4px;}
+.famcard .mono{font-size:13.5px;}
+.famgrid{display:grid; grid-template-columns:repeat(5,1fr); gap:10px;}
+@media (max-width:860px){ .famgrid{grid-template-columns:repeat(2,1fr);} }
+.chip{display:inline-block; font-family:"IBM Plex Mono"; font-weight:600; font-size:13px; color:var(--c); border:1px solid var(--c); border-radius:7px; padding:2px 8px; background:color-mix(in srgb,var(--c) 10%,var(--surface));}
+
+.anatomy{display:flex; gap:10px; align-items:stretch; justify-content:center; flex-wrap:wrap; font-family:"IBM Plex Mono";}
+.anatomy div{border:1px dashed var(--line); border-radius:10px; padding:10px 16px; text-align:center; font-size:22px; font-weight:600; background:var(--surface);}
+.anatomy div small{display:block; font-family:"IBM Plex Sans"; font-size:12px; font-weight:500; color:var(--ink-soft); margin-top:4px;}
+.anatomy .op{border:2px solid var(--f-comp); color:var(--f-comp);}
+
+/* esquema BD */
+.schema{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px;}
+.tcard{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); box-shadow:var(--shadow);}
+.tcard header{background:var(--accent); color:var(--accent-ink); font-family:"IBM Plex Mono"; font-weight:600; font-size:14px; padding:7px 12px;}
+.tcard ul{list-style:none; margin:0; padding:8px 12px; font-family:"IBM Plex Mono"; font-size:13px; line-height:1.8;}
+.tcard li span{font-size:10.5px; font-weight:600; border-radius:4px; padding:0 4px; margin-left:5px; border:1px solid var(--line); color:var(--ink-soft);}
+.tcard li span.pk{color:var(--amber); border-color:var(--amber);}
+.tcard li span.fk{color:var(--f-comp); border-color:var(--f-comp);}
+.tcard footer{font-size:12px; color:var(--ink-soft); padding:0 12px 8px;}
+
+/* pasos */
+.steps{display:flex; gap:6px; flex-wrap:wrap;}
+.stepbtn{font-family:"IBM Plex Sans"; font-weight:600; font-size:14px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-soft); border-radius:99px; padding:7px 14px; cursor:pointer;}
+.stepbtn.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+.steppanel{display:none; flex-direction:column; gap:10px;}
+.steppanel.active{display:flex;}
+
+/* agenda */
+.agenda{display:grid; grid-template-columns:auto 1fr auto; gap:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface);}
+.agenda div{padding:9px 14px; border-bottom:1px solid var(--line); font-size:15px;}
+.agenda div:nth-last-child(-n+3){border-bottom:none;}
+.agenda .num{font-family:"IBM Plex Mono"; color:var(--accent); font-weight:600;}
+.agenda .min{font-family:"IBM Plex Mono"; color:var(--ink-soft); text-align:right; white-space:nowrap;}
+
+/* venn */
+.venn-wrap{display:grid; grid-template-columns:minmax(260px,1fr) 1.2fr; gap:16px; align-items:start;}
+@media (max-width:820px){ .venn-wrap{grid-template-columns:1fr;} }
+svg.venn{width:100%; height:auto; max-width:440px;}
+svg.venn .rg{fill:var(--f-conj); opacity:.08; transition:opacity .25s;}
+svg.venn .rg.on{opacity:.45;}
+svg.venn .outline{fill:none; stroke:var(--ink-soft); stroke-width:1.5;}
+svg.venn text{fill:var(--ink); font-family:"IBM Plex Mono"; font-size:12.5px;}
+svg.venn text.ttl{font-family:"IBM Plex Sans"; font-weight:600; font-size:13px; fill:var(--ink-soft);}
+svg.venn text.twice{fill:var(--bad); font-weight:600; opacity:0; transition:opacity .25s;}
+svg.venn text.twice.on{opacity:1;}
+.setbtns{display:flex; gap:6px; flex-wrap:wrap;}
+.setbtn{font-family:"IBM Plex Mono"; font-weight:600; font-size:13px; border:1px solid var(--f-conj); color:var(--f-conj); background:var(--surface); border-radius:8px; padding:7px 12px; cursor:pointer;}
+.setbtn.active{background:var(--f-conj); color:var(--accent-ink);}
+
+/* quiz */
+.quiz{display:flex; flex-direction:column; gap:8px;}
+.quiz .qtext{font-weight:600; font-size:16px;}
+.choice{text-align:left; font-family:"IBM Plex Sans"; font-size:15px; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; padding:10px 14px; cursor:pointer;}
+.choice:hover{border-color:var(--accent);}
+.choice code{background:none; border:none; padding:0;}
+.choice.correct{border-color:var(--good); background:color-mix(in srgb,var(--good) 12%,var(--surface));}
+.choice.wrong{border-color:var(--bad); background:color-mix(in srgb,var(--bad) 10%,var(--surface));}
+.feedback{display:none; font-size:14.5px; line-height:1.55; padding:8px 12px; border-radius:8px;}
+.feedback.show{display:block;}
+.feedback.ok{color:var(--good); background:color-mix(in srgb,var(--good) 10%,var(--surface));}
+.feedback.no{color:var(--bad); background:color-mix(in srgb,var(--bad) 8%,var(--surface));}
+
+/* actividad 1: clasificar */
+.pool{display:flex; flex-wrap:wrap; gap:8px; min-height:56px; padding:12px; border:1px dashed var(--line); border-radius:12px; background:var(--surface);}
+.opcard{font-family:"IBM Plex Mono"; font-weight:600; font-size:15px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:9px; padding:7px 12px; cursor:grab; user-select:none;}
+.opcard.sel{outline:2px solid var(--accent); outline-offset:2px; background:color-mix(in srgb,var(--accent) 14%,var(--surface));}
+.opcard.ok{border-color:var(--good); background:color-mix(in srgb,var(--good) 16%,var(--surface));}
+.opcard.bad{border-color:var(--bad); background:color-mix(in srgb,var(--bad) 14%,var(--surface)); text-decoration:line-through wavy var(--bad);}
+.bins{display:grid; grid-template-columns:repeat(5,1fr); gap:8px;}
+@media (max-width:860px){ .bins{grid-template-columns:repeat(2,1fr);} }
+.bin{border:1px solid var(--line); border-top:4px solid var(--c); border-radius:12px; background:var(--surface); min-height:120px; display:flex; flex-direction:column; cursor:pointer;}
+.bin.over{background:color-mix(in srgb,var(--c) 10%,var(--surface));}
+.bin h4{margin:0; padding:8px 10px 4px; font-size:13.5px; color:var(--c); font-family:"IBM Plex Sans";}
+.bin .drop{display:flex; flex-wrap:wrap; gap:6px; padding:6px 8px 10px; flex:1;}
+.bin .drop .opcard{font-size:13.5px; padding:5px 9px;}
+.actbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+.score{font-family:"IBM Plex Mono"; font-weight:600; font-size:14px;}
+
+/* actividad 2: detectar */
+.catbar{display:flex; gap:6px; flex-wrap:wrap; position:sticky; top:-2px; z-index:3; background:var(--bg); padding:8px 0;}
+.catbtn{font-family:"IBM Plex Sans"; font-weight:600; font-size:13.5px; border:1px solid var(--c); color:var(--c); background:var(--surface); border-radius:8px; padding:7px 11px; cursor:pointer;}
+.catbtn:hover{background:color-mix(in srgb,var(--c) 12%,var(--surface));}
+.detq{display:flex; flex-direction:column; gap:6px;}
+.detq .lbl{font-family:"IBM Plex Mono"; font-size:12px; color:var(--ink-soft);}
+.optok{font-family:"IBM Plex Mono"; font-size:14.5px; font-weight:600; color:var(--code-fg); background:transparent; border:1.5px dashed #8a97a8; border-radius:6px; padding:0 5px; margin:0 1px; cursor:pointer; line-height:1.5; position:relative;}
+.optok.sel{border-style:solid; border-color:#ffffff; background:rgba(255,255,255,.14);}
+.optok[data-as]{border-style:solid;}
+.optok[data-as="comp"]{border-color:#6aa6e8; background:rgba(106,166,232,.22);}
+.optok[data-as="arit"]{border-color:#b28be6; background:rgba(178,139,230,.22);}
+.optok[data-as="logi"]{border-color:#e7a94a; background:rgba(231,169,74,.22);}
+.optok[data-as="espe"]{border-color:#e07bb0; background:rgba(224,123,176,.22);}
+.optok[data-as="conj"]{border-color:#43c2c7; background:rgba(67,194,199,.22);}
+.optok .tag{margin-left:5px; font-size:9.5px; font-family:"IBM Plex Sans"; font-weight:700; letter-spacing:.03em; color:var(--code-fg); opacity:.85; vertical-align:1px; pointer-events:none;}
+.optok .tag:empty{display:none;}
+.optok.ok::after, .optok.bad::after{position:absolute; right:-7px; top:-9px; font-size:11px; width:15px; height:15px; line-height:15px; text-align:center; border-radius:99px; color:#fff; font-family:"IBM Plex Sans";}
+.optok.ok::after{content:"✓"; background:#1f7a4d;}
+.optok.bad::after{content:"✗"; background:#b5342d;}
+.detq pre.code{padding-top:16px; line-height:2.1; white-space:pre-wrap;}
+.legend{display:flex; gap:10px; flex-wrap:wrap; font-size:13px;}
+.legend span{display:inline-flex; align-items:center; gap:5px;}
+.legend i{width:12px; height:12px; border-radius:3px; background:var(--c); display:inline-block;}
+
+.center-note{text-align:center; color:var(--ink-soft); font-size:14px;}
+.kbd{font-family:"IBM Plex Mono"; font-size:12px; border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:1px 6px; background:var(--surface-2);}
+.toast{position:fixed; left:50%; bottom:74px; transform:translateX(-50%); background:var(--ink); color:var(--bg); font-size:14px; padding:8px 14px; border-radius:8px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:20;}
+.toast.show{opacity:1;}
+
+.code .f{color:#8fd694; font-weight:600;}
+.famgrid4{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+@media (max-width:860px){ .famgrid4{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:520px){ .famgrid4{grid-template-columns:1fr;} }
+.famgrid4 .famcard p{font-size:13.5px; margin-top:6px; line-height:1.5;}
+/* laboratorio substring */
+.lab{display:flex; flex-direction:column; gap:12px;}
+.labctl{display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;}
+.labctl label{display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:600; color:var(--ink-soft);}
+.labctl select, .labctl input, .pin{font-family:"IBM Plex Mono"; font-size:15px; padding:7px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink);}
+.labctl input{width:110px;}
+.charrow{display:flex; flex-wrap:wrap; gap:4px;}
+.cbox{display:flex; flex-direction:column; align-items:center; min-width:30px; border:1px solid var(--line); border-radius:7px; padding:4px 3px; background:var(--surface-2);}
+.cbox b{font-family:"IBM Plex Mono"; font-size:17px;}
+.cbox span{font-family:"IBM Plex Mono"; font-size:10.5px; color:var(--ink-soft);}
+.cbox span.neg{color:var(--amber);}
+.cbox.on{background:color-mix(in srgb,var(--accent) 22%,var(--surface)); border-color:var(--accent);}
+.subres{font-size:16px; font-weight:600;}
+.subres .mono{color:var(--accent); font-size:17px;}
+/* recta numérica */
+svg.numline{width:100%; max-width:560px; height:auto;}
+svg.numline .ax{stroke:var(--ink-soft); stroke-width:2;}
+svg.numline .tk{stroke:var(--ink-soft); stroke-width:2;}
+svg.numline .tl{fill:var(--ink); font-family:"IBM Plex Mono"; font-size:13px;}
+svg.numline .pt{fill:var(--amber);}
+svg.numline .px{fill:var(--amber); font-family:"IBM Plex Mono"; font-size:13px; font-weight:600;}
+/* retos */
+.reto{display:flex; flex-direction:column; gap:10px;}
+.reto .enun{font-size:16px; line-height:1.6;}
+/* predice */
+.predgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+@media (max-width:760px){ .predgrid{grid-template-columns:1fr;} }
+.predrow{display:grid; grid-template-columns:1fr 140px; gap:4px 8px; align-items:center; border:1px solid var(--line); border-radius:10px; padding:8px 10px; background:var(--surface);}
+.predrow .pexp{font-size:13.5px; background:none; border:none; padding:0; overflow-wrap:anywhere;}
+.predrow .pin{width:100%; font-size:14px; padding:5px 8px;}
+.predrow .pmark{grid-column:1 / -1; font-size:12.5px; font-family:"IBM Plex Mono"; color:var(--ink-soft); min-height:0;}
+.predrow.ok{border-color:var(--good); background:color-mix(in srgb,var(--good) 10%,var(--surface));}
+.predrow.ok .pmark{color:var(--good);}
+.predrow.bad{border-color:var(--bad); background:color-mix(in srgb,var(--bad) 8%,var(--surface));}
+.predrow.bad .pmark{color:var(--bad);}
+/* autoevaluación */
+.autolist{display:flex; flex-direction:column; gap:10px;}
+.aq{border:1px solid var(--line); border-radius:12px; padding:10px 14px 12px; background:var(--surface); margin:0;}
+.aq legend{font-weight:600; font-size:15.5px; padding:0 6px; line-height:1.5;}
+.aq .anum{display:inline-block; min-width:24px; text-align:center; font-family:"IBM Plex Mono"; color:var(--accent-ink); background:var(--accent); border-radius:6px; margin-right:4px;}
+.aopt{display:flex; gap:8px; align-items:flex-start; padding:5px 6px; border-radius:8px; cursor:pointer; font-size:15px;}
+.aopt:hover{background:var(--surface-2);}
+.aq.ok{border-color:var(--good);} .aq.bad{border-color:var(--bad);}
+.aq.ok .aopt.right, .aq.bad .aopt.right{background:color-mix(in srgb,var(--good) 14%,var(--surface));}
+.aexp{font-size:14px; line-height:1.55; color:var(--ink-soft); margin-top:4px;}
+.aexp:empty{display:none;}
+
+</style>
+
+<body>
+<div id="deck">
+  <header id="topbar">
+    <span class="brand">BASES DE DATOS · SEMANA 4</span>
+    <div id="progress-track" aria-hidden="true"><div id="progress-fill"></div></div>
+    <span id="counter" aria-live="polite">01/01</span>
+    <button id="theme-btn" type="button" aria-label="Cambiar tema claro u oscuro">Tema</button>
+  </header>
+  <main id="viewport"></main>
+  <nav id="navbar" aria-label="Navegación de diapositivas">
+    <button class="navbtn" id="btn-prev" type="button">← Anterior</button>
+    <div id="dots"></div>
+    <button class="navbtn primary" id="btn-next" type="button">Siguiente →</button>
+  </nav>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+// =========================================================
+// DATOS GENERADOS Y VERIFICADOS CONTRA MySQL (hoy = 2026-10-02)
+// =========================================================
+const Q = {"T_entrenadores": "SELECT * FROM entrenadores ORDER BY id;", "T_planes": "SELECT * FROM planes;", "T_socios": "SELECT * FROM socios ORDER BY id;", "T_membresias": "SELECT * FROM membresias ORDER BY id;", "T_asistencias": "SELECT * FROM asistencias ORDER BY id;", "VERIF": "SELECT\n  (SELECT COUNT(*) FROM entrenadores) AS entrenadores,\n  (SELECT COUNT(*) FROM planes)       AS planes,\n  (SELECT COUNT(*) FROM socios)       AS socios,\n  (SELECT COUNT(*) FROM membresias)   AS membresias,\n  (SELECT COUNT(*) FROM asistencias)  AS asistencias;", "TD1": "SELECT nombre, apellido, fecha_registro\nFROM socios\nORDER BY fecha_registro\nLIMIT 3;", "TD2": "SELECT id, socio_id, fecha_fin\nFROM membresias\nWHERE fecha_fin > '2026-12-31';", "TD3": "SELECT id, socio_id, entrada\nFROM asistencias\nWHERE entrada BETWEEN '2026-10-01 00:00:00' AND '2026-10-01 23:59:59';", "N1": "SELECT nombre, telefono\nFROM socios\nWHERE telefono = NULL;", "N2": "SELECT nombre, apellido\nFROM socios\nWHERE telefono IS NULL;", "N3": "SELECT id, fecha_pago,\n       DATEDIFF('2026-10-02', fecha_pago) AS dias_desde_pago\nFROM membresias\nWHERE id IN (6, 7);", "N4": "SELECT COUNT(*)                     AS total,\n       COUNT(fecha_pago)            AS pagadas,\n       COUNT(*) - COUNT(fecha_pago) AS pendientes\nFROM membresias;", "P1": "SELECT id, entrada,\n       YEAR(entrada)   AS anio,\n       MONTH(entrada)  AS mes,\n       DAY(entrada)    AS dia,\n       HOUR(entrada)   AS hora,\n       MINUTE(entrada) AS minuto\nFROM asistencias\nWHERE id = 7;", "P2": "SELECT id, entrada,\n       DATE(entrada) AS solo_fecha,\n       TIME(entrada) AS solo_hora\nFROM asistencias\nWHERE id IN (7, 11);", "P3": "SELECT id, socio_id, entrada\nFROM asistencias\nWHERE HOUR(entrada) < 12\nORDER BY entrada;", "P4": "SELECT MONTH(fecha_inicio) AS mes, COUNT(*) AS membresias\nFROM membresias\nWHERE YEAR(fecha_inicio) = 2026\nGROUP BY MONTH(fecha_inicio)\nORDER BY mes;", "P5": "SELECT MONTHNAME('2026-10-02') AS mes,\n       DAYNAME('2026-10-02')   AS dia;", "A1": "SELECT DATE_ADD('2026-10-02', INTERVAL 2 WEEK)  AS en_dos_semanas,\n       DATE_SUB('2026-10-02', INTERVAL 1 MONTH) AS hace_un_mes;", "A2": "SELECT DATE_ADD('2026-01-31', INTERVAL 1 MONTH) AS fin_de_febrero,\n       DATE_ADD('2026-10-02 06:00:00', INTERVAL 90 MINUTE) AS mas_90_minutos;", "A3": "SELECT id, socio_id, fecha_fin,\n       DATE_ADD(fecha_fin, INTERVAL 1 MONTH) AS fin_si_renueva\nFROM membresias\nWHERE id IN (1, 5);", "D1": "SELECT DATEDIFF('2026-12-24', '2026-10-02') AS faltan_para_navidad,\n       DATEDIFF('2026-10-02', '2026-12-24') AS al_reves;", "D2": "SELECT id, fecha_inicio, fecha_fin,\n       TIMESTAMPDIFF(MONTH, fecha_inicio, fecha_fin) AS meses,\n       DATEDIFF(fecha_fin, fecha_inicio)             AS dias\nFROM membresias\nWHERE id IN (1, 3, 5);", "D3": "SELECT id, entrada, salida,\n       TIMESTAMPDIFF(MINUTE, entrada, salida) AS minutos\nFROM asistencias\nWHERE id IN (2, 3);", "D4": "SELECT nombre, fecha_nacimiento,\n       YEAR('2026-10-02') - YEAR(fecha_nacimiento)         AS resta_de_anios,\n       TIMESTAMPDIFF(YEAR, fecha_nacimiento, '2026-10-02') AS edad_real\nFROM socios\nWHERE id IN (2, 4);", "F1": "SELECT id, entrada,\n       DATE_FORMAT(entrada, '%d/%m/%Y %H:%i') AS entrada_colombia\nFROM asistencias\nWHERE id IN (1, 9);", "S1": "SELECT id, IFNULL(fecha_pago, 'Pendiente') AS pago\nFROM membresias\nWHERE id IN (5, 6);", "S2": "SELECT COALESCE(NULL, NULL, 'tercero', 'cuarto') AS resultado;", "S3": "SELECT nombre,\n       ISNULL(email)              AS email_es_null,\n       IFNULL(email, 'Sin email') AS email_mostrado\nFROM socios\nWHERE id IN (5, 6);", "S4": "SELECT nombre, apellido,\n       IFNULL(entrenador_id, 0) AS entrenador\nFROM socios\nWHERE entrenador_id IS NULL;", "C1": "SELECT CAST('2026-10-02' AS DATE) AS texto_a_fecha,\n       CAST(precio AS SIGNED)     AS precio_entero,\n       CONVERT(precio, CHAR)      AS precio_texto\nFROM planes\nWHERE id = 2;", "C2": "SELECT CONCAT('Plan ', nombre, ': $', CAST(precio AS SIGNED)) AS mensaje\nFROM planes;", "C3": "SELECT id, entrada,\n       CAST(entrada AS DATE) AS dia,\n       CAST(entrada AS TIME) AS hora\nFROM asistencias\nWHERE id IN (1, 2);", "E1": "SELECT DATE_ADD('2026-10-02', INTERVAL 5 DAYS);", "E2": "SELECT nombre, ISNULL(email, 'Sin email') AS email\nFROM socios;", "E3": "SELECT 2026-10-02 AS fecha;", "E4": "SELECT id, fecha_fin, fecha_fin + 5 AS mas_cinco\nFROM membresias\nWHERE id = 6;", "E5": "SELECT DATEDIFF('02/10/2026', '2026-10-01') AS dias;", "R1": "SELECT nombre,\n       DATE_FORMAT(fecha_contratacion, '%d/%m/%Y') AS contratado\nFROM entrenadores;", "R2": "SELECT id, socio_id, fecha_fin\nFROM membresias\nWHERE YEAR(fecha_fin) = 2026 AND MONTH(fecha_fin) = 10;", "R3": "SELECT id, fecha_inicio, fecha_fin,\n       DATEDIFF(fecha_fin, fecha_inicio) AS dias\nFROM membresias\nWHERE plan_id = 1;", "R4": "SELECT id, socio_id, entrada\nFROM asistencias\nWHERE HOUR(entrada) < 7;", "R5": "SELECT id, socio_id,\n       IFNULL(fecha_pago, 'Pendiente') AS pago\nFROM membresias\nWHERE MONTH(fecha_inicio) = 9;", "R6": "SELECT nombre,\n       TIMESTAMPDIFF(MONTH, fecha_registro, '2026-10-02') AS meses_inscrito\nFROM socios\nWHERE YEAR(fecha_registro) = 2026;"};
+const R = {"T_entrenadores": {"cols": ["id", "nombre", "especialidad", "fecha_contratacion", "telefono"], "rows": [["1", "Laura Gómez", "Musculación", "2019-02-11", "3104567890"], ["2", "Diego Rincón", "Funcional", "2021-07-01", "NULL"], ["3", "Paula Mejía", "Yoga", "2023-03-15", "3157894561"], ["4", "Camilo Herrera", "Cardio", "2025-11-03", "3001234567"]]}, "T_planes": {"cols": ["id", "nombre", "duracion_meses", "precio", "activo"], "rows": [["1", "Mensual", "1", "90000.00", "1"], ["2", "Trimestral", "3", "240000.00", "1"], ["3", "Semestral", "6", "450000.00", "1"], ["4", "Anual", "12", "840000.00", "1"]]}, "T_socios": {"cols": ["id", "nombre", "apellido", "fecha_nacimiento", "fecha_registro", "telefono", "email", "entrenador_id"], "rows": [["1", "Valentina", "Ruiz", "2008-03-14", "2025-01-20", "3201112233", "vruiz@correo.com", "1"], ["2", "Santiago", "Castro", "2007-11-02", "2024-08-05", "3112223344", "scastro@correo.com", "2"], ["3", "Mariana", "López", "1995-06-30", "2023-02-10", "NULL", "mlopez@correo.com", "3"], ["4", "Julián", "Torres", "1988-12-25", "2022-09-01", "3005556677", "NULL", "1"], ["5", "Daniela", "Pérez", "2000-10-02", "2025-06-15", "3134445566", "dperez@correo.com", "NULL"], ["6", "Mateo", "Rojas", "1979-04-18", "2021-03-03", "NULL", "NULL", "4"], ["7", "Sofía", "Martínez", "2003-01-09", "2026-01-12", "3187778899", "smartinez@correo.com", "2"], ["8", "Tomás", "Guerrero", "1999-10-03", "2024-11-20", "3159990011", "tguerrero@correo.com", "NULL"], ["9", "Isabella", "Moreno", "2006-07-21", "2026-07-01", "3016667788", "imoreno@correo.com", "3"], ["10", "Felipe", "Ortiz", "1992-02-28", "2023-05-08", "3148889900", "NULL", "4"], ["11", "Camila", "Suárez", "1985-09-10", "2022-01-17", "3176665544", "csuarez@correo.com", "1"], ["12", "Nicolás", "Ramírez", "2010-05-05", "2026-09-01", "NULL", "nramirez@correo.com", "NULL"]]}, "T_membresias": {"cols": ["id", "socio_id", "plan_id", "fecha_inicio", "fecha_fin", "valor", "fecha_pago"], "rows": [["1", "1", "2", "2026-08-01", "2026-11-01", "240000.00", "2026-08-01"], ["2", "2", "1", "2026-09-10", "2026-10-10", "90000.00", "2026-09-10"], ["3", "3", "4", "2026-02-10", "2027-02-10", "840000.00", "2026-02-12"], ["4", "4", "1", "2026-08-25", "2026-09-25", "90000.00", "2026-08-25"], ["5", "5", "3", "2026-06-15", "2026-12-15", "450000.00", "2026-06-20"], ["6", "6", "1", "2026-09-05", "2026-10-05", "90000.00", "NULL"], ["7", "7", "2", "2026-07-12", "2026-10-12", "240000.00", "2026-07-12"], ["8", "8", "1", "2026-07-20", "2026-08-20", "90000.00", "2026-07-21"], ["9", "9", "1", "2026-09-01", "2026-10-01", "90000.00", "2026-09-03"], ["10", "10", "3", "2026-04-08", "2026-10-08", "450000.00", "NULL"], ["11", "11", "4", "2025-10-20", "2026-10-20", "840000.00", "2025-10-20"], ["12", "12", "1", "2026-09-15", "2026-10-15", "90000.00", "NULL"], ["13", "1", "1", "2026-07-01", "2026-08-01", "90000.00", "2026-07-01"], ["14", "4", "1", "2026-07-25", "2026-08-25", "90000.00", "2026-07-26"]]}, "T_asistencias": {"cols": ["id", "socio_id", "entrada", "salida"], "rows": [["1", "1", "2026-09-28 06:05:00", "2026-09-28 07:20:00"], ["2", "2", "2026-09-28 17:30:00", "2026-09-28 19:00:00"], ["3", "3", "2026-09-28 18:10:00", "2026-09-28 19:05:00"], ["4", "5", "2026-09-29 05:50:00", "2026-09-29 07:10:00"], ["5", "7", "2026-09-29 16:45:00", "2026-09-29 18:30:00"], ["6", "1", "2026-09-30 06:00:00", "2026-09-30 07:15:00"], ["7", "11", "2026-09-30 19:00:00", "2026-09-30 20:10:00"], ["8", "2", "2026-09-30 17:40:00", "2026-09-30 18:55:00"], ["9", "10", "2026-10-01 06:30:00", "NULL"], ["10", "3", "2026-10-01 18:00:00", "2026-10-01 19:30:00"], ["11", "12", "2026-10-01 15:20:00", "2026-10-01 16:00:00"], ["12", "7", "2026-10-02 06:10:00", "2026-10-02 07:40:00"], ["13", "5", "2026-10-02 07:00:00", "NULL"], ["14", "1", "2026-10-02 06:05:00", "2026-10-02 07:05:00"], ["15", "9", "2026-09-30 17:00:00", "2026-09-30 18:45:00"]]}, "VERIF": {"cols": ["entrenadores", "planes", "socios", "membresias", "asistencias"], "rows": [["4", "4", "12", "14", "15"]]}, "TD1": {"cols": ["nombre", "apellido", "fecha_registro"], "rows": [["Mateo", "Rojas", "2021-03-03"], ["Camila", "Suárez", "2022-01-17"], ["Julián", "Torres", "2022-09-01"]]}, "TD2": {"cols": ["id", "socio_id", "fecha_fin"], "rows": [["3", "3", "2027-02-10"]]}, "TD3": {"cols": ["id", "socio_id", "entrada"], "rows": [["9", "10", "2026-10-01 06:30:00"], ["10", "3", "2026-10-01 18:00:00"], ["11", "12", "2026-10-01 15:20:00"]]}, "N1": {"cols": ["nombre", "telefono"], "rows": []}, "N2": {"cols": ["nombre", "apellido"], "rows": [["Mariana", "López"], ["Mateo", "Rojas"], ["Nicolás", "Ramírez"]]}, "N3": {"cols": ["id", "fecha_pago", "dias_desde_pago"], "rows": [["6", "NULL", "NULL"], ["7", "2026-07-12", "82"]]}, "N4": {"cols": ["total", "pagadas", "pendientes"], "rows": [["14", "11", "3"]]}, "P1": {"cols": ["id", "entrada", "anio", "mes", "dia", "hora", "minuto"], "rows": [["7", "2026-09-30 19:00:00", "2026", "9", "30", "19", "0"]]}, "P2": {"cols": ["id", "entrada", "solo_fecha", "solo_hora"], "rows": [["7", "2026-09-30 19:00:00", "2026-09-30", "19:00:00"], ["11", "2026-10-01 15:20:00", "2026-10-01", "15:20:00"]]}, "P3": {"cols": ["id", "socio_id", "entrada"], "rows": [["1", "1", "2026-09-28 06:05:00"], ["4", "5", "2026-09-29 05:50:00"], ["6", "1", "2026-09-30 06:00:00"], ["9", "10", "2026-10-01 06:30:00"], ["14", "1", "2026-10-02 06:05:00"], ["12", "7", "2026-10-02 06:10:00"], ["13", "5", "2026-10-02 07:00:00"]]}, "P4": {"cols": ["mes", "membresias"], "rows": [["2", "1"], ["4", "1"], ["6", "1"], ["7", "4"], ["8", "2"], ["9", "4"]]}, "P5": {"cols": ["mes", "dia"], "rows": [["October", "Friday"]]}, "A1": {"cols": ["en_dos_semanas", "hace_un_mes"], "rows": [["2026-10-16", "2026-09-02"]]}, "A2": {"cols": ["fin_de_febrero", "mas_90_minutos"], "rows": [["2026-02-28", "2026-10-02 07:30:00"]]}, "A3": {"cols": ["id", "socio_id", "fecha_fin", "fin_si_renueva"], "rows": [["1", "1", "2026-11-01", "2026-12-01"], ["5", "5", "2026-12-15", "2027-01-15"]]}, "D1": {"cols": ["faltan_para_navidad", "al_reves"], "rows": [["83", "-83"]]}, "D2": {"cols": ["id", "fecha_inicio", "fecha_fin", "meses", "dias"], "rows": [["1", "2026-08-01", "2026-11-01", "3", "92"], ["3", "2026-02-10", "2027-02-10", "12", "365"], ["5", "2026-06-15", "2026-12-15", "6", "183"]]}, "D3": {"cols": ["id", "entrada", "salida", "minutos"], "rows": [["2", "2026-09-28 17:30:00", "2026-09-28 19:00:00", "90"], ["3", "2026-09-28 18:10:00", "2026-09-28 19:05:00", "55"]]}, "D4": {"cols": ["nombre", "fecha_nacimiento", "resta_de_anios", "edad_real"], "rows": [["Santiago", "2007-11-02", "19", "18"], ["Julián", "1988-12-25", "38", "37"]]}, "F1": {"cols": ["id", "entrada", "entrada_colombia"], "rows": [["1", "2026-09-28 06:05:00", "28/09/2026 06:05"], ["9", "2026-10-01 06:30:00", "01/10/2026 06:30"]]}, "S1": {"cols": ["id", "pago"], "rows": [["5", "2026-06-20"], ["6", "Pendiente"]]}, "S2": {"cols": ["resultado"], "rows": [["tercero"]]}, "S3": {"cols": ["nombre", "email_es_null", "email_mostrado"], "rows": [["Daniela", "0", "dperez@correo.com"], ["Mateo", "1", "Sin email"]]}, "S4": {"cols": ["nombre", "apellido", "entrenador"], "rows": [["Daniela", "Pérez", "0"], ["Tomás", "Guerrero", "0"], ["Nicolás", "Ramírez", "0"]]}, "C1": {"cols": ["texto_a_fecha", "precio_entero", "precio_texto"], "rows": [["2026-10-02", "240000", "240000.00"]]}, "C2": {"cols": ["mensaje"], "rows": [["Plan Mensual: $90000"], ["Plan Trimestral: $240000"], ["Plan Semestral: $450000"], ["Plan Anual: $840000"]]}, "C3": {"cols": ["id", "entrada", "dia", "hora"], "rows": [["1", "2026-09-28 06:05:00", "2026-09-28", "06:05:00"], ["2", "2026-09-28 17:30:00", "2026-09-28", "17:30:00"]]}, "E1": {"error": "ERROR 1064: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'DAYS)' at line 1"}, "E2": {"error": "ERROR 1582: Incorrect parameter count in the call to native function 'ISNULL'"}, "E3": {"cols": ["fecha"], "rows": [["2014"]]}, "E4": {"cols": ["id", "fecha_fin", "mas_cinco"], "rows": [["6", "2026-10-05", "20261010"]]}, "E5": {"cols": ["dias"], "rows": [["NULL"]]}, "R1": {"cols": ["nombre", "contratado"], "rows": [["Laura Gómez", "11/02/2019"], ["Diego Rincón", "01/07/2021"], ["Paula Mejía", "15/03/2023"], ["Camilo Herrera", "03/11/2025"]]}, "R2": {"cols": ["id", "socio_id", "fecha_fin"], "rows": [["2", "2", "2026-10-10"], ["6", "6", "2026-10-05"], ["7", "7", "2026-10-12"], ["9", "9", "2026-10-01"], ["10", "10", "2026-10-08"], ["11", "11", "2026-10-20"], ["12", "12", "2026-10-15"]]}, "R3": {"cols": ["id", "fecha_inicio", "fecha_fin", "dias"], "rows": [["2", "2026-09-10", "2026-10-10", "30"], ["4", "2026-08-25", "2026-09-25", "31"], ["6", "2026-09-05", "2026-10-05", "30"], ["8", "2026-07-20", "2026-08-20", "31"], ["9", "2026-09-01", "2026-10-01", "30"], ["12", "2026-09-15", "2026-10-15", "30"], ["13", "2026-07-01", "2026-08-01", "31"], ["14", "2026-07-25", "2026-08-25", "31"]]}, "R4": {"cols": ["id", "socio_id", "entrada"], "rows": [["1", "1", "2026-09-28 06:05:00"], ["4", "5", "2026-09-29 05:50:00"], ["6", "1", "2026-09-30 06:00:00"], ["9", "10", "2026-10-01 06:30:00"], ["12", "7", "2026-10-02 06:10:00"], ["14", "1", "2026-10-02 06:05:00"]]}, "R5": {"cols": ["id", "socio_id", "pago"], "rows": [["2", "2", "2026-09-10"], ["6", "6", "Pendiente"], ["9", "9", "2026-09-03"], ["12", "12", "Pendiente"]]}, "R6": {"cols": ["nombre", "meses_inscrito"], "rows": [["Sofía", "8"], ["Isabella", "3"], ["Nicolás", "1"]]}};
+const PRED = [["DATE_ADD('2026-10-02', INTERVAL 10 DAY)", "2026-10-12"], ["DATE_SUB('2026-10-02', INTERVAL 1 YEAR)", "2025-10-02"], ["DATE_ADD('2026-03-31', INTERVAL 1 MONTH)", "2026-04-30"], ["DATEDIFF('2026-10-12', '2026-10-02')", "10"], ["DATEDIFF('2026-10-02', '2026-10-12')", "-10"], ["TIMESTAMPDIFF(YEAR, '2010-10-03', '2026-10-02')", "15"], ["TIMESTAMPDIFF(HOUR, '2026-10-02 06:00:00', '2026-10-02 19:30:00')", "13"], ["MONTH('2026-10-02')", "10"], ["DAY('2026-10-02 18:45:00')", "2"], ["IFNULL(NULL, 'Pendiente')", "Pendiente"], ["COALESCE(NULL, '3001234567', 'Sin contacto')", "3001234567"], ["ISNULL(NULL)", "1"]];
+const SQL_SCRIPT = "-- =====================================================================\n--  IMPLEMENTACIÓN DE BASES DE DATOS — Programa DAM (SENA)\n--  Semana 4 · Funciones de fecha-hora y funciones del sistema\n--  Base de datos del caso de estudio \"Gimnasio PulsoFit\" (5 tablas)\n--\n--  Plataforma: RunSQL (https://runsql.com) · Motor: MySQL 8.4\n--\n--  FECHA DE REFERENCIA DE LA SEMANA: 2026-10-02\n--  En todos los ejercicios \"hoy\" es el 2 de octubre de 2026. En lugar\n--  de CURDATE() se escribe la fecha '2026-10-02', para que todos\n--  obtengan los mismos resultados sin importar el día en que trabajen.\n--\n--  CÓMO CARGARLA EN RunSQL\n--  1. Entra a https://runsql.com y pulsa \"Run your SQL\" (o \"Go to app\").\n--  2. En la parte superior, en el selector de motor, elige \"MySQL 8.4\".\n--  3. Pulsa \"Import\" → \"From MySQL 8.4\".\n--  4. Copia TODO este archivo y pégalo en el recuadro de la derecha.\n--  5. Marca la casilla \"Clear DBML and table records\" (borra las tablas\n--     que había antes) y pulsa \"Apply\".\n--  6. En el panel 3 \"Write SQL Query\" escribe la consulta de\n--     verificación del final de este archivo y pulsa \"Run\".\n--\n--  IMPORTANTE\n--  - Este archivo NO se ejecuta en el panel de consultas: se carga con\n--    Import. Solo contiene CREATE TABLE e INSERT.\n--  - Los valores vacíos (NULL) se logran OMITIENDO la columna en un\n--    INSERT aparte. Si escribes la palabra NULL dentro de un INSERT, el\n--    importador de RunSQL la convierte en el texto 'null'.\n--  - Las fechas se escriben como texto con formato 'AAAA-MM-DD' y las\n--    fechas con hora como 'AAAA-MM-DD HH:MM:SS'.\n-- =====================================================================\n\n-- ---------------------------------------------------------------------\n-- 1. entrenadores: personal del gimnasio\n--    fecha_contratacion sirve para calcular la antigüedad\n--    telefono puede quedar vacío (NULL)\n-- ---------------------------------------------------------------------\nCREATE TABLE entrenadores (\n  id                  INT          PRIMARY KEY,\n  nombre              VARCHAR(40)  NOT NULL,\n  especialidad        VARCHAR(30)  NOT NULL,\n  fecha_contratacion  DATE         NOT NULL,\n  telefono            VARCHAR(15)\n);\n\nINSERT INTO entrenadores (id, nombre, especialidad, fecha_contratacion, telefono) VALUES\n  (1, 'Laura Gómez',    'Musculación', '2019-02-11', '3104567890'),\n  (3, 'Paula Mejía',    'Yoga',        '2023-03-15', '3157894561'),\n  (4, 'Camilo Herrera', 'Cardio',      '2025-11-03', '3001234567');\n\n-- Entrenador sin teléfono registrado (telefono queda NULL)\nINSERT INTO entrenadores (id, nombre, especialidad, fecha_contratacion) VALUES\n  (2, 'Diego Rincón',   'Funcional',   '2021-07-01');\n\n-- ---------------------------------------------------------------------\n-- 2. planes: tipos de membresía que vende el gimnasio\n--    precio en pesos colombianos\n--    activo: 1 = se vende actualmente (valor por defecto)\n-- ---------------------------------------------------------------------\nCREATE TABLE planes (\n  id              INT            PRIMARY KEY,\n  nombre          VARCHAR(20)    NOT NULL,\n  duracion_meses  INT            NOT NULL,\n  precio          DECIMAL(10,2)  NOT NULL,\n  activo          INT            NOT NULL DEFAULT 1\n);\n\nINSERT INTO planes (id, nombre, duracion_meses, precio, activo) VALUES\n  (1, 'Mensual',     1,  90000, 1),\n  (2, 'Trimestral',  3, 240000, 1),\n  (3, 'Semestral',   6, 450000, 1),\n  (4, 'Anual',      12, 840000, 1);\n\n-- ---------------------------------------------------------------------\n-- 3. socios: personas inscritas en el gimnasio\n--    telefono, email y entrenador_id pueden quedar vacíos (NULL)\n-- ---------------------------------------------------------------------\nCREATE TABLE socios (\n  id                INT          PRIMARY KEY,\n  nombre            VARCHAR(30)  NOT NULL,\n  apellido          VARCHAR(30)  NOT NULL,\n  fecha_nacimiento  DATE         NOT NULL,\n  fecha_registro    DATE         NOT NULL,\n  telefono          VARCHAR(15),\n  email             VARCHAR(60),\n  entrenador_id     INT,\n  FOREIGN KEY (entrenador_id) REFERENCES entrenadores(id)\n);\n\n-- Socios con todos los datos\nINSERT INTO socios (id, nombre, apellido, fecha_nacimiento, fecha_registro, telefono, email, entrenador_id) VALUES\n  ( 1, 'Valentina', 'Ruiz',     '2008-03-14', '2025-01-20', '3201112233', 'vruiz@correo.com',     1),\n  ( 2, 'Santiago',  'Castro',   '2007-11-02', '2024-08-05', '3112223344', 'scastro@correo.com',   2),\n  ( 7, 'Sofía',     'Martínez', '2003-01-09', '2026-01-12', '3187778899', 'smartinez@correo.com', 2),\n  ( 9, 'Isabella',  'Moreno',   '2006-07-21', '2026-07-01', '3016667788', 'imoreno@correo.com',   3),\n  (11, 'Camila',    'Suárez',   '1985-09-10', '2022-01-17', '3176665544', 'csuarez@correo.com',   1);\n\n-- Socios sin teléfono (telefono queda NULL)\nINSERT INTO socios (id, nombre, apellido, fecha_nacimiento, fecha_registro, email, entrenador_id) VALUES\n  ( 3, 'Mariana',   'López',    '1995-06-30', '2023-02-10', 'mlopez@correo.com',    3);\n\n-- Socios sin email (email queda NULL)\nINSERT INTO socios (id, nombre, apellido, fecha_nacimiento, fecha_registro, telefono, entrenador_id) VALUES\n  ( 4, 'Julián',    'Torres',   '1988-12-25', '2022-09-01', '3005556677',           1),\n  (10, 'Felipe',    'Ortiz',    '1992-02-28', '2023-05-08', '3148889900',           4);\n\n-- Socios sin entrenador asignado (entrenador_id queda NULL)\nINSERT INTO socios (id, nombre, apellido, fecha_nacimiento, fecha_registro, telefono, email) VALUES\n  ( 5, 'Daniela',   'Pérez',    '2000-10-02', '2025-06-15', '3134445566', 'dperez@correo.com'),\n  ( 8, 'Tomás',     'Guerrero', '1999-10-03', '2024-11-20', '3159990011', 'tguerrero@correo.com');\n\n-- Socio sin teléfono y sin entrenador\nINSERT INTO socios (id, nombre, apellido, fecha_nacimiento, fecha_registro, email) VALUES\n  (12, 'Nicolás',   'Ramírez',  '2010-05-05', '2026-09-01', 'nramirez@correo.com');\n\n-- Socio sin teléfono y sin email\nINSERT INTO socios (id, nombre, apellido, fecha_nacimiento, fecha_registro, entrenador_id) VALUES\n  ( 6, 'Mateo',     'Rojas',    '1979-04-18', '2021-03-03',                          4);\n\n-- ---------------------------------------------------------------------\n-- 4. membresias: cada compra de un plan por parte de un socio\n--    fecha_fin  = fecha en que termina la membresía\n--    fecha_pago = NULL cuando el pago está pendiente\n-- ---------------------------------------------------------------------\nCREATE TABLE membresias (\n  id           INT            PRIMARY KEY,\n  socio_id     INT            NOT NULL,\n  plan_id      INT            NOT NULL,\n  fecha_inicio DATE           NOT NULL,\n  fecha_fin    DATE           NOT NULL,\n  valor        DECIMAL(10,2)  NOT NULL,\n  fecha_pago   DATE,\n  FOREIGN KEY (socio_id) REFERENCES socios(id),\n  FOREIGN KEY (plan_id)  REFERENCES planes(id)\n);\n\n-- Membresías pagadas\nINSERT INTO membresias (id, socio_id, plan_id, fecha_inicio, fecha_fin, valor, fecha_pago) VALUES\n  ( 1,  1, 2, '2026-08-01', '2026-11-01', 240000, '2026-08-01'),\n  ( 2,  2, 1, '2026-09-10', '2026-10-10',  90000, '2026-09-10'),\n  ( 3,  3, 4, '2026-02-10', '2027-02-10', 840000, '2026-02-12'),\n  ( 4,  4, 1, '2026-08-25', '2026-09-25',  90000, '2026-08-25'),\n  ( 5,  5, 3, '2026-06-15', '2026-12-15', 450000, '2026-06-20'),\n  ( 7,  7, 2, '2026-07-12', '2026-10-12', 240000, '2026-07-12'),\n  ( 8,  8, 1, '2026-07-20', '2026-08-20',  90000, '2026-07-21'),\n  ( 9,  9, 1, '2026-09-01', '2026-10-01',  90000, '2026-09-03'),\n  (11, 11, 4, '2025-10-20', '2026-10-20', 840000, '2025-10-20'),\n  (13,  1, 1, '2026-07-01', '2026-08-01',  90000, '2026-07-01'),\n  (14,  4, 1, '2026-07-25', '2026-08-25',  90000, '2026-07-26');\n\n-- Membresías con pago pendiente (fecha_pago queda NULL)\nINSERT INTO membresias (id, socio_id, plan_id, fecha_inicio, fecha_fin, valor) VALUES\n  ( 6,  6, 1, '2026-09-05', '2026-10-05',  90000),\n  (10, 10, 3, '2026-04-08', '2026-10-08', 450000),\n  (12, 12, 1, '2026-09-15', '2026-10-15',  90000);\n\n-- ---------------------------------------------------------------------\n-- 5. asistencias: cada ingreso de un socio al gimnasio\n--    entrada y salida son fecha con hora (DATETIME)\n--    salida = NULL cuando el socio no registró su salida\n-- ---------------------------------------------------------------------\nCREATE TABLE asistencias (\n  id        INT       PRIMARY KEY,\n  socio_id  INT       NOT NULL,\n  entrada   DATETIME  NOT NULL,\n  salida    DATETIME,\n  FOREIGN KEY (socio_id) REFERENCES socios(id)\n);\n\n-- Asistencias con salida registrada\nINSERT INTO asistencias (id, socio_id, entrada, salida) VALUES\n  ( 1,  1, '2026-09-28 06:05:00', '2026-09-28 07:20:00'),\n  ( 2,  2, '2026-09-28 17:30:00', '2026-09-28 19:00:00'),\n  ( 3,  3, '2026-09-28 18:10:00', '2026-09-28 19:05:00'),\n  ( 4,  5, '2026-09-29 05:50:00', '2026-09-29 07:10:00'),\n  ( 5,  7, '2026-09-29 16:45:00', '2026-09-29 18:30:00'),\n  ( 6,  1, '2026-09-30 06:00:00', '2026-09-30 07:15:00'),\n  ( 7, 11, '2026-09-30 19:00:00', '2026-09-30 20:10:00'),\n  ( 8,  2, '2026-09-30 17:40:00', '2026-09-30 18:55:00'),\n  (10,  3, '2026-10-01 18:00:00', '2026-10-01 19:30:00'),\n  (11, 12, '2026-10-01 15:20:00', '2026-10-01 16:00:00'),\n  (12,  7, '2026-10-02 06:10:00', '2026-10-02 07:40:00'),\n  (14,  1, '2026-10-02 06:05:00', '2026-10-02 07:05:00'),\n  (15,  9, '2026-09-30 17:00:00', '2026-09-30 18:45:00');\n\n-- Asistencias sin salida registrada (salida queda NULL)\nINSERT INTO asistencias (id, socio_id, entrada) VALUES\n  ( 9, 10, '2026-10-01 06:30:00'),\n  (13,  5, '2026-10-02 07:00:00');\n\n-- =====================================================================\n--  CONSULTA DE VERIFICACIÓN (escríbela en el panel 3 y pulsa Run)\n--\n--  SELECT\n--    (SELECT COUNT(*) FROM entrenadores) AS entrenadores,\n--    (SELECT COUNT(*) FROM planes)       AS planes,\n--    (SELECT COUNT(*) FROM socios)       AS socios,\n--    (SELECT COUNT(*) FROM membresias)   AS membresias,\n--    (SELECT COUNT(*) FROM asistencias)  AS asistencias;\n--\n--  Resultado esperado: 4 | 4 | 12 | 14 | 15\n-- =====================================================================\n";
+// =========================================================
+// UTILIDADES
+// =========================================================
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const KW = /^(SELECT|FROM|WHERE|AS|ORDER|BY|GROUP|HAVING|AND|OR|NOT|BETWEEN|IN|LIKE|IS|NULL|DESC|ASC|DISTINCT|LIMIT|INTERVAL|DAY|DAYS|WEEK|MONTH|YEAR|HOUR|MINUTE|SIGNED|UNSIGNED|CHAR|DATE|TIME|DATETIME)$/i;
+const FN = /^(COUNT|SUM|AVG|MAX|MIN|ROUND|CONCAT|CURDATE|NOW|DATE_ADD|DATE_SUB|DATEDIFF|TIMESTAMPDIFF|DATE_FORMAT|MONTHNAME|DAYNAME|IFNULL|COALESCE|ISNULL|CAST|CONVERT)$/i;
+function hl(sql){
+  const re = /(--[^\n]*)|('(?:[^']|'')*')|([A-Za-z_][A-Za-z_0-9]*)|(\d+(?:\.\d+)?)|([\s\S])/g;
+  let out = '', m;
+  while((m = re.exec(sql))){
+    if(m[1]) out += `<span class="c">${esc(m[1])}</span>`;
+    else if(m[2]) out += `<span class="s">${esc(m[2])}</span>`;
+    else if(m[3]) out += (FN.test(m[3]) || (/^(YEAR|MONTH|DAY|HOUR|MINUTE|DATE|TIME)$/i.test(m[3]) && sql[re.lastIndex]==='(')) ? `<span class="f">${esc(m[3])}</span>` : KW.test(m[3]) ? `<span class="k">${esc(m[3])}</span>` : esc(m[3]);
+    else if(m[4]) out += `<span class="n">${esc(m[4])}</span>`;
+    else out += esc(m[5]);
+  }
+  return out;
+}
+function table(id, caption){
+  const r = R[id];
+  if(!r) return `<div class="err">Resultado no disponible (${esc(id)})</div>`;
+  if(r.error) return `<div class="err">Error (MySQL): ${esc(r.error.replace(/^ERROR \d+: /, ''))}</div>`;
+  const n = r.rows.length;
+  const cap = caption !== undefined ? caption : `${n} ${n===1?'fila':'filas'}`;
+  if(n===0) return `<div class="table-wrap"><table class="data"><caption>${cap}</caption><thead><tr>${r.cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody><tr><td colspan="${r.cols.length}" class="null">(sin filas)</td></tr></tbody></table></div>`;
+  return `<div class="table-wrap"><table class="data"><caption>${cap}</caption><thead><tr>${r.cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${
+    r.rows.map(row=>`<tr>${row.map(v=>v==='NULL'?`<td class="null">NULL</td>`:`<td>${esc(v)}</td>`).join('')}</tr>`).join('')
+  }</tbody></table></div>`;
+}
+let uid = 0;
+function ex(id, label, opts){
+  opts = opts || {};
+  const rid = 'rv' + (uid++);
+  const isErr = R[id] && R[id].error;
+  const btnTxt = isErr ? 'Ver qué pasa' : 'Ver resultado';
+  return `<div class="ex">
+    <div class="ex-head">${label ? `<span class="pill">${label}</span>` : '<span></span>'}
+      <div class="ex-actions">
+        <button class="mini" type="button" data-copy="${id}">Copiar</button>
+        <button class="reveal-btn" type="button" data-reveal="${rid}" data-show="${btnTxt}" data-hide="Ocultar">${opts.open?'Ocultar':btnTxt}</button>
+      </div>
+    </div>
+    <pre class="code">${hl(Q[id])}</pre>
+    <div class="reveal-box${opts.open?' show':''}" id="${rid}">${table(id)}${opts.after||''}</div>
+  </div>`;
+}
+let tg = 0;
+function tabs(items){
+  const g = 'tg' + (tg++);
+  return `<div class="tabset"><div class="tabs" role="tablist">${
+    items.map((it,i)=>`<button class="tab${i===0?' active':''}" type="button" role="tab" data-tabgroup="${g}" data-tabidx="${i}">${it[0]}</button>`).join('')
+  }</div>${
+    items.map((it,i)=>`<div class="tabpanel${i===0?' active':''}" data-tabgroup="${g}" data-tabidx="${i}">${it[1]}</div>`).join('')
+  }</div>`;
+}
+let sg = 0;
+function steps(items){
+  const g = 'sg' + (sg++);
+  return `<div class="steps">${
+    items.map((it,i)=>`<button class="stepbtn${i===0?' active':''}" type="button" data-stepgroup="${g}" data-stepidx="${i}">${it[0]}</button>`).join('')
+  }</div>${
+    items.map((it,i)=>`<div class="steppanel${i===0?' active':''}" data-stepgroup="${g}" data-stepidx="${i}">${it[1]}</div>`).join('')
+  }`;
+}
+function quiz(question, options, correct, okMsg, noMsg){
+  return `<div class="quiz card" data-quizroot data-correct="${correct}">
+    <div class="qtext">${question}</div>
+    ${options.map((o,i)=>`<button class="choice" type="button" data-idx="${i}">${o}</button>`).join('')}
+    <div class="feedback" data-ok="${esc(okMsg)}" data-no="${esc(noMsg)}"></div>
+  </div>`;
+}
+function reto(id, enunciado){
+  const rid = 'rv' + (uid++);
+  return `<div class="reto"><p class="enun">${enunciado}</p>
+    <div class="actbar"><button class="reveal-btn" type="button" data-reveal="${rid}" data-show="Ver solución" data-hide="Ocultar solución">Ver solución</button></div>
+    <div class="reveal-box" id="${rid}">
+      <div class="ex-head"><span class="pill">Solución posible</span><div class="ex-actions"><button class="mini" type="button" data-copy="${id}">Copiar</button></div></div>
+      <pre class="code">${hl(Q[id])}</pre>${table(id)}</div></div>`;
+}
+
+// =========================================================
+// DIAPOSITIVAS
+// =========================================================
+const slides = [];
+const S = o => slides.push(o);
+
+// 1. Portada
+S({cls:'cover', eyebrow:'Implementación de Bases de Datos · Programa DAM (SENA) · Semana 4', title:'Funciones de fecha-hora y funciones del sistema',
+body:`
+<p class="lede">Calcula edades, antigüedades y vencimientos; suma días y meses; mide cuánto dura una sesión; y decide qué mostrar cuando un dato no existe (NULL). Esta semana trabajamos con una base de datos nueva: el gimnasio <b>PulsoFit</b>.</p>
+<div class="grid3">
+  <div class="card"><h3>Trabajo autónomo</h3><p>Avanza a tu ritmo: ejemplos, laboratorios, retos y autoevaluación. Luego el taller del documento de lectura y el formulario.</p></div>
+  <div class="card"><h3>Qué necesitas</h3><p><b>RunSQL</b> (runsql.com) con motor <b>MySQL 8.4</b>, el script <code>gimnasio_semana4_mysql.sql</code>, el documento de lectura y tu cuaderno.</p></div>
+  <div class="card"><h3>Cómo navegar</h3><p>Botones inferiores, teclas <span class="kbd">←</span> <span class="kbd">→</span> o deslizando en el celular.</p></div>
+</div>
+<div class="callout warn"><strong>Hoy es 2026-10-02.</strong> En toda la semana usamos esa fecha fija como "hoy". Donde iría <code>CURDATE()</code>, escribimos <code>'2026-10-02'</code>. En la parte 01 verás por qué.</div>
+`});
+
+// 2. Ruta
+S({eyebrow:'Ruta de la semana', title:'¿Qué vas a lograr?',
+body:`
+<p class="lede">Al terminar serás capaz de:</p>
+<ul>
+  <li>Reconocer los tipos <b>DATE</b>, <b>DATETIME</b> y <b>TIME</b>, y escribir fechas en el formato de MySQL.</li>
+  <li>Explicar qué es <b>NULL</b>, para qué sirven <b>NOT NULL</b> y <b>DEFAULT</b>, y buscar valores vacíos con <b>IS NULL</b>.</li>
+  <li>Extraer partes de una fecha con <b>YEAR</b>, <b>MONTH</b>, <b>DAY</b>, <b>HOUR</b>.</li>
+  <li>Sumar y restar tiempo con <b>DATE_ADD</b> y <b>DATE_SUB</b>, y medir diferencias con <b>DATEDIFF</b> y <b>TIMESTAMPDIFF</b>.</li>
+  <li>Reemplazar NULL con <b>IFNULL</b> y <b>COALESCE</b>, y cambiar tipos con <b>CAST</b> y <b>CONVERT</b>.</li>
+</ul>
+<div class="agenda">
+  <div class="num">01</div><div>Base de datos nueva: Gimnasio PulsoFit, y la fecha de referencia</div><div class="min">parte 1</div>
+  <div class="num">02</div><div>Tipos de fecha y hora; NULL, NOT NULL y DEFAULT</div><div class="min">parte 2</div>
+  <div class="num">03</div><div>Funciones de fecha-hora + laboratorios</div><div class="min">parte 3</div>
+  <div class="num">04</div><div>Funciones del sistema: IFNULL, COALESCE, ISNULL, CAST, CONVERT</div><div class="min">parte 4</div>
+  <div class="num">05</div><div>Errores comunes, retos, predice el resultado y autoevaluación</div><div class="min">parte 5</div>
+  <div class="num">06</div><div>Taller del documento de lectura (10 ejercicios) y formulario de Google</div><div class="min">cierre</div>
+</div>
+`});
+
+// 3. Nueva BD
+S({section:true, eyebrow:'01 · Base de datos nueva', title:'Gimnasio PulsoFit',
+body:`
+<p class="lede">Para practicar fechas necesitamos datos donde las fechas importen: cumpleaños, vencimientos de membresías, antigüedad del personal y horas de entrada y salida. Por eso cambiamos de TiendaApp a un gimnasio.</p>
+<div class="grid2">
+  <div class="card">
+    <h3>Cargar la base de datos</h3>
+    <ol style="margin:0;padding-left:20px;line-height:1.7;font-size:15px;">
+      <li>Entra a <b>runsql.com</b> y pulsa <b>Run your SQL</b>.</li>
+      <li>Arriba, en el selector de motor, elige <b>MySQL 8.4</b>.</li>
+      <li>Pulsa <b>Import</b> → <b>From MySQL 8.4</b>.</li>
+      <li>Abre <code>gimnasio_semana4_mysql.sql</code>, copia todo y pégalo en el recuadro (o usa el botón de abajo).</li>
+      <li>Marca <b>Clear DBML and table records</b> y pulsa <b>Apply</b>.</li>
+      <li>En el panel 3 (<b>Write SQL Query</b>) ejecuta la consulta de verificación.</li>
+    </ol>
+    <div class="actbar" style="margin-top:10px;"><button class="mini" type="button" data-copy="__SCRIPT__">Copiar script completo</button></div>
+  </div>
+  <div class="card">
+    <h3>Verificación</h3>
+    ${ex('VERIF','Consulta de verificación')}
+  </div>
+</div>
+<div class="callout tip"><strong>Recuerda de la semana 3:</strong> RunSQL ejecuta una consulta a la vez. Si tienes varias en el editor, selecciona la que quieres y pulsa <b>Run Selected</b>.</div>
+`});
+
+// 4. Esquema y datos
+S({eyebrow:'01 · Base de datos nueva', title:'Las 5 tablas',
+body:`
+<div class="schema">
+  <div class="tcard"><header>entrenadores</header><ul><li>id<span class="pk">PK</span></li><li>nombre</li><li>especialidad</li><li>fecha_contratacion<span>DATE</span></li><li>telefono<span>NULL</span></li></ul></div>
+  <div class="tcard"><header>planes</header><ul><li>id<span class="pk">PK</span></li><li>nombre</li><li>duracion_meses</li><li>precio<span>DECIMAL</span></li><li>activo<span>DEFAULT 1</span></li></ul></div>
+  <div class="tcard"><header>socios</header><ul><li>id<span class="pk">PK</span></li><li>nombre, apellido</li><li>fecha_nacimiento<span>DATE</span></li><li>fecha_registro<span>DATE</span></li><li>telefono<span>NULL</span></li><li>email<span>NULL</span></li><li>entrenador_id<span class="fk">FK</span><span>NULL</span></li></ul></div>
+  <div class="tcard"><header>membresias</header><ul><li>id<span class="pk">PK</span></li><li>socio_id<span class="fk">FK</span></li><li>plan_id<span class="fk">FK</span></li><li>fecha_inicio<span>DATE</span></li><li>fecha_fin<span>DATE</span></li><li>valor</li><li>fecha_pago<span>NULL</span></li></ul><footer>fecha_pago NULL = pago pendiente</footer></div>
+  <div class="tcard"><header>asistencias</header><ul><li>id<span class="pk">PK</span></li><li>socio_id<span class="fk">FK</span></li><li>entrada<span>DATETIME</span></li><li>salida<span>DATETIME</span><span>NULL</span></li></ul><footer>salida NULL = no registró salida</footer></div>
+</div>
+${tabs([
+  ['socios', table('T_socios','socios · 12 filas')],
+  ['membresias', table('T_membresias','membresias · 14 filas')],
+  ['asistencias', table('T_asistencias','asistencias · 15 filas')],
+  ['entrenadores', table('T_entrenadores','entrenadores · 4 filas')],
+  ['planes', table('T_planes','planes · precio en pesos colombianos')]
+])}
+<p class="center-note">Esta semana cada consulta usa <b>una sola tabla</b>. Combinar tablas (JOIN) es el tema de la semana 5.</p>
+`});
+
+// 5. Fecha de referencia
+S({eyebrow:'01 · Base de datos nueva', title:'¿Por qué "hoy" es 2026-10-02?',
+body:`
+<div class="grid2">
+  <div class="card"><h3><code>CURDATE()</code></h3><p>Devuelve la <b>fecha actual</b> del servidor (tipo DATE).</p></div>
+  <div class="card"><h3><code>NOW()</code></h3><p>Devuelve la <b>fecha y la hora actuales</b> del servidor (tipo DATETIME).</p></div>
+</div>
+<pre class="code">${hl("SELECT CURDATE() AS hoy, NOW() AS ahora;")}</pre>
+<div class="grid2">
+  <div class="callout warn"><strong>Cambian cada día.</strong> Si el taller usara <code>CURDATE()</code>, quien lo haga el lunes y quien lo haga el jueves obtendrían resultados distintos, y el formulario no podría tener una sola respuesta correcta.</div>
+  <div class="callout note"><strong>RunSQL usa la hora UTC</strong> (Colombia es UTC − 5). Desde las 7:00 p. m. de Colombia, <code>CURDATE()</code> en RunSQL ya devuelve el día siguiente. Lo comprobamos: a las 10:28 p. m. del 29 de septiembre, <code>NOW()</code> devolvió <code>2026-09-30 03:28:50</code>.</div>
+</div>
+<div class="table-wrap"><table class="data ops"><caption>Cómo escribir "hoy" esta semana</caption>
+<thead><tr><th>En un sistema real</th><th>En el taller de la semana 4</th></tr></thead><tbody>
+<tr><td>DATEDIFF(fecha_fin, CURDATE())</td><td>DATEDIFF(fecha_fin, '2026-10-02')</td></tr>
+<tr><td>TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE())</td><td>TIMESTAMPDIFF(YEAR, fecha_nacimiento, '2026-10-02')</td></tr>
+</tbody></table></div>
+`});
+
+// 6. Tipos
+S({section:true, eyebrow:'02 · Tipos y NULL', title:'Tipos de datos de fecha y hora',
+body:`
+<div class="grid3">
+  <div class="famcard fam comp"><b>DATE</b><span class="mono">'AAAA-MM-DD'</span><p>Solo fecha. <code>fecha_nacimiento = '2008-03-14'</code></p></div>
+  <div class="famcard fam arit"><b>DATETIME</b><span class="mono">'AAAA-MM-DD HH:MM:SS'</span><p>Fecha y hora. <code>entrada = '2026-09-28 06:05:00'</code></p></div>
+  <div class="famcard fam logi"><b>TIME</b><span class="mono">'HH:MM:SS'</span><p>Solo hora, formato de 24 horas. 7:30 p. m. = <code>'19:30:00'</code></p></div>
+</div>
+<div class="grid2">
+  <div class="callout tip"><strong>Año primero y entre comillas:</strong> <code>'2026-10-02'</code>. Así las fechas se ordenan bien con ORDER BY y se comparan con <code>&lt;</code>, <code>&gt;</code>, <code>BETWEEN</code>.</div>
+  <div class="callout warn"><strong><code>'02/10/2026'</code> no es una fecha</strong> para MySQL: las funciones de fecha devuelven NULL.</div>
+</div>
+${tabs([
+  ['Ordenar', ex('TD1','Los 3 socios más antiguos')],
+  ['Comparar', ex('TD2','Membresías que terminan después de 2026')],
+  ['Rango con hora', ex('TD3','Ingresos del 1 de octubre (todo el día)') + `<div class="callout note">Con DATETIME, "todo el día" va de las <code>00:00:00</code> a las <code>23:59:59</code>. Más adelante verás una forma más corta: <code>DATE(entrada) = '2026-10-01'</code>.</div>`]
+])}
+`});
+
+// 7. NULL
+S({eyebrow:'02 · Tipos y NULL', title:'NULL, NOT NULL y DEFAULT',
+body:`
+<div class="grid3">
+  <div class="card"><h3>NULL</h3><p><b>No hay dato</b> o se desconoce. No es 0, no es <code>''</code>, no es la palabra "null".</p></div>
+  <div class="card"><h3>NOT NULL</h3><p>La columna es <b>obligatoria</b>. Un INSERT sin ese valor es rechazado.</p></div>
+  <div class="card"><h3>DEFAULT</h3><p>Valor que MySQL pone <b>si el INSERT no trae la columna</b>. En <code>planes</code>: <code>activo INT NOT NULL DEFAULT 1</code>.</p></div>
+</div>
+${tabs([
+  ['Regla 1 · IS NULL', ex('N1','Con = NULL…') + ex('N2','…y con IS NULL') + `<div class="callout tip"><code>= NULL</code> nunca es verdadero, ni siquiera cuando el valor es NULL. Se pregunta con <code>IS NULL</code> o <code>IS NOT NULL</code>.</div>`],
+  ['Regla 2 · Cálculos', ex('N3','Un cálculo con NULL da NULL') + `<div class="callout tip">La membresía 6 no se ha pagado: no hay fecha para restar, así que el resultado también es NULL.</div>`],
+  ['Regla 3 · Agregación', ex('N4','COUNT(*) frente a COUNT(columna)') + `<div class="callout tip"><code>COUNT(columna)</code>, <code>AVG</code>, <code>SUM</code>, <code>MAX</code> y <code>MIN</code> <b>ignoran los NULL</b>. <code>COUNT(*)</code> cuenta todas las filas.</div>`]
+])}
+`});
+
+// 8. Extraer partes
+S({section:true, eyebrow:'03 · Funciones de fecha-hora', title:'Extraer partes de una fecha',
+body:`
+<div class="anatomy">
+  <div>2026<small>YEAR()</small></div><div>-</div><div>09<small>MONTH()</small></div><div>-</div><div>30<small>DAY()</small></div><div class="op">19<small>HOUR()</small></div><div>:</div><div>00<small>MINUTE()</small></div><div>:</div><div>00<small>segundos</small></div>
+</div>
+<p class="center-note"><code>DATE(x)</code> se queda con <b>2026-09-30</b> · <code>TIME(x)</code> se queda con <b>19:00:00</b></p>
+${tabs([
+  ['Todas las partes', ex('P1','Partes de una entrada')],
+  ['DATE y TIME', ex('P2','Separar fecha y hora')],
+  ['En WHERE', ex('P3','Ingresos en la mañana (antes de las 12)')],
+  ['En GROUP BY', ex('P4','Membresías iniciadas por mes en 2026')],
+  ['Nombres', ex('P5','Nombre del mes y del día') + `<div class="callout note">RunSQL devuelve los nombres <b>en inglés</b>. Por eso en el curso usamos el número del mes con <code>MONTH()</code>.</div>`]
+])}
+`});
+
+// 9. DATE_ADD
+S({eyebrow:'03 · Funciones de fecha-hora', title:'Sumar y restar tiempo: DATE_ADD y DATE_SUB',
+body:`
+<pre class="code">${hl("DATE_ADD(fecha, INTERVAL cantidad unidad)   -- suma\nDATE_SUB(fecha, INTERVAL cantidad unidad)   -- resta\n-- unidades: DAY, WEEK, MONTH, YEAR, HOUR, MINUTE (en singular)")}</pre>
+${tabs([
+  ['Básico', ex('A1','Dos semanas después y un mes antes')],
+  ['Fin de mes y minutos', ex('A2','¿Qué pasa con el 31 de enero + 1 mes?') + `<div class="callout note">Febrero de 2026 no tiene día 31: MySQL se queda en el <b>último día del mes</b>, el 28.</div>`],
+  ['Caso de negocio', ex('A3','Hasta cuándo iría la membresía si renueva un mes')]
+])}
+<div class="callout warn"><strong>No sumes días con +.</strong> <code>fecha_fin + 5</code> no da una fecha: da un número. Usa siempre <code>DATE_ADD(fecha_fin, INTERVAL 5 DAY)</code>.</div>
+`});
+
+// 10. DATEDIFF / TIMESTAMPDIFF
+S({eyebrow:'03 · Funciones de fecha-hora', title:'Diferencias: DATEDIFF y TIMESTAMPDIFF',
+body:`
+<div class="grid2">
+  <div class="famcard fam comp"><b>DATEDIFF(f1, f2)</b><span class="mono">días de f2 a f1 · orden: MAYOR, menor</span><p>Siempre en días. Si f1 es anterior, el resultado es negativo. Ignora la hora.</p></div>
+  <div class="famcard fam arit"><b>TIMESTAMPDIFF(unidad, inicio, fin)</b><span class="mono">orden: menor, MAYOR</span><p>Unidades <strong>completas</strong>: MINUTE, HOUR, DAY, WEEK, MONTH, YEAR.</p></div>
+</div>
+${tabs([
+  ['DATEDIFF', ex('D1','Días para Navidad (y al revés)')],
+  ['Meses y días', ex('D2','Duración de tres membresías')],
+  ['Minutos', ex('D3','Duración de dos sesiones de entrenamiento')]
+])}
+<div class="callout tip"><strong>Truco para recordar el orden:</strong> DATEDIFF resta como en matemáticas (<code>f1 − f2</code>). TIMESTAMPDIFF va como una línea de tiempo: de <b>inicio</b> a <b>fin</b>.</div>
+`});
+
+// 11. Laboratorio
+S({eyebrow:'03 · Laboratorio interactivo', title:'Laboratorio: calculadora de fechas',
+body:`
+<p class="lede">Cambia las fechas y la cantidad. La calculadora aplica las mismas reglas que MySQL (incluido el ajuste a fin de mes) y muestra la consulta que puedes probar en RunSQL.</p>
+<div class="grid2">
+  <div class="card lab">
+    <h3>DATE_ADD / DATE_SUB</h3>
+    <div class="labctl">
+      <label>Fecha <input id="la-date" type="date" value="2026-10-02" style="width:auto"></label>
+      <label>Operación <select id="la-op"><option value="ADD">DATE_ADD</option><option value="SUB">DATE_SUB</option></select></label>
+      <label>Cantidad <input id="la-n" type="number" value="5" step="1" style="width:80px"></label>
+      <label>Unidad <select id="la-u"><option>DAY</option><option>WEEK</option><option>MONTH</option><option>YEAR</option></select></label>
+    </div>
+    <pre class="code" id="la-sql"></pre>
+    <div class="subres">Resultado: <span id="la-out" class="mono"></span></div>
+  </div>
+  <div class="card lab">
+    <h3>DATEDIFF / TIMESTAMPDIFF</h3>
+    <div class="labctl">
+      <label>Fecha 1 (inicio) <input id="ld-a" type="date" value="2026-10-02" style="width:auto"></label>
+      <label>Fecha 2 (fin) <input id="ld-b" type="date" value="2026-12-24" style="width:auto"></label>
+    </div>
+    <pre class="code" id="ld-sql"></pre>
+    <div id="ld-out"></div>
+  </div>
+</div>
+<div class="grid2">
+  <div class="callout tip"><strong>Prueba:</strong> suma 1 mes al <code>2026-01-31</code> y al <code>2028-01-31</code> (2028 es bisiesto).</div>
+  <div class="callout warn"><strong>Prueba:</strong> intercambia las dos fechas de la derecha. ¿Qué le pasa al signo?</div>
+</div>
+`});
+
+// 12. Edad
+S({eyebrow:'03 · Funciones de fecha-hora', title:'Cómo calcular una edad (sin equivocarse)',
+body:`
+<p class="lede">Restar años parece lógico, pero <b>ignora si la persona ya cumplió años</b>. La edad (y la antigüedad) se calcula con <code>TIMESTAMPDIFF(YEAR, …)</code>, que cuenta solo años completos.</p>
+${ex('D4','Resta de años frente a TIMESTAMPDIFF', {open:true})}
+<div class="card lab">
+  <h3>Pruébalo con cualquier fecha de nacimiento (hoy = 2026-10-02)</h3>
+  <div class="labctl"><label>Fecha de nacimiento <input id="le-b" type="date" value="2007-11-02" style="width:auto"></label></div>
+  <div class="table-wrap"><table class="data ops"><thead><tr><th>Método</th><th>Resultado</th></tr></thead><tbody>
+    <tr><td>YEAR('2026-10-02') - YEAR(nacimiento)</td><td id="le-r"></td></tr>
+    <tr><td>TIMESTAMPDIFF(YEAR, nacimiento, '2026-10-02')</td><td id="le-t"></td></tr>
+  </tbody></table></div>
+  <p id="le-msg" style="font-size:15px"></p>
+</div>
+`});
+
+// 13. DATE_FORMAT
+S({eyebrow:'03 · Funciones de fecha-hora', title:'DATE_FORMAT: mostrar la fecha a la colombiana',
+body:`
+<div class="table-wrap"><table class="data ops"><caption>Códigos más usados</caption>
+<thead><tr><th>Código</th><th>Significa</th><th>Ejemplo</th></tr></thead><tbody>
+<tr><td>%d</td><td>día con dos dígitos</td><td>02</td></tr>
+<tr><td>%m</td><td>mes con dos dígitos</td><td>10</td></tr>
+<tr><td>%Y</td><td>año con cuatro dígitos</td><td>2026</td></tr>
+<tr><td>%H</td><td>hora de 00 a 23</td><td>19</td></tr>
+<tr><td>%i</td><td>minutos</td><td>05</td></tr>
+</tbody></table></div>
+${ex('F1','Fecha y hora en formato día/mes/año')}
+<div class="callout warn"><strong>DATE_FORMAT devuelve texto.</strong> Úsalo solo para mostrar. Para comparar, ordenar o calcular, usa la fecha original.</div>
+`});
+
+// 14. IFNULL / COALESCE / ISNULL
+S({section:true, eyebrow:'04 · Funciones del sistema', title:'IFNULL, COALESCE e ISNULL',
+body:`
+<div class="grid3">
+  <div class="famcard fam comp"><b>IFNULL(v, r)</b><span class="mono">reemplaza un NULL</span><p>Si <i>v</i> es NULL devuelve <i>r</i>; si no, devuelve <i>v</i>.</p></div>
+  <div class="famcard fam arit"><b>COALESCE(v1, v2, …)</b><span class="mono">el primero no NULL</span><p>Revisa de izquierda a derecha. El orden es la <strong>prioridad</strong>.</p></div>
+  <div class="famcard fam espe"><b>ISNULL(v)</b><span class="mono">solo pregunta</span><p>Devuelve 1 si es NULL y 0 si no. <strong>No reemplaza.</strong></p></div>
+</div>
+${tabs([
+  ['IFNULL', ex('S1','Pago pendiente') + ex('S4','Socios sin entrenador')],
+  ['COALESCE paso a paso', steps([
+    ['Idea', `${ex('S2','',{open:true})}<p>Los dos primeros son NULL, así que devuelve el tercero.</p>`],
+    ['Teléfono', `<pre class="code">${hl("COALESCE(telefono, email, 'Sin contacto')")}</pre><p>Si <code>telefono</code> tiene valor, se muestra el teléfono y no se mira nada más.</p>`],
+    ['Email', `<p>Si <code>telefono</code> es NULL, pasa al <b>email</b>. Si el email tiene valor, muestra el email.</p>`],
+    ['Texto final', `<p>Si <code>telefono</code> y <code>email</code> son NULL, muestra <code>'Sin contacto'</code>.</p><div class="callout tip">Esta regla la usarás en el ejercicio 9 del taller.</div>`]
+  ])],
+  ['ISNULL', ex('S3','ISNULL pregunta, IFNULL reemplaza')]
+])}
+`});
+
+// 15. CAST / CONVERT
+S({eyebrow:'04 · Funciones del sistema', title:'CAST y CONVERT: cambiar el tipo de dato',
+body:`
+<pre class="code">${hl("CAST(valor AS tipo)\nCONVERT(valor, tipo)\n-- tipos: DATE, DATETIME, TIME, SIGNED, UNSIGNED, CHAR, DECIMAL(p,d)")}</pre>
+${tabs([
+  ['Básico', ex('C1','Texto a fecha, decimal a entero y a texto')],
+  ['Con CONCAT', ex('C2','Mensaje con el precio sin decimales')],
+  ['DATETIME a DATE', ex('C3','Quedarse con el día o con la hora') + `<div class="callout tip"><code>CAST(entrada AS DATE)</code> descarta la hora. Sirve para <b>agrupar por día</b> registros que tienen hora (ejercicio 10 del taller).</div>`]
+])}
+<div class="callout note"><strong>SIGNED</strong> significa "entero con signo" (puede ser negativo). <strong>UNSIGNED</strong> es entero sin signo. <strong>CHAR</strong> es texto.</div>
+`});
+
+// 16. Errores
+S({section:true, eyebrow:'05 · Práctica', title:'Errores comunes (y cómo evitarlos)',
+body:`
+${tabs([
+  ['DAYS', ex('E1','') + `<div class="callout tip"><b>Solución:</b> la unidad va en singular: <code>INTERVAL 5 DAY</code>.</div>`],
+  ['ISNULL con 2 valores', ex('E2','') + `<div class="callout tip"><b>Solución:</b> para reemplazar usa <code>IFNULL(email, 'Sin email')</code>.</div>`],
+  ['Fecha sin comillas', ex('E3','') + `<div class="callout tip"><b>No da error, pero está mal:</b> sin comillas MySQL resta 2026 − 10 − 2 = 2014. Escribe <code>'2026-10-02'</code>.</div>`],
+  ['Sumar con +', ex('E4','') + `<div class="callout tip"><b>No da error, pero está mal:</b> 20261010 es un número, no una fecha. Usa <code>DATE_ADD(fecha_fin, INTERVAL 5 DAY)</code>.</div>`],
+  ['Formato dd/mm/aaaa', ex('E5','') + `<div class="callout tip"><b>Solución:</b> año primero: <code>'2026-10-02'</code>.</div>`],
+  ['= NULL', ex('N1','') + `<div class="callout tip"><b>Solución:</b> <code>WHERE telefono IS NULL</code>.</div>`]
+])}
+<p class="center-note">Los mensajes de error se muestran como los devuelve MySQL.</p>
+`});
+
+// 17. Retos
+S({eyebrow:'05 · Práctica', title:'Retos prácticos',
+body:`
+<p class="lede">Escribe cada consulta en RunSQL <b>antes</b> de ver la solución. Estos retos son de práctica; los 10 ejercicios del taller están en el documento de lectura.</p>
+${tabs([
+  ['Reto 1', reto('R1','Muestra el nombre de cada entrenador y su fecha de contratación en formato <code>dd/mm/aaaa</code> (alias <code>contratado</code>).')],
+  ['Reto 2', reto('R2','Muestra <code>id</code>, <code>socio_id</code> y <code>fecha_fin</code> de las membresías que terminan en <b>octubre de 2026</b>. Usa YEAR y MONTH.')],
+  ['Reto 3', reto('R3','Para las membresías del plan mensual (<code>plan_id = 1</code>), muestra <code>id</code>, <code>fecha_inicio</code>, <code>fecha_fin</code> y cuántos días dura cada una (alias <code>dias</code>).')],
+  ['Reto 4', reto('R4','Muestra las asistencias cuya hora de entrada fue <b>antes de las 7:00</b>.')],
+  ['Reto 5', reto('R5','Para las membresías que empezaron en septiembre (mes 9), muestra <code>id</code>, <code>socio_id</code> y la fecha de pago, o <code>Pendiente</code> si no han pagado (alias <code>pago</code>).')],
+  ['Reto 6', reto('R6','Para los socios que se registraron en 2026, muestra el nombre y cuántos meses completos llevan inscritos a hoy (alias <code>meses_inscrito</code>).')]
+])}
+`});
+
+// 18. Predice
+S({eyebrow:'05 · Autoevaluación · Parte A', title:'Predice el resultado',
+body:`
+<p class="lede">Escribe lo que devuelve cada expresión <b>sin ejecutarla</b>. Luego pulsa <b>Revisar</b>. Escribe las fechas como <code>AAAA-MM-DD</code> y los textos sin comillas.</p>
+<div id="pred" class="predgrid"></div>
+<div class="actbar">
+  <button class="navbtn primary" type="button" id="pred-check">Revisar</button>
+  <button class="navbtn" type="button" id="pred-reset">Reiniciar</button>
+  <button class="navbtn" type="button" id="pred-solve">Ver respuestas</button>
+  <span class="score" id="pred-score"></span>
+</div>
+`});
+
+// 19. Autoevaluación
+S({eyebrow:'05 · Autoevaluación · Parte B', title:'Autoevaluación: 10 preguntas',
+body:`
+<p class="lede">Responde todas las preguntas y pulsa <b>Calificar</b>. Esta autoevaluación <b>no se califica</b>: úsala para saber si entendiste antes de hacer el taller.</p>
+<div id="auto" class="autolist"></div>
+<div class="actbar">
+  <button class="navbtn primary" type="button" id="auto-check">Calificar</button>
+  <button class="navbtn" type="button" id="auto-reset">Intentar de nuevo</button>
+  <span class="score" id="auto-score"></span>
+</div>
+<div class="feedback" id="auto-fb"></div>
+`});
+
+// 20. Resumen
+S({eyebrow:'Resumen', title:'Mapa de la semana',
+body:`
+<div class="table-wrap"><table class="data ops"><caption>Funciones de la semana 4 (MySQL) · hoy = 2026-10-02</caption>
+<thead><tr><th>Función</th><th>Qué hace</th><th>Ejemplo</th><th>Resultado</th></tr></thead><tbody>
+<tr><td>YEAR / MONTH / DAY</td><td>parte de una fecha</td><td><code>MONTH('2026-10-02')</code></td><td>10</td></tr>
+<tr><td>HOUR / MINUTE</td><td>parte de una hora</td><td><code>HOUR('2026-09-30 19:00:00')</code></td><td>19</td></tr>
+<tr><td>DATE_ADD</td><td>suma tiempo</td><td><code>DATE_ADD('2026-10-02', INTERVAL 10 DAY)</code></td><td>2026-10-12</td></tr>
+<tr><td>DATE_SUB</td><td>resta tiempo</td><td><code>DATE_SUB('2026-10-02', INTERVAL 1 YEAR)</code></td><td>2025-10-02</td></tr>
+<tr><td>DATEDIFF</td><td>días (mayor, menor)</td><td><code>DATEDIFF('2026-12-24', '2026-10-02')</code></td><td>83</td></tr>
+<tr><td>TIMESTAMPDIFF</td><td>unidades completas (menor, mayor)</td><td><code>TIMESTAMPDIFF(MONTH, '2026-08-01', '2026-11-01')</code></td><td>3</td></tr>
+<tr><td>DATE_FORMAT</td><td>fecha como texto</td><td><code>DATE_FORMAT('2026-10-02', '%d/%m/%Y')</code></td><td>02/10/2026</td></tr>
+<tr><td>IFNULL</td><td>reemplaza NULL</td><td><code>IFNULL(NULL, 'Pendiente')</code></td><td>Pendiente</td></tr>
+<tr><td>COALESCE</td><td>primer valor no NULL</td><td><code>COALESCE(NULL, NULL, 'tercero')</code></td><td>tercero</td></tr>
+<tr><td>ISNULL</td><td>¿es NULL? 1 / 0</td><td><code>ISNULL(NULL)</code></td><td>1</td></tr>
+<tr><td>CAST / CONVERT</td><td>cambia el tipo</td><td><code>CAST(240000.00 AS SIGNED)</code></td><td>240000</td></tr>
+</tbody></table></div>
+<div class="callout note"><strong>📓 Para tu cuaderno:</strong> en el documento de lectura están marcadas con 📓 las secciones que debes transcribir.</div>
+`});
+
+// 21. Taller y formulario
+S({eyebrow:'Siguientes pasos', title:'Taller y formulario',
+body:`
+<div class="grid2">
+  <div class="card">
+    <h3>1. Lee y copia en el cuaderno</h3>
+    <p>Lee el <b>documento de lectura de la semana 4</b> y transcribe en tu cuaderno las secciones marcadas con 📓.</p>
+  </div>
+  <div class="card">
+    <h3>2. Resuelve el taller</h3>
+    <p>La sección 10 del documento tiene <b>10 ejercicios obligatorios</b> sobre PulsoFit. Escribe cada consulta en RunSQL y anota en el cuaderno el dato que se pide.</p>
+  </div>
+  <div class="card">
+    <h3>3. Completa la tabla de resultados</h3>
+    <p>Al final del taller hay una tabla con los 10 resultados. Llénala en tu cuaderno.</p>
+  </div>
+  <div class="card">
+    <h3>4. Responde el formulario</h3>
+    <p>El formulario de Google tiene <b>10 preguntas de selección múltiple</b>, una por ejercicio. Pregunta por los <b>resultados</b> de tus consultas: sin el taller no se puede responder.</p>
+  </div>
+</div>
+<div class="callout warn"><strong>Recuerda:</strong> hoy es <code>'2026-10-02'</code>. Si usas <code>CURDATE()</code>, tus resultados no coincidirán con las opciones del formulario.</div>
+`});
+
+// 22. Cierre
+S({section:true, eyebrow:'Cierre', title:'Nos vemos en la semana 5',
+body:`
+<p class="lede">Próximo tema: <b>INNER JOIN y OUTER JOIN</b>. Aprenderás a combinar tablas, por ejemplo, para ver el nombre del socio junto a su membresía.</p>
+<p class="center-note" style="margin-top:16px;">Fin de la presentación · Semana 4 · Funciones de fecha-hora y funciones del sistema</p>
+`});
+// =========================================================
+// RENDER Y NAVEGACIÓN
+// =========================================================
+const viewport = document.getElementById('viewport');
+const dotsEl = document.getElementById('dots');
+let current = 0;
+slides.forEach((s,i)=>{
+  const el = document.createElement('section');
+  el.className = 'slide' + (s.section ? ' section-slide' : '') + (s.cls ? ' '+s.cls : '');
+  el.id = 'slide-' + i;
+  el.setAttribute('aria-label', 'Diapositiva ' + (i+1) + ': ' + s.title);
+  el.innerHTML = `<div class="slide-inner">${s.eyebrow?`<div class="eyebrow">${s.eyebrow}</div>`:''}<h2>${s.title}</h2>${s.body}</div>`;
+  viewport.appendChild(el);
+  const d = document.createElement('button');
+  d.type = 'button';
+  d.className = 'dot' + (s.section ? ' section' : '');
+  d.setAttribute('aria-label', 'Ir a la diapositiva ' + (i+1));
+  d.addEventListener('click', ()=>goTo(i));
+  dotsEl.appendChild(d);
+});
+const total = slides.length;
+const pad = n => String(n).padStart(2,'0');
+function render(){
+  document.querySelectorAll('.slide').forEach((el,i)=>el.classList.toggle('active', i===current));
+  dotsEl.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active', i===current));
+  document.getElementById('counter').textContent = pad(current+1) + '/' + pad(total);
+  document.getElementById('progress-fill').style.width = (current/(total-1)*100) + '%';
+  document.getElementById('btn-prev').disabled = current===0;
+  document.getElementById('btn-next').disabled = current===total-1;
+  try{ history.replaceState(null,'','#'+(current+1)); }catch(e){}
+}
+function goTo(i){
+  const n = Math.max(0, Math.min(total-1, i));
+  if(n===current && document.querySelector('.slide.active')) return;
+  current = n; render();
+  const el = document.getElementById('slide-'+current); if(el) el.scrollTop = 0;
+}
+document.getElementById('btn-prev').addEventListener('click', ()=>goTo(current-1));
+document.getElementById('btn-next').addEventListener('click', ()=>goTo(current+1));
+document.addEventListener('keydown', e=>{
+  if(e.target.closest && e.target.closest('input,textarea,select')) return;
+  if(e.key==='ArrowRight' || e.key==='PageDown'){ e.preventDefault(); goTo(current+1); }
+  else if(e.key==='ArrowLeft' || e.key==='PageUp'){ e.preventDefault(); goTo(current-1); }
+  else if(e.key==='Home'){ goTo(0); } else if(e.key==='End'){ goTo(total-1); }
+});
+let touchX=null, touchY=null;
+viewport.addEventListener('touchstart', e=>{ touchX=e.touches[0].clientX; touchY=e.touches[0].clientY; }, {passive:true});
+viewport.addEventListener('touchend', e=>{
+  if(touchX===null) return;
+  const dx = e.changedTouches[0].clientX - touchX, dy = e.changedTouches[0].clientY - touchY;
+  const inScrollable = e.target.closest && e.target.closest('pre,.table-wrap,.pool,.bins');
+  if(!inScrollable && Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){ dx<0 ? goTo(current+1) : goTo(current-1); }
+  touchX=null;
+}, {passive:true});
+
+// tema
+document.getElementById('theme-btn').addEventListener('click', ()=>{
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+});
+
+// toast y copiar
+const toast = document.getElementById('toast');
+let toastT;
+function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(()=>toast.classList.remove('show'), 1800); }
+function copyText(txt){
+  const fallback = ()=>{
+    const ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly','');
+    ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+    let ok=false; try{ ok = document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    showToast(ok ? 'Copiado. Pégalo en RunSQL (panel 3, motor MySQL 8.4).' : 'No se pudo copiar: selecciona el texto manualmente.');
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(txt).then(()=>showToast('Copiado. Pégalo en RunSQL (panel 3, motor MySQL 8.4).'), fallback);
+  } else fallback();
+}
+
+
+// =========================================================
+// ARITMÉTICA DE FECHAS CON LAS REGLAS DE MySQL (comprobada contra MySQL)
+// =========================================================
+const parseD = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s||''); return m ? {y:+m[1], m:+m[2], d:+m[3]} : null; };
+const dim = (y,m) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+const fmtD = o => `${String(o.y).padStart(4,'0')}-${String(o.m).padStart(2,'0')}-${String(o.d).padStart(2,'0')}`;
+const toDays = o => Date.UTC(o.y, o.m-1, o.d) / 86400000;
+const fromDays = n => { const t = new Date(n*86400000); return {y:t.getUTCFullYear(), m:t.getUTCMonth()+1, d:t.getUTCDate()}; };
+function dateAdd(o, n, unit){
+  if(unit==='DAY') return fromDays(toDays(o) + n);
+  if(unit==='WEEK') return fromDays(toDays(o) + 7*n);
+  const months = unit==='YEAR' ? 12*n : n;
+  let idx = o.y*12 + (o.m-1) + months;
+  const y = Math.floor(idx/12), m = idx - y*12 + 1;
+  return {y, m, d: Math.min(o.d, dim(y,m))};
+}
+function datediff(a, b){ return toDays(a) - toDays(b); }
+function tsdiffMonths(a, b){ // de a hasta b, meses completos
+  if(toDays(b) < toDays(a)) return -tsdiffMonths(b, a);
+  let n = (b.y - a.y)*12 + (b.m - a.m);
+  if(b.d < a.d) n--;
+  return n;
+}
+function tsdiff(unit, a, b){
+  if(unit==='DAY') return toDays(b) - toDays(a);
+  if(unit==='MONTH') return tsdiffMonths(a, b);
+  if(unit==='YEAR') return Math.trunc(tsdiffMonths(a, b) / 12);
+}
+
+function laUpdate(){
+  const d = parseD(document.getElementById('la-date').value);
+  const op = document.getElementById('la-op').value;
+  const n = parseInt(document.getElementById('la-n').value, 10);
+  const u = document.getElementById('la-u').value;
+  const out = document.getElementById('la-out');
+  if(!d || isNaN(n)){ out.textContent = 'Escribe una fecha y una cantidad'; return; }
+  document.getElementById('la-sql').innerHTML = hl(`SELECT DATE_${op}('${fmtD(d)}', INTERVAL ${n} ${u}) AS resultado;`);
+  out.textContent = fmtD(dateAdd(d, op==='ADD' ? n : -n, u));
+}
+function ldUpdate(){
+  const a = parseD(document.getElementById('ld-a').value), b = parseD(document.getElementById('ld-b').value);
+  const box = document.getElementById('ld-out');
+  if(!a || !b){ box.innerHTML = ''; return; }
+  const A = fmtD(a), B = fmtD(b);
+  document.getElementById('ld-sql').innerHTML = hl(`SELECT DATEDIFF('${B}', '${A}') AS dias,\n       TIMESTAMPDIFF(MONTH, '${A}', '${B}') AS meses,\n       TIMESTAMPDIFF(YEAR,  '${A}', '${B}') AS anios;`);
+  box.innerHTML = `<div class="table-wrap"><table class="data"><thead><tr><th>dias</th><th>meses</th><th>anios</th></tr></thead><tbody><tr><td>${datediff(b,a)}</td><td>${tsdiff('MONTH',a,b)}</td><td>${tsdiff('YEAR',a,b)}</td></tr></tbody></table></div>`;
+}
+function leUpdate(){
+  const b = parseD(document.getElementById('le-b').value);
+  const hoy = {y:2026, m:10, d:2};
+  const r = document.getElementById('le-r'), t = document.getElementById('le-t'), msg = document.getElementById('le-msg');
+  if(!b){ r.textContent = t.textContent = ''; msg.textContent=''; return; }
+  const resta = 2026 - b.y, real = tsdiff('YEAR', b, hoy);
+  r.textContent = resta; t.textContent = real;
+  msg.innerHTML = resta === real
+    ? '✓ Coinciden: al 2 de octubre esta persona <b>ya cumplió</b> años.'
+    : '✗ No coinciden: al 2 de octubre esta persona <b>todavía no cumple</b> años. La resta de años suma uno de más.';
+}
+
+// =========================================================
+// PARTE A: PREDICE EL RESULTADO (resultados de MySQL)
+// =========================================================
+const norm = s => String(s).trim().replace(/^['"](.*)['"]$/,'$1').trim();
+function predInit(){
+  document.getElementById('pred').innerHTML = PRED.map((p,i)=>`<div class="predrow" id="pr${i}">
+    <code class="pexp">${esc(p[0])}</code>
+    <input type="text" class="pin" id="pin${i}" aria-label="Resultado de ${esc(p[0])}" autocomplete="off" spellcheck="false">
+    <span class="pmark" id="pm${i}"></span></div>`).join('');
+  document.getElementById('pred-score').textContent='';
+}
+function predCheck(){
+  let ok = 0;
+  PRED.forEach((p,i)=>{
+    const v = norm(document.getElementById('pin'+i).value);
+    const row = document.getElementById('pr'+i), m = document.getElementById('pm'+i);
+    row.classList.remove('ok','bad');
+    if(v === ''){ m.textContent = 'sin responder'; return; }
+    if(v.toLowerCase() === p[1].toLowerCase()){ ok++; row.classList.add('ok'); m.textContent = '✓'; }
+    else { row.classList.add('bad'); m.textContent = '✗ revisa'; }
+  });
+  document.getElementById('pred-score').textContent = `${ok} / ${PRED.length} correctas`;
+}
+function predSolve(){ PRED.forEach((p,i)=>{ document.getElementById('pm'+i).textContent = 'Respuesta: ' + p[1]; }); }
+
+// =========================================================
+// PARTE B: AUTOEVALUACIÓN
+// =========================================================
+const AUTO = [
+ {q:"¿Qué tipo de dato usarías para guardar el momento exacto en que un socio entra al gimnasio (día y hora)?", o:["<code>DATE</code>","<code>TIME</code>","<code>DATETIME</code>","<code>VARCHAR(10)</code>"], c:2, e:"DATETIME guarda fecha y hora juntas: <code>'2026-09-28 06:05:00'</code>. DATE solo guarda el día y TIME solo la hora."},
+ {q:"¿Cuántas filas devuelve <code>SELECT * FROM socios WHERE email = NULL;</code> si hay socios sin email?", o:["Las filas sin email","Todas las filas","0 filas","Un error de sintaxis"], c:2, e:"<code>= NULL</code> nunca es verdadero. Para encontrar los socios sin email se escribe <code>WHERE email IS NULL</code>."},
+ {q:"¿Qué devuelve <code>DATEDIFF('2026-10-01', '2026-10-05')</code>?", o:["4","-4","5","0"], c:1, e:"DATEDIFF calcula <i>primera − segunda</i>. Como la primera fecha es anterior, el resultado es negativo: −4."},
+ {q:"Una persona nació el <code>2008-10-15</code>. ¿Qué devuelve <code>TIMESTAMPDIFF(YEAR, '2008-10-15', '2026-10-02')</code>?", o:["18","17","19","16"], c:1, e:"Al 2 de octubre todavía no ha cumplido (cumple el 15), así que tiene 17 años completos. Restar años daría 18, que es incorrecto."},
+ {q:"¿Qué devuelve <code>DATE_ADD('2026-10-31', INTERVAL 1 MONTH)</code>?", o:["<code>2026-11-31</code>","<code>2026-12-01</code>","<code>2026-11-30</code>","NULL"], c:2, e:"Noviembre no tiene día 31. MySQL se queda en el último día del mes: 2026-11-30."},
+ {q:"¿Qué devuelve <code>COALESCE(NULL, 'b', 'c')</code>?", o:["NULL","<code>b</code>","<code>c</code>","<code>bc</code>"], c:1, e:"COALESCE devuelve el primer valor que no es NULL, leyendo de izquierda a derecha: <code>'b'</code>."},
+ {q:"Una columna tiene los valores 60, NULL y 90. ¿Qué devuelve <code>AVG</code> sobre esa columna?", o:["50","75","NULL","150"], c:1, e:"AVG ignora los NULL: (60 + 90) / 2 = 75. Si el NULL contara como 0, daría 50."},
+ {q:"En MySQL, ¿qué devuelve <code>ISNULL('hola')</code>?", o:["<code>hola</code>","1","0","Un error"], c:2, e:"En MySQL, ISNULL solo pregunta si el valor es NULL: 1 = sí, 0 = no. <code>'hola'</code> no es NULL, así que devuelve 0."},
+ {q:"La columna <code>entrada</code> es DATETIME. ¿Cuál agrupa correctamente las asistencias <b>por día</b>?", o:["<code>GROUP BY entrada</code>","<code>GROUP BY CAST(entrada AS DATE)</code>","<code>GROUP BY HOUR(entrada)</code>","<code>GROUP BY CAST(entrada AS TIME)</code>"], c:1, e:"CAST(entrada AS DATE) descarta la hora, así que todos los ingresos del mismo día quedan en un grupo. Agrupar por <code>entrada</code> deja cada hora distinta en su propio grupo."},
+ {q:"La columna <code>activo</code> se definió como <code>INT NOT NULL DEFAULT 1</code>. Si un INSERT en <code>planes</code> no menciona <code>activo</code>, ¿qué valor queda?", o:["NULL","0","1","El INSERT es rechazado"], c:2, e:"DEFAULT define el valor que se usa cuando el INSERT no trae la columna: queda 1."}
+];
+function autoInit(){
+  document.getElementById('auto').innerHTML = AUTO.map((q,i)=>`<fieldset class="aq" id="aq${i}">
+    <legend><span class="anum">${i+1}</span> ${q.q}</legend>
+    ${q.o.map((o,k)=>`<label class="aopt"><input type="radio" name="aq${i}" value="${k}"> <span>${o}</span></label>`).join('')}
+    <div class="aexp" id="ax${i}"></div>
+  </fieldset>`).join('');
+  document.getElementById('auto-score').textContent='';
+  const fb = document.getElementById('auto-fb'); fb.className='feedback'; fb.textContent='';
+}
+function autoCheck(){
+  let ok = 0, blank = 0;
+  AUTO.forEach((q,i)=>{
+    const sel = document.querySelector(`input[name="aq${i}"]:checked`);
+    const fs = document.getElementById('aq'+i), ex = document.getElementById('ax'+i);
+    fs.classList.remove('ok','bad');
+    fs.querySelectorAll('.aopt').forEach((l,k)=>l.classList.toggle('right', k===q.c));
+    if(!sel){ blank++; fs.classList.add('bad'); ex.innerHTML = '<b>Sin responder.</b> ' + q.e; return; }
+    if(+sel.value === q.c){ ok++; fs.classList.add('ok'); ex.innerHTML = '<b>¡Correcto!</b> ' + q.e; }
+    else { fs.classList.add('bad'); ex.innerHTML = '<b>Incorrecto.</b> ' + q.e; }
+  });
+  document.getElementById('auto-score').textContent = `${ok} / ${AUTO.length} correctas`;
+  const fb = document.getElementById('auto-fb');
+  let msg;
+  if(ok >= 9) msg = 'Excelente dominio. Continúa con el taller del documento de lectura.';
+  else if(ok >= 7) msg = 'Buen nivel. Repasa las preguntas que fallaste antes de hacer el taller.';
+  else if(ok >= 5) msg = 'Vas en camino. Vuelve a los ejemplos y a los laboratorios, y repite la autoevaluación.';
+  else msg = 'Necesitas repasar. Lee el documento de lectura, rehaz los ejemplos en RunSQL y repite la autoevaluación.';
+  if(blank) msg = `Dejaste ${blank} pregunta(s) sin responder. ` + msg;
+  fb.className = 'feedback show ' + (ok >= 7 ? 'ok' : 'no');
+  fb.textContent = msg;
+}
+
+// =========================================================
+// EVENTOS
+// =========================================================
+document.addEventListener('click', e=>{
+  const t = e.target;
+  const cp = t.closest('[data-copy]');
+  if(cp){ const k = cp.dataset.copy; copyText(k==='__SCRIPT__' ? SQL_SCRIPT : Q[k]); return; }
+  const rv = t.closest('[data-reveal]');
+  if(rv){ const box = document.getElementById(rv.dataset.reveal); const on = box.classList.toggle('show'); rv.textContent = on ? rv.dataset.hide : rv.dataset.show; return; }
+  const tab = t.closest('.tab');
+  if(tab){ const g=tab.dataset.tabgroup, i=tab.dataset.tabidx;
+    document.querySelectorAll(`.tab[data-tabgroup="${g}"]`).forEach(b=>b.classList.toggle('active', b===tab));
+    document.querySelectorAll(`.tabpanel[data-tabgroup="${g}"]`).forEach(p=>p.classList.toggle('active', p.dataset.tabidx===i)); return; }
+  const sb = t.closest('.stepbtn');
+  if(sb){ const g=sb.dataset.stepgroup, i=sb.dataset.stepidx;
+    document.querySelectorAll(`.stepbtn[data-stepgroup="${g}"]`).forEach(b=>b.classList.toggle('active', b===sb));
+    document.querySelectorAll(`.steppanel[data-stepgroup="${g}"]`).forEach(p=>p.classList.toggle('active', p.dataset.stepidx===i)); return; }
+  if(t.id==='pred-check'){ predCheck(); return; }
+  if(t.id==='pred-reset'){ predInit(); return; }
+  if(t.id==='pred-solve'){ predSolve(); return; }
+  if(t.id==='auto-check'){ autoCheck(); return; }
+  if(t.id==='auto-reset'){ autoInit(); document.getElementById('auto').scrollIntoView({block:'start'}); return; }
+});
+['la-date','la-op','la-n','la-u'].forEach(id=>{ const el=document.getElementById(id); el.addEventListener('input', laUpdate); el.addEventListener('change', laUpdate); });
+['ld-a','ld-b'].forEach(id=>{ const el=document.getElementById(id); el.addEventListener('input', ldUpdate); el.addEventListener('change', ldUpdate); });
+['le-b'].forEach(id=>{ const el=document.getElementById(id); el.addEventListener('input', leUpdate); el.addEventListener('change', leUpdate); });
+
+laUpdate(); ldUpdate(); leUpdate();
+predInit();
+autoInit();
+const h = parseInt((location.hash||'').slice(1),10);
+current = (h>=1 && h<=total) ? h-1 : 0;
+render();
+})();
+</script>
+</body>
+</html>
