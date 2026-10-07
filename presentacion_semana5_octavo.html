@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capacitor y Temporizadores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2efe3; --surface:#fffdf8; --surface-2:#e8e1cd;
+    --grid-dot: rgba(31,42,38,0.14);
+    --ink:#1f2a26; --ink-soft:#5b6b64; --ink-faint:#8a978f;
+    --accent:#a84e1c; --accent-ink:#fffaf3;
+    --accent-2:#2f6f5e; --accent-2-ink:#f2fbf7;
+    --rail-pos:#a63a2c; --rail-neg:#2a5c8f;
+    --line: rgba(31,42,38,0.16);
+    --shadow: 0 1px 0 rgba(31,42,38,0.05), 0 12px 28px -18px rgba(31,42,38,0.35);
+    --radius: 14px; --danger:#a63a2c;
+    --led:#c0392b; --ledg:#2f8f4e;
+    --n-p:#c0392b; --n-a:#d17a0f; --n-b:#7a4fb5; --n-c:#16857f; --n-d:#b0368a; --n-g:#2a5c8f;
+    --board:#ece6d4; --board-hole:#b9b19a; --board-hl:rgba(47,111,94,0.18);
+    --res-body:#d8c39a; --cap:#2a5c8f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg:#141f1b; --surface:#1a2723; --surface-2:#20322b;
+      --grid-dot: rgba(238,242,238,0.10);
+      --ink:#edf2ee; --ink-soft:#a7b6ae; --ink-faint:#748179;
+      --accent:#e3a066; --accent-ink:#20140a;
+      --accent-2:#6fcaa6; --accent-2-ink:#0a1f17;
+      --rail-pos:#e2776a; --rail-neg:#7cb0e8;
+      --line: rgba(238,242,238,0.14);
+      --shadow: 0 1px 0 rgba(0,0,0,0.2), 0 12px 28px -18px rgba(0,0,0,0.6);
+      --danger:#e2776a;
+      --led:#ff6b5b; --ledg:#5fd08a;
+      --n-p:#ff7a6b; --n-a:#f0a54a; --n-b:#b594e8; --n-c:#4fc9c0; --n-d:#e77cc3; --n-g:#7cb0e8;
+      --board:#2a3a34; --board-hole:#56685f; --board-hl:rgba(111,202,166,0.2);
+      --res-body:#b9a47c; --cap:#7cb0e8;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:#141f1b; --surface:#1a2723; --surface-2:#20322b;
+    --grid-dot: rgba(238,242,238,0.10);
+    --ink:#edf2ee; --ink-soft:#a7b6ae; --ink-faint:#748179;
+    --accent:#e3a066; --accent-ink:#20140a;
+    --accent-2:#6fcaa6; --accent-2-ink:#0a1f17;
+    --rail-pos:#e2776a; --rail-neg:#7cb0e8;
+    --line: rgba(238,242,238,0.14);
+    --shadow: 0 1px 0 rgba(0,0,0,0.2), 0 12px 28px -18px rgba(0,0,0,0.6);
+    --danger:#e2776a;
+    --led:#ff6b5b; --ledg:#5fd08a;
+    --n-p:#ff7a6b; --n-a:#f0a54a; --n-b:#b594e8; --n-c:#4fc9c0; --n-d:#e77cc3; --n-g:#7cb0e8;
+    --board:#2a3a34; --board-hole:#56685f; --board-hl:rgba(111,202,166,0.2);
+    --res-body:#b9a47c; --cap:#7cb0e8;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background: radial-gradient(var(--grid-dot) 1.3px, transparent 1.3px) 0 0/22px 22px, var(--bg);
+    color:var(--ink); font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+    display:flex; flex-direction:column; min-height:100%;
+  }
+  h1,h2,h3,.mono{ font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace; }
+  h2{ text-wrap:balance; }
+  a{ color:var(--accent); }
+
+  .topbar{ display:flex; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid var(--line);
+    background:color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(6px); position:sticky; top:env(safe-area-inset-top,0px); z-index:20; flex-wrap:wrap; }
+  .brand{ display:flex; flex-direction:column; line-height:1.15; min-width:0; }
+  .brand .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); }
+  .brand .title{ font-weight:700; font-size:14px; }
+  .topbar .spacer{ flex:1; }
+  .progress-wrap{ display:flex; align-items:center; gap:10px; }
+  .progress-track{ width:min(34vw,220px); height:6px; border-radius:6px; background:var(--surface-2); overflow:hidden; border:1px solid var(--line); }
+  .progress-fill{ height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); width:5%; transition:width .25s ease; }
+  .progress-label{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink-soft); white-space:nowrap; }
+
+  .stage{ flex:1; display:flex; align-items:flex-start; justify-content:center; padding:28px 16px 12px; }
+  .slide{ width:100%; max-width:820px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:34px clamp(18px,4vw,46px) 30px; animation: rise .32s ease; }
+  @keyframes rise{ from{ opacity:.4; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){ .slide{animation:none;} .spin, .flow{animation:none!important;} }
+
+  .kicker{ display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .tag{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    padding:4px 9px; border-radius:20px; border:1px solid var(--line); color:var(--ink-soft); }
+  .tag.time{ color:var(--accent); border-color:color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .tag.key{ color:var(--accent-2-ink); background:var(--accent-2); border-color:var(--accent-2); }
+  .slide h2{ font-size:clamp(21px,3.2vw,27px); margin:0 0 6px; }
+  .slide .sub{ color:var(--ink-soft); font-size:15px; margin:0 0 20px; max-width:62ch; }
+  .body-text{ font-size:15.5px; line-height:1.65; max-width:68ch; }
+  .body-text p{ margin:0 0 12px; }
+
+  ol.steps, ul.list{ margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:10px;}
+  ol.steps li{ display:flex; gap:12px; align-items:flex-start; font-size:15px; line-height:1.55; }
+  ol.steps li .num{ flex:none; width:26px; height:26px; border-radius:7px; background:var(--surface-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--accent); font-weight:700; }
+  ul.list li{ display:flex; gap:10px; align-items:flex-start; font-size:15px; line-height:1.55; }
+  ul.list li::before{ content:"▸"; color:var(--accent); flex:none; }
+
+  .callout{ border:1px solid var(--line); border-left:3px solid var(--accent); background:var(--surface-2);
+    border-radius:10px; padding:13px 15px; font-size:14.5px; line-height:1.55; margin-top:16px; }
+  .callout.warn{ border-left-color: var(--danger); }
+  .callout.ok{ border-left-color: var(--accent-2); }
+  .callout .callout-label{ font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); display:block; margin-bottom:4px; }
+  .callout.warn .callout-label{ color:var(--danger); }
+  .callout.ok .callout-label{ color:var(--accent-2); }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
+
+  .tbl-wrap{ overflow-x:auto; }
+  table.formula{ width:100%; border-collapse:collapse; font-size:14.5px; margin-top:10px; }
+  table.formula th, table.formula td{ border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+  table.formula th{ background:var(--surface-2); font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+  table.formula td.f{ font-family:'JetBrains Mono',monospace; color:var(--accent); font-weight:600; }
+
+  .btn{ font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; letter-spacing:.02em;
+    border:1px solid var(--line); background:var(--surface-2); color:var(--ink);
+    padding:10px 16px; border-radius:9px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; text-decoration:none; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
+  .btn:hover{ border-color:var(--accent); }
+  .btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .btn.sel{ background:var(--accent-2); color:var(--accent-2-ink); border-color:var(--accent-2); }
+  .btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .btn:focus-visible, button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .btnrow{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  .navbar{ display:flex; align-items:center; justify-content:center; gap:16px; padding:16px 16px 22px; flex-wrap:wrap; }
+  .dots{ display:flex; gap:6px; flex-wrap:wrap; max-width:520px; justify-content:center; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:var(--surface-2); border:1px solid var(--line); cursor:pointer; padding:0; }
+  .dot.active{ background:var(--accent); border-color:var(--accent); width:20px; border-radius:5px; }
+  .dot.done{ background:var(--accent-2); border-color:var(--accent-2); }
+  footer.hint{ text-align:center; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-faint); padding:0 16px 16px; }
+  code{ font-family:'JetBrains Mono',monospace; background:var(--surface-2); border:1px solid var(--line); padding:1px 6px; border-radius:5px; font-size:.92em; }
+
+  /* ---- esquemáticos ---- */
+  .sch-wrap{ border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:8px; overflow-x:auto; }
+  .sch-wrap svg{ display:block; width:100%; min-width:320px; height:auto; }
+  .sch .c, .sch .w{ transition: opacity .2s ease, stroke .2s ease; }
+  .sch-wrap.focus .c{ opacity:.28; }
+  .sch-wrap.focus .c.hl{ opacity:1; }
+  .sch-wrap.nodes .w.n-p{ stroke:var(--n-p); stroke-width:4; } .sch-wrap.nodes .j.n-p{ fill:var(--n-p); }
+  .sch-wrap.nodes .w.n-a{ stroke:var(--n-a); stroke-width:4; } .sch-wrap.nodes .j.n-a{ fill:var(--n-a); }
+  .sch-wrap.nodes .w.n-b{ stroke:var(--n-b); stroke-width:4; } .sch-wrap.nodes .j.n-b{ fill:var(--n-b); }
+  .sch-wrap.nodes .w.n-c{ stroke:var(--n-c); stroke-width:4; } .sch-wrap.nodes .j.n-c{ fill:var(--n-c); }
+  .sch-wrap.nodes .w.n-d{ stroke:var(--n-d); stroke-width:4; } .sch-wrap.nodes .j.n-d{ fill:var(--n-d); }
+  .sch-wrap.nodes .w.n-g{ stroke:var(--n-g); stroke-width:4; } .sch-wrap.nodes .j.n-g{ fill:var(--n-g); }
+  .sch-wrap.on .c-LED1 polygon:first-of-type{ fill-opacity:1; filter:drop-shadow(0 0 6px var(--led)); }
+  .legend{ display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:10px; font-size:13px; font-family:'JetBrains Mono',monospace; }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .legend i{ width:18px; height:5px; border-radius:3px; display:inline-block; }
+
+  /* ---- protoboard ---- */
+  .board-wrap{ border:1px solid var(--line); border-radius:12px; background:var(--surface-2); padding:8px; overflow-x:auto; }
+  .board-wrap svg{ display:block; width:100%; min-width:360px; height:auto; }
+  .walk{ display:grid; grid-template-columns: 1fr; gap:14px; }
+  .walk-step{ display:flex; align-items:flex-start; gap:12px; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .walk-step .n{ flex:none; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--accent-2-ink); background:var(--accent-2); border-radius:7px; min-width:30px; height:26px; display:flex; align-items:center; justify-content:center; font-size:12.5px; padding:0 6px; }
+  .walk-step .t{ font-size:14.5px; line-height:1.55; }
+  .walk-step .t b{ display:block; margin-bottom:2px; }
+  .walk-nav{ display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .pip{ display:flex; gap:4px; }
+  .pip i{ width:18px; height:5px; border-radius:3px; background:var(--line); }
+  .pip i.on{ background:var(--accent-2); }
+
+  /* ---- quiz ---- */
+  .q-card{ border:1px solid var(--line); border-radius:12px; padding:12px; background:var(--surface); display:flex; flex-direction:column; gap:10px; }
+  .q-card .sch-wrap{ border:none; padding:0; }
+  .q-card .sch-wrap svg{ min-width:260px; }
+  .fb{ font-size:14px; line-height:1.5; min-height:1.5em; }
+  .fb.good{ color:var(--accent-2); } .fb.bad{ color:var(--danger); }
+  .sym-q{ display:grid; grid-template-columns: minmax(0,200px) 1fr; gap:16px; align-items:center; }
+  @media (max-width:560px){ .sym-q{ grid-template-columns:1fr; } }
+  .sym-box{ border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:6px; }
+  .sym-box svg{ display:block; width:100%; height:auto; }
+  .class-row{ display:grid; grid-template-columns: 1fr 190px 26px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); font-size:15px; }
+  .class-row:last-child{ border-bottom:none; }
+  .class-row select{ font:inherit; font-size:14px; padding:7px 8px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--ink); width:100%; }
+  .class-row .mark{ font-weight:700; text-align:center; }
+  @media (max-width:480px){ .class-row{ grid-template-columns: 1fr 26px; } .class-row select{ grid-column:1 / 2; } }
+  .num-in{ width:90px; padding:9px 10px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; font-size:15px; text-align:center; }
+
+  /* ---- interactivos de interruptores ---- */
+  .demo{ border:1px solid var(--line); border-radius:12px; background:var(--surface-2); padding:14px; display:flex; flex-direction:column; gap:10px; align-items:center; text-align:center; }
+  .bulb{ width:46px; height:46px; border-radius:50%; background:color-mix(in srgb, var(--led) 18%, var(--surface)); border:2px solid var(--led); transition: all .15s ease; }
+  .bulb.on{ background:var(--led); box-shadow:0 0 22px 4px color-mix(in srgb, var(--led) 60%, transparent); }
+  .slider{ width:84px; height:34px; border-radius:18px; background:var(--surface); border:1px solid var(--line); position:relative; cursor:pointer; padding:0; }
+  .slider::after{ content:""; position:absolute; top:4px; left:4px; width:40px; height:24px; border-radius:13px; background:var(--ink-faint); transition:left .15s ease, background .15s ease; }
+  .slider.on::after{ left:38px; background:var(--accent-2); }
+  .pushbtn{ width:64px; height:64px; border-radius:12px; background:var(--surface); border:1px solid var(--line); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; touch-action:none; }
+  .pushbtn span{ width:34px; height:34px; border-radius:50%; background:var(--accent); box-shadow:0 4px 0 color-mix(in srgb, var(--accent) 60%, #000); transition: transform .06s ease, box-shadow .06s ease; }
+  .pushbtn.down span{ transform:translateY(3px); box-shadow:0 1px 0 color-mix(in srgb, var(--accent) 60%, #000); }
+  .spin{ animation: spin 1s linear infinite; transform-origin: 50% 50%; transform-box: fill-box; }
+  .spin.rev{ animation-direction: reverse; }
+  @keyframes spin{ to{ transform: rotate(360deg);} }
+  .legpick circle.leg{ cursor:pointer; }
+  .check-item{ display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--line); }
+  .check-item:last-child{ border-bottom:none; }
+  .check-item input{ margin-top:3px; width:16px; height:16px; accent-color:var(--accent-2); flex:none; }
+  .check-item label{ font-size:14.5px; line-height:1.5; }
+  .parts{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:6px; }
+  @media (max-width:640px){ .parts{ grid-template-columns:repeat(2,1fr); } }
+  .part{ border:1px solid var(--line); border-radius:12px; padding:12px; background:var(--surface-2); }
+  .part b{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em; }
+  .part p{ margin:0; font-size:13.5px; line-height:1.45; }
+  .part small{ display:block; margin-top:6px; color:var(--ink-soft); font-size:12.5px; }
+
+  .sch-wrap.on .led polygon{ fill:var(--led); filter:drop-shadow(0 0 7px var(--led)); }
+  .bar{ display:inline-block; height:10px; width:0; border-radius:5px; background:var(--accent); vertical-align:middle; transition:width .2s ease; }
+  .bar.on{ width:18px; } .bar.big.on{ width:120px; background:var(--accent-2); }
+  .grid2 > .sym-box svg{ max-width:360px; margin:0 auto; }
+
+  /* ---- semana 5: capacitor ---- */
+  .tank{ width:46px; height:70px; border:2px solid var(--cap); border-radius:6px 6px 8px 8px; background:var(--surface); position:relative; overflow:hidden; flex:none; }
+  .tank.sm{ width:38px; height:54px; margin:6px 0; }
+  .tank-fill{ position:absolute; left:0; right:0; bottom:0; background:color-mix(in srgb, var(--cap) 70%, transparent); }
+  .hint-small{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink-faint); margin:10px 0 0; }
+  .slider:disabled{ opacity:.35; cursor:not-allowed; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="eyebrow">Electrónica · Grado octavo</span>
+    <span class="title">Semana 5 — El capacitor y los temporizadores</span>
+  </div>
+  <div class="spacer"></div>
+  <div class="progress-wrap">
+    <span class="progress-label mono" id="slideCounter">1 / 1</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+</div>
+
+<div class="stage"><div class="slide" id="slideHost"></div></div>
+
+<div class="navbar">
+  <button class="btn" id="prevBtn" aria-label="Diapositiva anterior">← Anterior</button>
+  <div class="dots" id="dots"></div>
+  <button class="btn primary" id="nextBtn" aria-label="Siguiente diapositiva">Siguiente →</button>
+</div>
+<footer class="hint">Usa las flechas ← → del teclado, o haz clic en los puntos, para moverte entre diapositivas.</footer>
+
+<script>
+const SVG = {"circuito1": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 820 560\" class=\"sch\" font-family=\"DejaVu Sans, Archivo, sans-serif\"><g class=\"\" transform=\"translate(80,280) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-6\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"6\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"-6\" y1=\"-22\" x2=\"-6\" y2=\"22\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"6\" y1=\"-11\" x2=\"6\" y2=\"11\" stroke=\"var(--ink)\" stroke-width=\"7\"/></g><text x=\"56\" y=\"266\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">+</text><text x=\"56\" y=\"316\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">−</text><text x=\"42\" y=\"275\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"end\">B1</text><text x=\"42\" y=\"301\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"end\">9 V</text><polyline points=\"80,80 80,250\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,310 80,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,80 135,80\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(165,80) rotate(0)\"><line x1=\"-30\" y1=\"0\" x2=\"-12\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"12\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"-12,-13 -12,13 12,0\" fill=\"none\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><line x1=\"12\" y1=\"-13\" x2=\"12\" y2=\"13\" stroke=\"var(--ink)\" stroke-width=\"3.5\"/></g><text x=\"165\" y=\"28\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">D1</text><text x=\"165\" y=\"52\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">diodo</text><polyline points=\"195,80 255,80\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(285,80) rotate(0)\"><line x1=\"-30\" y1=\"0\" x2=\"-14\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"14\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><circle cx=\"-14\" cy=\"0\" r=\"3.5\" fill=\"var(--ink)\"/><circle cx=\"14\" cy=\"0\" r=\"5\" fill=\"none\" stroke=\"var(--ink)\" stroke-width=\"2.5\"/><line x1=\"-14\" y1=\"0\" x2=\"12\" y2=\"-14\" stroke=\"var(--accent)\" stroke-width=\"3.5\" stroke-linecap=\"round\"/></g><text x=\"285\" y=\"34\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">S1</text><text x=\"285\" y=\"106\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">interruptor</text><polyline points=\"315,80 370,80\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(400,80) rotate(0)\"><line x1=\"-30\" y1=\"0\" x2=\"-22\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"22\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><rect x=\"-22\" y=\"-10\" width=\"44\" height=\"20\" rx=\"3\" fill=\"none\" stroke=\"var(--accent)\" stroke-width=\"3.5\"/></g><text x=\"400\" y=\"34\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">R1</text><text x=\"400\" y=\"106\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">100 Ω</text><polyline points=\"430,80 680,80\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"520\" cy=\"80\" r=\"6\" fill=\"var(--ink-soft)\"/><polyline points=\"520,80 520,250\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"cap\" transform=\"translate(520,280) rotate(0)\"><line x1=\"0\" y1=\"-30\" x2=\"0\" y2=\"-6\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"0\" y1=\"8\" x2=\"0\" y2=\"30\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"-20\" y1=\"-6\" x2=\"20\" y2=\"-6\" stroke=\"var(--cap)\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M -20 12 Q 0 2 20 12\" fill=\"none\" stroke=\"var(--cap)\" stroke-width=\"4\" stroke-linecap=\"round\"/><text x=\"-26\" y=\"-12\" font-size=\"18\" font-weight=\"700\" fill=\"var(--cap)\" text-anchor=\"middle\">+</text></g><polyline points=\"520,310 520,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"552\" y=\"274\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">C1</text><text x=\"552\" y=\"300\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">1000 µF</text><polyline points=\"680,80 680,165\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(680,195) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-22\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"22\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><rect x=\"-22\" y=\"-10\" width=\"44\" height=\"20\" rx=\"3\" fill=\"none\" stroke=\"var(--accent)\" stroke-width=\"3.5\"/></g><text x=\"702\" y=\"190\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">R2</text><text x=\"702\" y=\"216\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">470 Ω</text><polyline points=\"680,225 680,275\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"led\" transform=\"translate(680,305) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-12\" y2=\"0\" stroke=\"var(--led)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"12\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--led)\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"-12,-13 -12,13 12,0\" fill=\"var(--led)\" fill-opacity=\"0.22\" stroke=\"var(--led)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><line x1=\"12\" y1=\"-14\" x2=\"12\" y2=\"14\" stroke=\"var(--led)\" stroke-width=\"3.5\"/><line x1=\"-2\" y1=\"-18\" x2=\"-10\" y2=\"-30\" stroke=\"var(--led)\" stroke-width=\"2.5\"/><polygon points=\"-12,-33 -6,-28 -12,-26\" fill=\"var(--led)\"/><line x1=\"8\" y1=\"-18\" x2=\"0\" y2=\"-30\" stroke=\"var(--led)\" stroke-width=\"2.5\"/><polygon points=\"-2,-33 4,-28 -2,-26\" fill=\"var(--led)\"/></g><text x=\"718\" y=\"300\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">LED1</text><text x=\"718\" y=\"326\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">rojo</text><polyline points=\"680,335 680,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,480 680,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"520\" cy=\"480\" r=\"6\" fill=\"var(--ink-soft)\"/><text x=\"24\" y=\"538\" font-size=\"21\" fill=\"var(--ink-soft)\">Circuito 1</text></svg>", "circuito2": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1000 580\" class=\"sch\" font-family=\"DejaVu Sans, Archivo, sans-serif\"><g class=\"\" transform=\"translate(80,290) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-6\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"6\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"-6\" y1=\"-22\" x2=\"-6\" y2=\"22\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"6\" y1=\"-11\" x2=\"6\" y2=\"11\" stroke=\"var(--ink)\" stroke-width=\"7\"/></g><text x=\"56\" y=\"276\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">+</text><text x=\"56\" y=\"326\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">−</text><text x=\"42\" y=\"285\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"end\">B1</text><text x=\"42\" y=\"311\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"end\">9 V</text><polyline points=\"80,80 80,260\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,320 80,500\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,80 135,80\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(165,80) rotate(0)\"><line x1=\"-30\" y1=\"0\" x2=\"-12\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"12\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"-12,-13 -12,13 12,0\" fill=\"none\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><line x1=\"12\" y1=\"-13\" x2=\"12\" y2=\"13\" stroke=\"var(--ink)\" stroke-width=\"3.5\"/></g><text x=\"165\" y=\"28\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">D1</text><text x=\"165\" y=\"52\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">diodo</text><polyline points=\"195,80 255,80\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(285,80) rotate(0)\"><line x1=\"-30\" y1=\"0\" x2=\"-14\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"14\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><circle cx=\"-14\" cy=\"0\" r=\"3.5\" fill=\"var(--ink)\"/><circle cx=\"14\" cy=\"0\" r=\"5\" fill=\"none\" stroke=\"var(--ink)\" stroke-width=\"2.5\"/><line x1=\"-14\" y1=\"0\" x2=\"12\" y2=\"-14\" stroke=\"var(--accent)\" stroke-width=\"3.5\" stroke-linecap=\"round\"/></g><text x=\"285\" y=\"34\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">S1</text><text x=\"285\" y=\"106\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">interruptor</text><polyline points=\"315,80 370,80\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(400,80) rotate(0)\"><line x1=\"-30\" y1=\"0\" x2=\"-22\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"22\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><rect x=\"-22\" y=\"-10\" width=\"44\" height=\"20\" rx=\"3\" fill=\"none\" stroke=\"var(--accent)\" stroke-width=\"3.5\"/></g><text x=\"400\" y=\"34\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">R1</text><text x=\"400\" y=\"106\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">100 Ω</text><polyline points=\"430,80 760,80\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"480\" cy=\"80\" r=\"6\" fill=\"var(--ink-soft)\"/><polyline points=\"480,80 480,125\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(480,155) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-12\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"12\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"-12,-13 -12,13 12,0\" fill=\"none\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><line x1=\"12\" y1=\"-13\" x2=\"12\" y2=\"13\" stroke=\"var(--ink)\" stroke-width=\"3.5\"/></g><text x=\"458\" y=\"162\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"end\">D2</text><polyline points=\"480,185 480,215\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"480\" cy=\"215\" r=\"6\" fill=\"var(--ink-soft)\"/><polyline points=\"480,215 600,215\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"480,215 480,320\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"cap\" transform=\"translate(480,350) rotate(0)\"><line x1=\"0\" y1=\"-30\" x2=\"0\" y2=\"-6\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"0\" y1=\"8\" x2=\"0\" y2=\"30\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"-20\" y1=\"-6\" x2=\"20\" y2=\"-6\" stroke=\"var(--cap)\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M -20 12 Q 0 2 20 12\" fill=\"none\" stroke=\"var(--cap)\" stroke-width=\"4\" stroke-linecap=\"round\"/><text x=\"-26\" y=\"-12\" font-size=\"18\" font-weight=\"700\" fill=\"var(--cap)\" text-anchor=\"middle\">+</text></g><polyline points=\"480,380 480,500\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"512\" y=\"344\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">C1</text><text x=\"512\" y=\"370\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">1000 µF</text><polyline points=\"600,215 600,245\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(600,275) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-22\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"22\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><rect x=\"-22\" y=\"-10\" width=\"44\" height=\"20\" rx=\"3\" fill=\"none\" stroke=\"var(--accent)\" stroke-width=\"3.5\"/></g><text x=\"622\" y=\"270\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">R2</text><text x=\"622\" y=\"296\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">470 Ω</text><polyline points=\"600,305 600,355\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"led\" transform=\"translate(600,385) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-12\" y2=\"0\" stroke=\"var(--led)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"12\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--led)\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"-12,-13 -12,13 12,0\" fill=\"var(--led)\" fill-opacity=\"0.22\" stroke=\"var(--led)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><line x1=\"12\" y1=\"-14\" x2=\"12\" y2=\"14\" stroke=\"var(--led)\" stroke-width=\"3.5\"/><line x1=\"-2\" y1=\"-18\" x2=\"-10\" y2=\"-30\" stroke=\"var(--led)\" stroke-width=\"2.5\"/><polygon points=\"-12,-33 -6,-28 -12,-26\" fill=\"var(--led)\"/><line x1=\"8\" y1=\"-18\" x2=\"0\" y2=\"-30\" stroke=\"var(--led)\" stroke-width=\"2.5\"/><polygon points=\"-2,-33 4,-28 -2,-26\" fill=\"var(--led)\"/></g><text x=\"638\" y=\"380\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">LED1</text><text x=\"638\" y=\"406\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">rojo</text><polyline points=\"600,415 600,500\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"760,80 760,125\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(760,155) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-12\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"12\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"-12,-13 -12,13 12,0\" fill=\"none\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><line x1=\"12\" y1=\"-13\" x2=\"12\" y2=\"13\" stroke=\"var(--ink)\" stroke-width=\"3.5\"/></g><text x=\"738\" y=\"162\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"end\">D3</text><polyline points=\"760,185 760,215\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"760\" cy=\"215\" r=\"6\" fill=\"var(--ink-soft)\"/><polyline points=\"760,215 880,215\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"760,215 760,320\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"cap\" transform=\"translate(760,350) rotate(0)\"><line x1=\"0\" y1=\"-30\" x2=\"0\" y2=\"-6\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"0\" y1=\"8\" x2=\"0\" y2=\"30\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"-20\" y1=\"-6\" x2=\"20\" y2=\"-6\" stroke=\"var(--cap)\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M -20 12 Q 0 2 20 12\" fill=\"none\" stroke=\"var(--cap)\" stroke-width=\"4\" stroke-linecap=\"round\"/><text x=\"-26\" y=\"-12\" font-size=\"18\" font-weight=\"700\" fill=\"var(--cap)\" text-anchor=\"middle\">+</text></g><polyline points=\"760,380 760,500\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"792\" y=\"344\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">C2</text><text x=\"792\" y=\"370\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">100 µF</text><polyline points=\"880,215 880,245\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(880,275) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-22\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"22\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><rect x=\"-22\" y=\"-10\" width=\"44\" height=\"20\" rx=\"3\" fill=\"none\" stroke=\"var(--accent)\" stroke-width=\"3.5\"/></g><text x=\"902\" y=\"270\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">R3</text><text x=\"902\" y=\"296\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">470 Ω</text><polyline points=\"880,305 880,355\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"led\" transform=\"translate(880,385) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-12\" y2=\"0\" stroke=\"var(--ledg)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"12\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ledg)\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"-12,-13 -12,13 12,0\" fill=\"var(--ledg)\" fill-opacity=\"0.22\" stroke=\"var(--ledg)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><line x1=\"12\" y1=\"-14\" x2=\"12\" y2=\"14\" stroke=\"var(--ledg)\" stroke-width=\"3.5\"/><line x1=\"-2\" y1=\"-18\" x2=\"-10\" y2=\"-30\" stroke=\"var(--ledg)\" stroke-width=\"2.5\"/><polygon points=\"-12,-33 -6,-28 -12,-26\" fill=\"var(--ledg)\"/><line x1=\"8\" y1=\"-18\" x2=\"0\" y2=\"-30\" stroke=\"var(--ledg)\" stroke-width=\"2.5\"/><polygon points=\"-2,-33 4,-28 -2,-26\" fill=\"var(--ledg)\"/></g><text x=\"918\" y=\"380\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">LED2</text><text x=\"918\" y=\"406\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">verde</text><polyline points=\"880,415 880,500\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,500 880,500\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"480\" cy=\"500\" r=\"6\" fill=\"var(--ink-soft)\"/><circle cx=\"600\" cy=\"500\" r=\"6\" fill=\"var(--ink-soft)\"/><circle cx=\"760\" cy=\"500\" r=\"6\" fill=\"var(--ink-soft)\"/><text x=\"24\" y=\"558\" font-size=\"21\" fill=\"var(--ink-soft)\">Circuito 2</text></svg>", "circuito3": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 900 600\" class=\"sch\" font-family=\"DejaVu Sans, Archivo, sans-serif\"><g class=\"\" transform=\"translate(80,300) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-6\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"6\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"-6\" y1=\"-22\" x2=\"-6\" y2=\"22\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"6\" y1=\"-11\" x2=\"6\" y2=\"11\" stroke=\"var(--ink)\" stroke-width=\"7\"/></g><text x=\"56\" y=\"286\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">+</text><text x=\"56\" y=\"336\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">−</text><text x=\"42\" y=\"295\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"end\">B1</text><text x=\"42\" y=\"321\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"end\">9 V</text><polyline points=\"80,80 80,270\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,330 80,520\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,80 135,80\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(165,80) rotate(0)\"><line x1=\"-30\" y1=\"0\" x2=\"-12\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"12\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"-12,-13 -12,13 12,0\" fill=\"none\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><line x1=\"12\" y1=\"-13\" x2=\"12\" y2=\"13\" stroke=\"var(--ink)\" stroke-width=\"3.5\"/></g><text x=\"165\" y=\"28\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">D1</text><text x=\"165\" y=\"52\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">diodo</text><polyline points=\"195,80 740,80\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"250\" cy=\"80\" r=\"6\" fill=\"var(--ink-soft)\"/><polyline points=\"250,80 250,340 280,340\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(310,340) rotate(0)\"><line x1=\"-30\" y1=\"0\" x2=\"-14\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"14\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><circle cx=\"-14\" cy=\"0\" r=\"3.5\" fill=\"var(--ink)\"/><circle cx=\"14\" cy=\"0\" r=\"3.5\" fill=\"var(--ink)\"/><line x1=\"-18\" y1=\"-12\" x2=\"18\" y2=\"-12\" stroke=\"var(--accent)\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><line x1=\"0\" y1=\"-12\" x2=\"0\" y2=\"-24\" stroke=\"var(--accent)\" stroke-width=\"3.5\"/><line x1=\"-8\" y1=\"-24\" x2=\"8\" y2=\"-24\" stroke=\"var(--accent)\" stroke-width=\"3.5\" stroke-linecap=\"round\"/></g><text x=\"310\" y=\"300\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">P1</text><text x=\"310\" y=\"385\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">pulsador</text><polyline points=\"340,340 370,340\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(400,340) rotate(0)\"><line x1=\"-30\" y1=\"0\" x2=\"-22\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"22\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><rect x=\"-22\" y=\"-10\" width=\"44\" height=\"20\" rx=\"3\" fill=\"none\" stroke=\"var(--accent)\" stroke-width=\"3.5\"/></g><text x=\"400\" y=\"316\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">R1</text><text x=\"400\" y=\"385\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">100 Ω</text><polyline points=\"430,340 530,340\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"470\" cy=\"340\" r=\"6\" fill=\"var(--ink-soft)\"/><polyline points=\"470,340 470,405\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"cap\" transform=\"translate(470,435) rotate(0)\"><line x1=\"0\" y1=\"-30\" x2=\"0\" y2=\"-6\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"0\" y1=\"8\" x2=\"0\" y2=\"30\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"-20\" y1=\"-6\" x2=\"20\" y2=\"-6\" stroke=\"var(--cap)\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M -20 12 Q 0 2 20 12\" fill=\"none\" stroke=\"var(--cap)\" stroke-width=\"4\" stroke-linecap=\"round\"/><text x=\"-26\" y=\"-12\" font-size=\"18\" font-weight=\"700\" fill=\"var(--cap)\" text-anchor=\"middle\">+</text></g><polyline points=\"470,465 470,520\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"500\" y=\"430\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">C1</text><text x=\"500\" y=\"456\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">100 µF</text><g class=\"\" transform=\"translate(560,340) rotate(0)\"><line x1=\"-30\" y1=\"0\" x2=\"-22\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"22\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><rect x=\"-22\" y=\"-10\" width=\"44\" height=\"20\" rx=\"3\" fill=\"none\" stroke=\"var(--accent)\" stroke-width=\"3.5\"/></g><text x=\"560\" y=\"316\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">R2</text><text x=\"560\" y=\"385\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">10 kΩ</text><polyline points=\"590,340 680,340\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"725\" cy=\"340\" r=\"30\" fill=\"none\" stroke=\"var(--ink)\" stroke-width=\"2.5\"/><line x1=\"680\" y1=\"340\" x2=\"713\" y2=\"340\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"713\" y1=\"322\" x2=\"713\" y2=\"358\" stroke=\"var(--ink)\" stroke-width=\"5\"/><line x1=\"713\" y1=\"332\" x2=\"740\" y2=\"316\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"740\" y1=\"316\" x2=\"740\" y2=\"295\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"713\" y1=\"348\" x2=\"740\" y2=\"364\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"740\" y1=\"364\" x2=\"740\" y2=\"385\" stroke=\"var(--ink)\" stroke-width=\"3\"/><polygon points=\"740,364 726,362 732,352\" fill=\"var(--ink)\"/><text x=\"685\" y=\"332\" font-size=\"14\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">B</text><text x=\"751\" y=\"310\" font-size=\"14\" fill=\"var(--ink-soft)\">C</text><text x=\"751\" y=\"380\" font-size=\"14\" fill=\"var(--ink-soft)\">E</text><text x=\"770\" y=\"355\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">Q1</text><text x=\"770\" y=\"381\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">NPN</text><polyline points=\"740,80 740,120\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"\" transform=\"translate(740,150) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-22\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"22\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><rect x=\"-22\" y=\"-10\" width=\"44\" height=\"20\" rx=\"3\" fill=\"none\" stroke=\"var(--accent)\" stroke-width=\"3.5\"/></g><text x=\"762\" y=\"145\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">R3</text><text x=\"762\" y=\"171\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">470 Ω</text><polyline points=\"740,180 740,205\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><g class=\"led\" transform=\"translate(740,235) rotate(90)\"><line x1=\"-30\" y1=\"0\" x2=\"-12\" y2=\"0\" stroke=\"var(--led)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"12\" y1=\"0\" x2=\"30\" y2=\"0\" stroke=\"var(--led)\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"-12,-13 -12,13 12,0\" fill=\"var(--led)\" fill-opacity=\"0.22\" stroke=\"var(--led)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><line x1=\"12\" y1=\"-14\" x2=\"12\" y2=\"14\" stroke=\"var(--led)\" stroke-width=\"3.5\"/><line x1=\"-2\" y1=\"-18\" x2=\"-10\" y2=\"-30\" stroke=\"var(--led)\" stroke-width=\"2.5\"/><polygon points=\"-12,-33 -6,-28 -12,-26\" fill=\"var(--led)\"/><line x1=\"8\" y1=\"-18\" x2=\"0\" y2=\"-30\" stroke=\"var(--led)\" stroke-width=\"2.5\"/><polygon points=\"-2,-33 4,-28 -2,-26\" fill=\"var(--led)\"/></g><text x=\"778\" y=\"230\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">LED1</text><text x=\"778\" y=\"256\" font-size=\"18\" fill=\"var(--ink-soft)\" text-anchor=\"start\">rojo</text><polyline points=\"740,265 740,295\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"740,385 740,520\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,520 740,520\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"470\" cy=\"520\" r=\"6\" fill=\"var(--ink-soft)\"/><text x=\"24\" y=\"578\" font-size=\"21\" fill=\"var(--ink-soft)\">Circuito 3</text></svg>", "simbolo_capacitor": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 520 220\" class=\"sch\" font-family=\"DejaVu Sans, Archivo, sans-serif\"><g class=\"cap\" transform=\"translate(150,110) scale(1.6) rotate(0)\"><line x1=\"0\" y1=\"-30\" x2=\"0\" y2=\"-6\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"0\" y1=\"8\" x2=\"0\" y2=\"30\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"-20\" y1=\"-6\" x2=\"20\" y2=\"-6\" stroke=\"var(--cap)\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M -20 12 Q 0 2 20 12\" fill=\"none\" stroke=\"var(--cap)\" stroke-width=\"4\" stroke-linecap=\"round\"/><text x=\"-26\" y=\"-12\" font-size=\"18\" font-weight=\"700\" fill=\"var(--cap)\" text-anchor=\"middle\">+</text></g><text x=\"215\" y=\"85\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\">Pata + (positiva)</text><text x=\"215\" y=\"110\" font-size=\"17\" fill=\"var(--ink-soft)\">va hacia el lado del positivo</text><text x=\"215\" y=\"150\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\">Pata − (negativa)</text><text x=\"215\" y=\"175\" font-size=\"17\" fill=\"var(--ink-soft)\">va hacia el negativo</text></svg>"};
+
+function kicker(tagText, key){
+  return `<div class="kicker"><span class="tag${key?' key':''}">${tagText}</span></div>`;
+}
+function sch(key, extraClass, id){
+  return `<div class="sch-wrap ${extraClass||''}" ${id?`id="${id}"`:''}>${SVG[key]}</div>`;
+}
+let slideDefs = [];
+const after = {};
+let anim = null;               // animación activa (se detiene al cambiar de diapositiva)
+function stopAnim(){ if(anim){ cancelAnimationFrame(anim); anim=null; } }
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Brillo de un LED del esquemático: b entre 0 y 1 */
+function setLed(svgHost, idx, b){
+  const g = svgHost.querySelectorAll('.led')[idx]; if(!g) return;
+  const poly = g.querySelector('polygon');
+  poly.style.fillOpacity = (0.22 + 0.78*b).toFixed(3);
+  g.style.filter = b>0.03 ? `drop-shadow(0 0 ${(2+8*b).toFixed(1)}px ${idx===1 && svgHost.dataset.green ? 'var(--ledg)' : 'var(--led)'})` : 'none';
+}
+/* Brillo a partir del "nivel" de carga v (0..1): el LED deja de encender antes de que v llegue a 0 */
+const bright = v => Math.max(0, Math.min(1, (v-0.22)/0.78));
+
+/* 1. Portada */
+slideDefs.push({render:()=>`
+  ${kicker("Portada")}
+  <h2>El capacitor y los temporizadores</h2>
+  <p class="sub">Grado octavo · Periodo 3 · Semana 5 de 10</p>
+  <div class="body-text">
+    <p>Hasta ahora, cuando abrías el interruptor, el LED se apagaba <strong>de inmediato</strong>.</p>
+    <p>Esta semana conoces el <strong>capacitor</strong>: un componente que <strong>guarda carga eléctrica</strong> y la entrega después. Con él vas a lograr que un LED se apague despacio y que se apague <strong>solo</strong>, después de un tiempo.</p>
+  </div>
+  <div class="callout">
+    <span class="callout-label">Necesitas</span>
+    Tu cuenta de Tinkercad, tu cuaderno, la lectura de esta semana y la guía del taller.
+  </div>
+`});
+
+/* 2. Cómo funciona esta semana */
+slideDefs.push({render:()=>`
+  ${kicker("Esta semana")}
+  <h2>Cómo funciona la semana 5</h2>
+  <ol class="steps">
+    <li><span class="num">1</span><span>Esta presentación y la <strong>lectura</strong>: el capacitor, la carga y la descarga. Transcribe a tu cuaderno las partes marcadas con 📓.</span></li>
+    <li><span class="num">2</span><span>El <strong>taller evaluativo</strong>: construyes <strong>3 circuitos</strong> en Tinkercad a partir de sus diagramas y respondes <strong>5 preguntas</strong> sobre lo que observas.</span></li>
+    <li><span class="num">3</span><span>La <strong>entrega en Classroom</strong>: los 3 enlaces de tus circuitos y las respuestas a las 5 preguntas.</span></li>
+  </ol>
+  <div class="callout ok">
+    <span class="callout-label">Tiempo</span>
+    Lectura + taller + entrega: <strong>máximo 2 horas</strong>.
+  </div>
+`});
+
+/* 3. Repaso y objetivo */
+slideDefs.push({render:()=>`
+  ${kicker("Repaso")}
+  <h2>Lo que ya sabes</h2>
+  <ul class="list">
+    <li><span>El <strong>diodo</strong> y el <strong>LED</strong> tienen polaridad: si quedan al revés, bloquean la corriente.</span></li>
+    <li><span>Dos componentes <strong>en paralelo</strong> quedan conectados entre los mismos dos nodos.</span></li>
+    <li><span>El <strong>transistor</strong> se cierra cuando llega corriente a su <strong>base</strong>, y se abre cuando no llega.</span></li>
+    <li><span><strong>Cada nodo del diagrama = una columna de la protoboard.</strong></span></li>
+    <li><span>El multímetro mide <strong>voltaje</strong> tocando los dos extremos, sin quitar nada.</span></li>
+  </ul>
+  <div class="callout ok">
+    <span class="callout-label">Objetivo de hoy</span>
+    Explicar cómo el capacitor almacena carga y la entrega al circuito, y construir en Tinkercad un temporizador simple, comparando qué pasa al cambiar la capacidad.
+  </div>
+`});
+
+/* 4. ¿Qué es un capacitor? */
+slideDefs.push({render:()=>`
+  ${kicker("Concepto 1 · El capacitor")}
+  <h2>Un pequeño tanque de carga</h2>
+  <div class="grid2">
+    <div class="body-text">
+      <p>Piensa en un <strong>tanque de agua</strong>: mientras la llave está abierta, el tanque se llena. Cuando cierras la llave, el agua que quedó sigue saliendo un tiempo, hasta que se vacía.</p>
+      <p>El <strong>capacitor</strong> hace lo mismo con la carga eléctrica: la <strong>guarda</strong> mientras la batería está conectada y la <strong>entrega</strong> cuando la batería se desconecta.</p>
+    </div>
+    <div class="demo" style="justify-content:center">
+      <div class="mono" style="font-weight:700">Llenar → guardar → entregar</div>
+      <div class="tank"><div class="tank-fill" style="height:70%"></div></div>
+      <div style="font-size:13.5px;line-height:1.5">El "nivel" del tanque es la carga guardada</div>
+    </div>
+  </div>
+  <div class="callout">
+    <span class="callout-label">📓 Para tu cuaderno</span>
+    <strong>Capacitor:</strong> componente que almacena carga eléctrica y luego la entrega al circuito.
+  </div>
+`});
+
+/* 5. El capacitor polarizado */
+slideDefs.push({render:()=>`
+  ${kicker("Concepto 2 · Polaridad")}
+  <h2>El capacitor polarizado</h2>
+  <div class="grid2">
+    <div class="sym-box">${SVG.simbolo_capacitor}</div>
+    <div class="tbl-wrap"><table class="formula">
+      <tr><th>Pata</th><th>Hacia dónde va</th></tr>
+      <tr><td class="f">+ positiva</td><td>Hacia el lado del positivo. En el símbolo es la <strong>placa recta</strong>, la del signo +</td></tr>
+      <tr><td class="f">− negativa</td><td>Hacia el negativo</td></tr>
+    </table></div>
+  </div>
+  <div class="callout">
+    <span class="callout-label">En Tinkercad</span>
+    Escribe <code>capacitor</code> en el buscador de componentes y elige el <strong>polarizado</strong> (<em>Polarized Capacitor</em>). Pasa el mouse sobre cada pata para ver cuál es la + y cuál la −. Las dos patas van en <strong>columnas distintas</strong>.
+  </div>
+`});
+
+/* 6. Capacidad */
+slideDefs.push({render:()=>`
+  ${kicker("Concepto 3 · Capacidad")}
+  <h2>El tamaño del tanque: la capacidad</h2>
+  <div class="body-text">
+    <p>La <strong>capacidad</strong> dice cuánta carga puede guardar un capacitor. Se mide en <strong>faradios (F)</strong>, pero un faradio es muchísimo: en los circuitos se usan <strong>microfaradios (µF)</strong>.</p>
+  </div>
+  <div class="parts" style="grid-template-columns:repeat(3,1fr)">
+    <div class="part"><b>100 µF</b><div class="tank sm"><div class="tank-fill" style="height:10%"></div></div><small>Tanque pequeño</small></div>
+    <div class="part"><b>470 µF</b><div class="tank sm"><div class="tank-fill" style="height:47%"></div></div><small>Tanque mediano</small></div>
+    <div class="part"><b>1000 µF</b><div class="tank sm"><div class="tank-fill" style="height:100%"></div></div><small>Tanque grande</small></div>
+  </div>
+  <div class="callout">
+    <span class="callout-label">📓 Para tu cuaderno</span>
+    A mayor capacidad, más carga puede guardar el capacitor.
+  </div>
+  <div class="callout ok"><span class="callout-label">En Tinkercad</span>La capacidad se escribe en el panel de propiedades del capacitor: revisa que la unidad sea <strong>µF</strong>. Deja el voltaje del capacitor en un valor mayor que 9 V (por ejemplo, 16 V).</div>
+`});
+
+/* 7. Interactivo: carga y descarga (circuito 1) */
+slideDefs.push({render:()=>`
+  ${kicker("Interactivo")}
+  <h2>Carga y descarga</h2>
+  <p class="sub">Este es el circuito 1 del taller. Enciende S1, espera a que el capacitor se cargue y luego apágalo. Después prueba <strong>sin C1</strong>.</p>
+  ${sch('circuito1','','cdSch')}
+  <div class="grid2" style="margin-top:12px;align-items:center">
+    <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><button class="slider" id="cdS1" aria-label="Interruptor S1" aria-pressed="false"></button><span class="mono" style="font-size:12px">S1</span></div>
+      <label class="mono" style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="cdC" checked style="accent-color:var(--accent-2)"> Con C1</label>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <div class="tank"><div class="tank-fill" id="cdTank" style="height:0%"></div></div>
+      <div style="font-size:13.5px;line-height:1.5">Carga guardada en C1</div>
+    </div>
+  </div>
+  <div class="callout" id="cdTxt"><span class="callout-label">S1 apagado</span>Enciende S1 para empezar.</div>
+  <p class="hint-small">Animación ilustrativa: los tiempos en Tinkercad pueden ser distintos.</p>
+`});
+after[slideDefs.length-1] = ()=>{
+  const host=document.getElementById('cdSch'), sw=document.getElementById('cdS1'), cc=document.getElementById('cdC');
+  const tank=document.getElementById('cdTank'), txt=document.getElementById('cdTxt');
+  let on=false, v=0, last=performance.now();
+  const msg=()=>{
+    const withC=cc.checked;
+    host.querySelector('.cap').style.opacity = withC ? 1 : 0.15;
+    if(on) txt.innerHTML='<span class="callout-label">Carga</span>La batería alimenta el LED'+(withC?' y <strong>llena de carga</strong> el capacitor.':'. No hay capacitor que cargar.');
+    else txt.innerHTML = withC
+      ? '<span class="callout-label">Descarga</span>La batería ya no está conectada, pero el capacitor <strong>entrega la carga que guardó</strong>: el LED se apaga <strong>poco a poco</strong>.'
+      : '<span class="callout-label">Sin capacitor</span>Sin batería y sin capacitor no hay corriente: el LED se apaga <strong>de inmediato</strong>.';
+  };
+  sw.onclick=()=>{ on=!on; sw.classList.toggle('on',on); sw.setAttribute('aria-pressed',on); msg(); };
+  cc.onchange=()=>{ if(!cc.checked && !on) v=0; msg(); };
+  host.querySelector('.cap').style.transition='opacity .2s';
+  const tick=t=>{
+    const dt=Math.min(0.1,(t-last)/1000); last=t;
+    if(on) v = cc.checked ? v+(1-v)*(1-Math.exp(-dt/0.35)) : 1;
+    else   v = cc.checked ? v*Math.exp(-dt/1.4) : 0;
+    if(reduceMotion) v = on?1:0;
+    setLed(host,0, cc.checked||on ? bright(v) : 0);
+    tank.style.height = (cc.checked? v*100 : 0).toFixed(1)+'%';
+    anim=requestAnimationFrame(tick);
+  };
+  anim=requestAnimationFrame(tick);
+};
+
+/* 8. Interactivo: capacitor grande vs pequeño (circuito 2) */
+slideDefs.push({render:()=>`
+  ${kicker("Concepto 4 · El tiempo")}
+  <h2>¿Cuál se apaga primero?</h2>
+  <p class="sub">Circuito 2 del taller: el LED rojo tiene un capacitor de <strong>1000 µF</strong> y el verde uno de <strong>100 µF</strong>. Antes de probar, <strong>predice</strong> cuál se apaga primero.</p>
+  <div class="btnrow" id="ppOpts" style="margin-bottom:10px">
+    <button class="btn" data-v="1">El rojo (1000 µF)</button><button class="btn" data-v="2">El verde (100 µF)</button><button class="btn" data-v="0">Al mismo tiempo</button>
+  </div>
+  ${sch('circuito2','','ppSch')}
+  <div style="display:flex;gap:16px;align-items:center;margin-top:12px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><button class="slider" id="ppS1" aria-label="Interruptor S1" aria-pressed="false" disabled></button><span class="mono" style="font-size:12px">S1</span></div>
+    <div class="fb" id="ppFb" style="flex:1">Elige tu predicción para activar S1.</div>
+  </div>
+  <div class="callout"><span class="callout-label">📓 Para tu cuaderno</span>El tiempo de descarga depende de la <strong>capacidad</strong> del capacitor y de la <strong>resistencia</strong> por donde se descarga. Más capacidad → más tiempo.</div>
+  <p class="hint-small">Animación ilustrativa: en el taller lo compruebas tú en Tinkercad.</p>
+`});
+after[slideDefs.length-1] = ()=>{
+  const host=document.getElementById('ppSch'); host.dataset.green='1';
+  const sw=document.getElementById('ppS1'), fb=document.getElementById('ppFb');
+  let on=false, v1=0, v2=0, last=performance.now(), pred=null, charged=false;
+  document.querySelectorAll('#ppOpts .btn').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('#ppOpts .btn').forEach(x=>x.classList.remove('sel')); b.classList.add('sel');
+    pred=b.dataset.v; sw.disabled=false; fb.className='fb'; fb.textContent='Ahora enciende S1, espera un momento y apágalo.';
+  });
+  sw.onclick=()=>{ on=!on; sw.classList.toggle('on',on); sw.setAttribute('aria-pressed',on);
+    if(on){ charged=true; fb.className='fb'; fb.textContent='Los dos capacitores se están cargando. Ahora apaga S1.'; }
+    else if(charged){ setTimeout(()=>{ if(on) return; const ok=pred==='2';
+      fb.className='fb '+(ok?'good':'bad');
+      fb.textContent=(ok?'✓ Tu predicción es correcta. ':'✗ Mira de nuevo: ')+'El verde (100 µF) se apaga primero: su capacitor guarda menos carga. El rojo (1000 µF) dura más.'; }, 1200); }
+  };
+  const tick=t=>{
+    const dt=Math.min(0.1,(t-last)/1000); last=t;
+    if(on){ v1+= (1-v1)*(1-Math.exp(-dt/0.3)); v2+=(1-v2)*(1-Math.exp(-dt/0.3)); }
+    else { v1*=Math.exp(-dt/2.2); v2*=Math.exp(-dt/0.22); }
+    if(reduceMotion){ v1=v2=on?1:0; }
+    setLed(host,0,bright(v1)); setLed(host,1,bright(v2));
+    anim=requestAnimationFrame(tick);
+  };
+  anim=requestAnimationFrame(tick);
+};
+
+/* 9. Interactivo: temporizador (circuito 3) */
+slideDefs.push({render:()=>`
+  ${kicker("Concepto 5 · Temporizador")}
+  <h2>Capacitor + transistor = temporizador</h2>
+  <p class="sub">Circuito 3 del taller. Presiona P1 <strong>un momento</strong> y suéltalo. Luego cambia C1 a 470 µF y compara.</p>
+  ${sch('circuito3','','tmSch')}
+  <div class="grid2" style="margin-top:12px;align-items:center">
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><button class="pushbtn" id="tmP1" aria-label="Pulsador P1"><span></span></button><span class="mono" style="font-size:12px">P1</span></div>
+      <div class="btnrow" id="tmC"><button class="btn sel" data-c="100">C1 = 100 µF</button><button class="btn" data-c="470">C1 = 470 µF</button></div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <div class="tank"><div class="tank-fill" id="tmTank" style="height:0%"></div></div>
+      <div style="font-size:13.5px;line-height:1.5">Carga en C1 → corriente a la base</div>
+    </div>
+  </div>
+  <div class="callout" id="tmTxt"><span class="callout-label">En reposo</span>C1 está descargado: no llega corriente a la base, el transistor está abierto y el LED está apagado.</div>
+  <p class="hint-small">Animación ilustrativa: los tiempos en Tinkercad pueden ser distintos.</p>
+`});
+after[slideDefs.length-1] = ()=>{
+  const host=document.getElementById('tmSch'), b=document.getElementById('tmP1'), tank=document.getElementById('tmTank'), txt=document.getElementById('tmTxt');
+  let down=false, v=0, tau=1.6, last=performance.now(), state='rest';
+  document.querySelectorAll('#tmC .btn').forEach(x=>x.onclick=()=>{
+    document.querySelectorAll('#tmC .btn').forEach(y=>y.classList.remove('sel')); x.classList.add('sel');
+    tau = x.dataset.c==='470' ? 7.5 : 1.6;
+    const lbl=[...host.querySelectorAll('text')].find(t=>/µF/.test(t.textContent)); if(lbl) lbl.textContent=x.dataset.c+' µF';
+  });
+  const set=d=>{ down=d; b.classList.toggle('down',d); };
+  b.addEventListener('pointerdown',e=>{e.preventDefault(); set(true);}); b.addEventListener('pointerup',()=>set(false)); b.addEventListener('pointerleave',()=>set(false));
+  b.addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); set(true);} }); b.addEventListener('keyup',()=>set(false));
+  const tick=t=>{
+    const dt=Math.min(0.1,(t-last)/1000); last=t;
+    if(down) v+= (1-v)*(1-Math.exp(-dt/0.15)); else v*=Math.exp(-dt/tau);
+    if(reduceMotion) v = down?1:0;
+    const br=bright(v);
+    setLed(host,0,br); tank.style.height=(v*100).toFixed(1)+'%';
+    const ns = down ? 'press' : (br>0.02 ? 'timer' : 'rest');
+    if(ns!==state){ state=ns;
+      txt.innerHTML = ns==='press' ? '<span class="callout-label">P1 presionado</span>La batería carga C1 y envía corriente a la base: el transistor se cierra y el LED enciende.'
+        : ns==='timer' ? '<span class="callout-label">P1 suelto</span>¡El LED sigue encendido! C1 <strong>se descarga</strong> enviando corriente a la base por R2, y el transistor sigue cerrado.'
+        : '<span class="callout-label">Fin del tiempo</span>C1 se descargó: la base se quedó sin corriente, el transistor se abrió y el LED se apagó <strong>solo</strong>.'; }
+    anim=requestAnimationFrame(tick);
+  };
+  anim=requestAnimationFrame(tick);
+};
+
+/* 10. Predicción */
+const PRED = [
+  ["Circuito 1 <strong>sin C1</strong>. Apagas S1.", "inm", "Sin capacitor no hay carga guardada: al desconectar la batería no queda nada que alimente el LED."],
+  ["Circuito 1 <strong>con C1</strong>. Apagas S1.", "poco", "C1 entrega la carga que guardó: el LED se va apagando a medida que C1 se descarga."],
+  ["Circuito 3. Presionas P1 un momento y lo sueltas.", "poco", "C1 sigue enviando corriente a la base mientras se descarga: el LED se queda encendido un rato y luego se apaga solo."],
+  ["Circuito 3, pero con el cable de la <strong>base</strong> de Q1 suelto. Sueltas P1.", "nunca", "Si la corriente no llega a la base, el transistor nunca se cierra: el LED no enciende ni siquiera al presionar P1."]
+];
+const PRED_OPTS = [["inm","Se apaga de inmediato"],["poco","Se queda encendido un rato"],["nunca","Nunca encendió"]];
+slideDefs.push({render:()=>`
+  ${kicker("Predicción")}
+  <h2>¿Qué hace el LED?</h2>
+  <p class="sub">Piensa en cada situación y elige. Luego puedes comprobarlo en Tinkercad.</p>
+  <div class="grid2">${PRED.map(([t],i)=>`
+    <div class="q-card"><div class="mono" style="font-size:12px;color:var(--ink-soft)">Situación ${String.fromCharCode(65+i)}</div>
+      <div style="font-size:14.5px;line-height:1.5">${t}</div>
+      <div class="btnrow">${PRED_OPTS.map(([k,l])=>`<button class="btn" style="font-size:12px;padding:8px 10px" onclick="predAns(${i},'${k}',this)">${l}</button>`).join('')}</div>
+      <div class="fb" id="prFb${i}"></div></div>`).join('')}
+  </div>
+`});
+function predAns(i, v, btn){
+  const [, ok, why] = PRED[i]; const fb=document.getElementById('prFb'+i);
+  btn.parentElement.querySelectorAll('.btn').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel');
+  const okLbl = PRED_OPTS.find(o=>o[0]===ok)[1];
+  fb.className = 'fb ' + (v===ok?'good':'bad');
+  fb.textContent = (v===ok?'✓ ':'✗ ') + okLbl + '. ' + why;
+}
+
+/* 11. En Tinkercad */
+slideDefs.push({render:()=>`
+  ${kicker("En Tinkercad", true)}
+  <h2>El capacitor en la protoboard</h2>
+  <ol class="steps">
+    <li><span class="num">1</span><span>Marca los nodos del diagrama, como en las semanas anteriores.</span></li>
+    <li><span class="num">2</span><span>Busca <code>capacitor</code> y elige el <strong>polarizado</strong>.</span></li>
+    <li><span class="num">3</span><span>En sus propiedades escribe la <strong>capacidad</strong> del diagrama y revisa la unidad: <strong>µF</strong>.</span></li>
+    <li><span class="num">4</span><span>Coloca cada pata en <strong>una columna distinta</strong>: la <strong>+</strong> hacia el lado del positivo, la <strong>−</strong> hacia el negativo.</span></li>
+    <li><span class="num">5</span><span>Revisa las polaridades de diodos y LEDs, y simula.</span></li>
+    <li><span class="num">6</span><span>Para medir el voltaje del capacitor: multímetro en <strong>V</strong>, punta roja en la pata +, punta negra en la pata −.</span></li>
+  </ol>
+  <div class="callout"><span class="callout-label">Un circuito, un diseño</span>Crea un diseño nuevo de Tinkercad para cada circuito del taller: cada uno necesita su propio enlace.</div>
+`});
+
+/* 12. Errores frecuentes */
+slideDefs.push({render:()=>`
+  ${kicker("Errores frecuentes")}
+  <h2>Lo que más falla con el capacitor</h2>
+  <div class="tbl-wrap"><table class="formula">
+    <tr><th>Error</th><th>Qué pasa</th><th>Cómo evitarlo</th></tr>
+    <tr><td>Capacitor al revés</td><td>El circuito no funciona como se espera; un capacitor polarizado al revés se puede dañar</td><td>Pasa el mouse sobre cada pata antes de conectar</td></tr>
+    <tr><td>Las dos patas en la misma columna</td><td>Quedan unidas: el capacitor no hace nada</td><td>Cada pata en una columna distinta</td></tr>
+    <tr><td>Otra unidad en lugar de µF</td><td>El capacitor queda con un valor muy distinto</td><td>Revisa la unidad en las propiedades</td></tr>
+    <tr><td>Quitar la resistencia R1</td><td>El capacitor se carga sin protección</td><td>Usa exactamente los componentes del diagrama</td></tr>
+    <tr><td>Pulsador con dos patas del mismo lado</td><td>No controla nada</td><td>Patas en diagonal</td></tr>
+  </table></div>
+`});
+
+/* 13. El taller */
+slideDefs.push({render:()=>`
+  ${kicker("Taller", true)}
+  <h2>Taller evaluativo: 3 circuitos, 5 preguntas</h2>
+  <div class="tbl-wrap"><table class="formula">
+    <tr><th>#</th><th>Circuito</th><th>Preguntas</th><th>Tiempo</th></tr>
+    <tr><td>—</td><td>Lectura de la semana</td><td>—</td><td>15 min</td></tr>
+    <tr><td>1</td><td>El LED que se apaga despacio</td><td>1 y 2</td><td>30 min</td></tr>
+    <tr><td>2</td><td>Capacitor grande y capacitor pequeño</td><td>3</td><td>25 min</td></tr>
+    <tr><td>3</td><td>Temporizador con transistor</td><td>4 y 5</td><td>30 min</td></tr>
+    <tr><td>—</td><td>Entrega en Classroom</td><td>—</td><td>10 min</td></tr>
+  </table></div>
+  <div class="callout warn"><span class="callout-label">Para cada circuito</span>1) constrúyelo desde el diagrama, 2) simula y haz la prueba, 3) responde sus preguntas en tu cuaderno, 4) comparte el enlace. Los diagramas están en la guía del taller.</div>
+`});
+
+/* 14. Entregables y evaluación */
+slideDefs.push({render:()=>`
+  ${kicker("Entregable")}
+  <h2>Qué debes entregar</h2>
+  <div class="check-item"><input type="checkbox" id="e1"><label for="e1">En Classroom: los <strong>3 enlaces compartidos</strong> de Tinkercad, uno por circuito.</label></div>
+  <div class="check-item"><input type="checkbox" id="e2"><label for="e2">En Classroom: las <strong>respuestas a las 5 preguntas</strong> del taller.</label></div>
+  <div class="check-item"><input type="checkbox" id="e3"><label for="e3">En tu cuaderno: las 5 respuestas (en la pregunta 2, el valor medido con su unidad).</label></div>
+  <div class="check-item"><input type="checkbox" id="e4"><label for="e4">En tu cuaderno: la transcripción de las partes marcadas con 📓 de la lectura.</label></div>
+  <div class="callout ok"><span class="callout-label">Cómo se califica</span>Cada pregunta vale <strong>20 puntos</strong> (total 100) y se califica con una rúbrica: se tiene en cuenta que <strong>describas bien lo que observaste</strong> y que <strong>expliques por qué</strong> pasa.</div>
+  <p class="sub" style="margin-top:14px">La fecha de entrega la indica tu docente.</p>
+`});
+
+/* 15. Cierre */
+slideDefs.push({render:()=>`
+  ${kicker("Cierre")}
+  <h2>Resumen de la Semana 5</h2>
+  <ul class="list">
+    <li><span>El <strong>capacitor</strong> almacena carga eléctrica y luego la entrega al circuito.</span></li>
+    <li><span>El capacitor polarizado tiene pata <strong>+</strong> y pata <strong>−</strong>, como el LED.</span></li>
+    <li><span>La <strong>capacidad</strong> se mide en faradios; en los circuitos se usan <strong>µF</strong>.</span></li>
+    <li><span><strong>Carga:</strong> la batería lo llena. <strong>Descarga:</strong> entrega lo que guardó.</span></li>
+    <li><span>Más capacidad → la descarga dura <strong>más tiempo</strong>.</span></li>
+    <li><span>Capacitor + transistor = <strong>temporizador</strong>: el LED se apaga solo después de un tiempo.</span></li>
+  </ul>
+  <div class="callout"><span class="callout-label">Próxima semana</span>Semana 6: proyecto integrador de electrónica análoga.</div>
+`});
+
+/* ====================== MOTOR DE DIAPOSITIVAS ====================== */
+let current = 0;
+const host = document.getElementById('slideHost');
+const dotsEl = document.getElementById('dots');
+function buildDots(){
+  dotsEl.innerHTML = slideDefs.map((_,i)=>`<button class="dot" aria-label="Ir a diapositiva ${i+1}" onclick="goTo(${i})"></button>`).join('');
+}
+function renderSlide(){
+  stopAnim();
+  host.innerHTML = slideDefs[current].render();
+  document.getElementById('slideCounter').textContent = `${current+1} / ${slideDefs.length}`;
+  document.getElementById('progressFill').style.width = `${((current+1)/slideDefs.length)*100}%`;
+  [...dotsEl.children].forEach((d,i)=>{ d.classList.toggle('active', i===current); d.classList.toggle('done', i<current); });
+  document.getElementById('prevBtn').disabled = current===0;
+  const nb = document.getElementById('nextBtn');
+  nb.textContent = current===slideDefs.length-1 ? 'Fin ✓' : 'Siguiente →';
+  nb.disabled = current===slideDefs.length-1;
+  if(after[current]) after[current]();
+}
+function goTo(i){ const n = Math.max(0, Math.min(slideDefs.length-1, i)); if(n!==current){ current=n; renderSlide(); window.scrollTo({top:0}); } }
+document.getElementById('prevBtn').onclick = ()=>goTo(current-1);
+document.getElementById('nextBtn').onclick = ()=>goTo(current+1);
+document.addEventListener('keydown', e=>{
+  const tg = e.target.tagName;
+  if(tg==='INPUT' || tg==='SELECT' || tg==='TEXTAREA' || tg==='BUTTON' && (e.key===' '||e.key==='Enter')) return;
+  if(e.key==='ArrowRight') goTo(current+1);
+  if(e.key==='ArrowLeft') goTo(current-1);
+});
+try{ const h = location.hash.replace('#s',''); if(/^\d+$/.test(h)) current = Math.min(slideDefs.length-1, Math.max(0, parseInt(h)-1)); }catch(e){}
+buildDots();
+renderSlide();
+
+</script>
+
+</body>
+</html>
