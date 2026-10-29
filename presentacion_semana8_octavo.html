@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compuertas Lógicas Básicas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2efe3; --surface:#fffdf8; --surface-2:#e8e1cd;
+    --grid-dot: rgba(31,42,38,0.14);
+    --ink:#1f2a26; --ink-soft:#5b6b64; --ink-faint:#8a978f;
+    --accent:#a84e1c; --accent-ink:#fffaf3;
+    --accent-2:#2f6f5e; --accent-2-ink:#f2fbf7;
+    --rail-pos:#a63a2c; --rail-neg:#2a5c8f;
+    --line: rgba(31,42,38,0.16);
+    --shadow: 0 1px 0 rgba(31,42,38,0.05), 0 12px 28px -18px rgba(31,42,38,0.35);
+    --radius: 14px; --danger:#a63a2c;
+    --led:#c0392b; --ledg:#2f8f4e;
+    --n-p:#c0392b; --n-a:#d17a0f; --n-b:#7a4fb5; --n-c:#16857f; --n-d:#b0368a; --n-g:#2a5c8f;
+    --board:#ece6d4; --board-hole:#b9b19a; --board-hl:rgba(47,111,94,0.18);
+    --res-body:#d8c39a; --cap:#2a5c8f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg:#141f1b; --surface:#1a2723; --surface-2:#20322b;
+      --grid-dot: rgba(238,242,238,0.10);
+      --ink:#edf2ee; --ink-soft:#a7b6ae; --ink-faint:#748179;
+      --accent:#e3a066; --accent-ink:#20140a;
+      --accent-2:#6fcaa6; --accent-2-ink:#0a1f17;
+      --rail-pos:#e2776a; --rail-neg:#7cb0e8;
+      --line: rgba(238,242,238,0.14);
+      --shadow: 0 1px 0 rgba(0,0,0,0.2), 0 12px 28px -18px rgba(0,0,0,0.6);
+      --danger:#e2776a;
+      --led:#ff6b5b; --ledg:#5fd08a;
+      --n-p:#ff7a6b; --n-a:#f0a54a; --n-b:#b594e8; --n-c:#4fc9c0; --n-d:#e77cc3; --n-g:#7cb0e8;
+      --board:#2a3a34; --board-hole:#56685f; --board-hl:rgba(111,202,166,0.2);
+      --res-body:#b9a47c; --cap:#7cb0e8;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:#141f1b; --surface:#1a2723; --surface-2:#20322b;
+    --grid-dot: rgba(238,242,238,0.10);
+    --ink:#edf2ee; --ink-soft:#a7b6ae; --ink-faint:#748179;
+    --accent:#e3a066; --accent-ink:#20140a;
+    --accent-2:#6fcaa6; --accent-2-ink:#0a1f17;
+    --rail-pos:#e2776a; --rail-neg:#7cb0e8;
+    --line: rgba(238,242,238,0.14);
+    --shadow: 0 1px 0 rgba(0,0,0,0.2), 0 12px 28px -18px rgba(0,0,0,0.6);
+    --danger:#e2776a;
+    --led:#ff6b5b; --ledg:#5fd08a;
+    --n-p:#ff7a6b; --n-a:#f0a54a; --n-b:#b594e8; --n-c:#4fc9c0; --n-d:#e77cc3; --n-g:#7cb0e8;
+    --board:#2a3a34; --board-hole:#56685f; --board-hl:rgba(111,202,166,0.2);
+    --res-body:#b9a47c; --cap:#7cb0e8;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background: radial-gradient(var(--grid-dot) 1.3px, transparent 1.3px) 0 0/22px 22px, var(--bg);
+    color:var(--ink); font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+    display:flex; flex-direction:column; min-height:100%;
+  }
+  h1,h2,h3,.mono{ font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace; }
+  h2{ text-wrap:balance; }
+  a{ color:var(--accent); }
+
+  .topbar{ display:flex; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid var(--line);
+    background:color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(6px); position:sticky; top:env(safe-area-inset-top,0px); z-index:20; flex-wrap:wrap; }
+  .brand{ display:flex; flex-direction:column; line-height:1.15; min-width:0; }
+  .brand .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); }
+  .brand .title{ font-weight:700; font-size:14px; }
+  .topbar .spacer{ flex:1; }
+  .progress-wrap{ display:flex; align-items:center; gap:10px; }
+  .progress-track{ width:min(34vw,220px); height:6px; border-radius:6px; background:var(--surface-2); overflow:hidden; border:1px solid var(--line); }
+  .progress-fill{ height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); width:5%; transition:width .25s ease; }
+  .progress-label{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink-soft); white-space:nowrap; }
+
+  .stage{ flex:1; display:flex; align-items:flex-start; justify-content:center; padding:28px 16px 12px; }
+  .slide{ width:100%; max-width:820px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:34px clamp(18px,4vw,46px) 30px; animation: rise .32s ease; }
+  @keyframes rise{ from{ opacity:.4; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){ .slide{animation:none;} .spin, .flow{animation:none!important;} }
+
+  .kicker{ display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .tag{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    padding:4px 9px; border-radius:20px; border:1px solid var(--line); color:var(--ink-soft); }
+  .tag.time{ color:var(--accent); border-color:color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .tag.key{ color:var(--accent-2-ink); background:var(--accent-2); border-color:var(--accent-2); }
+  .slide h2{ font-size:clamp(21px,3.2vw,27px); margin:0 0 6px; }
+  .slide .sub{ color:var(--ink-soft); font-size:15px; margin:0 0 20px; max-width:62ch; }
+  .body-text{ font-size:15.5px; line-height:1.65; max-width:68ch; }
+  .body-text p{ margin:0 0 12px; }
+
+  ol.steps, ul.list{ margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:10px;}
+  ol.steps li{ display:flex; gap:12px; align-items:flex-start; font-size:15px; line-height:1.55; }
+  ol.steps li .num{ flex:none; width:26px; height:26px; border-radius:7px; background:var(--surface-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--accent); font-weight:700; }
+  ul.list li{ display:flex; gap:10px; align-items:flex-start; font-size:15px; line-height:1.55; }
+  ul.list li::before{ content:"▸"; color:var(--accent); flex:none; }
+
+  .callout{ border:1px solid var(--line); border-left:3px solid var(--accent); background:var(--surface-2);
+    border-radius:10px; padding:13px 15px; font-size:14.5px; line-height:1.55; margin-top:16px; }
+  .callout.warn{ border-left-color: var(--danger); }
+  .callout.ok{ border-left-color: var(--accent-2); }
+  .callout .callout-label{ font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); display:block; margin-bottom:4px; }
+  .callout.warn .callout-label{ color:var(--danger); }
+  .callout.ok .callout-label{ color:var(--accent-2); }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
+
+  .tbl-wrap{ overflow-x:auto; }
+  table.formula{ width:100%; border-collapse:collapse; font-size:14.5px; margin-top:10px; }
+  table.formula th, table.formula td{ border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+  table.formula th{ background:var(--surface-2); font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+  table.formula td.f{ font-family:'JetBrains Mono',monospace; color:var(--accent); font-weight:600; }
+
+  .btn{ font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; letter-spacing:.02em;
+    border:1px solid var(--line); background:var(--surface-2); color:var(--ink);
+    padding:10px 16px; border-radius:9px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; text-decoration:none; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
+  .btn:hover{ border-color:var(--accent); }
+  .btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .btn.sel{ background:var(--accent-2); color:var(--accent-2-ink); border-color:var(--accent-2); }
+  .btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .btn:focus-visible, button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .btnrow{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  .navbar{ display:flex; align-items:center; justify-content:center; gap:16px; padding:16px 16px 22px; flex-wrap:wrap; }
+  .dots{ display:flex; gap:6px; flex-wrap:wrap; max-width:520px; justify-content:center; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:var(--surface-2); border:1px solid var(--line); cursor:pointer; padding:0; }
+  .dot.active{ background:var(--accent); border-color:var(--accent); width:20px; border-radius:5px; }
+  .dot.done{ background:var(--accent-2); border-color:var(--accent-2); }
+  footer.hint{ text-align:center; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-faint); padding:0 16px 16px; }
+  code{ font-family:'JetBrains Mono',monospace; background:var(--surface-2); border:1px solid var(--line); padding:1px 6px; border-radius:5px; font-size:.92em; }
+
+  /* ---- esquemáticos ---- */
+  .sch-wrap{ border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:8px; overflow-x:auto; }
+  .sch-wrap svg{ display:block; width:100%; min-width:320px; height:auto; }
+  .sch .c, .sch .w{ transition: opacity .2s ease, stroke .2s ease; }
+  .sch-wrap.focus .c{ opacity:.28; }
+  .sch-wrap.focus .c.hl{ opacity:1; }
+  .sch-wrap.nodes .w.n-p{ stroke:var(--n-p); stroke-width:4; } .sch-wrap.nodes .j.n-p{ fill:var(--n-p); }
+  .sch-wrap.nodes .w.n-a{ stroke:var(--n-a); stroke-width:4; } .sch-wrap.nodes .j.n-a{ fill:var(--n-a); }
+  .sch-wrap.nodes .w.n-b{ stroke:var(--n-b); stroke-width:4; } .sch-wrap.nodes .j.n-b{ fill:var(--n-b); }
+  .sch-wrap.nodes .w.n-c{ stroke:var(--n-c); stroke-width:4; } .sch-wrap.nodes .j.n-c{ fill:var(--n-c); }
+  .sch-wrap.nodes .w.n-d{ stroke:var(--n-d); stroke-width:4; } .sch-wrap.nodes .j.n-d{ fill:var(--n-d); }
+  .sch-wrap.nodes .w.n-g{ stroke:var(--n-g); stroke-width:4; } .sch-wrap.nodes .j.n-g{ fill:var(--n-g); }
+  .sch-wrap.on .c-LED1 polygon:first-of-type{ fill-opacity:1; filter:drop-shadow(0 0 6px var(--led)); }
+  .legend{ display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:10px; font-size:13px; font-family:'JetBrains Mono',monospace; }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .legend i{ width:18px; height:5px; border-radius:3px; display:inline-block; }
+
+  /* ---- protoboard ---- */
+  .board-wrap{ border:1px solid var(--line); border-radius:12px; background:var(--surface-2); padding:8px; overflow-x:auto; }
+  .board-wrap svg{ display:block; width:100%; min-width:360px; height:auto; }
+  .walk{ display:grid; grid-template-columns: 1fr; gap:14px; }
+  .walk-step{ display:flex; align-items:flex-start; gap:12px; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .walk-step .n{ flex:none; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--accent-2-ink); background:var(--accent-2); border-radius:7px; min-width:30px; height:26px; display:flex; align-items:center; justify-content:center; font-size:12.5px; padding:0 6px; }
+  .walk-step .t{ font-size:14.5px; line-height:1.55; }
+  .walk-step .t b{ display:block; margin-bottom:2px; }
+  .walk-nav{ display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .pip{ display:flex; gap:4px; }
+  .pip i{ width:18px; height:5px; border-radius:3px; background:var(--line); }
+  .pip i.on{ background:var(--accent-2); }
+
+  /* ---- quiz ---- */
+  .q-card{ border:1px solid var(--line); border-radius:12px; padding:12px; background:var(--surface); display:flex; flex-direction:column; gap:10px; }
+  .q-card .sch-wrap{ border:none; padding:0; }
+  .q-card .sch-wrap svg{ min-width:260px; }
+  .fb{ font-size:14px; line-height:1.5; min-height:1.5em; }
+  .fb.good{ color:var(--accent-2); } .fb.bad{ color:var(--danger); }
+  .sym-q{ display:grid; grid-template-columns: minmax(0,200px) 1fr; gap:16px; align-items:center; }
+  @media (max-width:560px){ .sym-q{ grid-template-columns:1fr; } }
+  .sym-box{ border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:6px; }
+  .sym-box svg{ display:block; width:100%; height:auto; }
+  .class-row{ display:grid; grid-template-columns: 1fr 190px 26px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); font-size:15px; }
+  .class-row:last-child{ border-bottom:none; }
+  .class-row select{ font:inherit; font-size:14px; padding:7px 8px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--ink); width:100%; }
+  .class-row .mark{ font-weight:700; text-align:center; }
+  @media (max-width:480px){ .class-row{ grid-template-columns: 1fr 26px; } .class-row select{ grid-column:1 / 2; } }
+  .num-in{ width:90px; padding:9px 10px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; font-size:15px; text-align:center; }
+
+  /* ---- interactivos de interruptores ---- */
+  .demo{ border:1px solid var(--line); border-radius:12px; background:var(--surface-2); padding:14px; display:flex; flex-direction:column; gap:10px; align-items:center; text-align:center; }
+  .bulb{ width:46px; height:46px; border-radius:50%; background:color-mix(in srgb, var(--led) 18%, var(--surface)); border:2px solid var(--led); transition: all .15s ease; }
+  .bulb.on{ background:var(--led); box-shadow:0 0 22px 4px color-mix(in srgb, var(--led) 60%, transparent); }
+  .slider{ width:84px; height:34px; border-radius:18px; background:var(--surface); border:1px solid var(--line); position:relative; cursor:pointer; padding:0; }
+  .slider::after{ content:""; position:absolute; top:4px; left:4px; width:40px; height:24px; border-radius:13px; background:var(--ink-faint); transition:left .15s ease, background .15s ease; }
+  .slider.on::after{ left:38px; background:var(--accent-2); }
+  .pushbtn{ width:64px; height:64px; border-radius:12px; background:var(--surface); border:1px solid var(--line); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; touch-action:none; }
+  .pushbtn span{ width:34px; height:34px; border-radius:50%; background:var(--accent); box-shadow:0 4px 0 color-mix(in srgb, var(--accent) 60%, #000); transition: transform .06s ease, box-shadow .06s ease; }
+  .pushbtn.down span{ transform:translateY(3px); box-shadow:0 1px 0 color-mix(in srgb, var(--accent) 60%, #000); }
+  .spin{ animation: spin 1s linear infinite; transform-origin: 50% 50%; transform-box: fill-box; }
+  .spin.rev{ animation-direction: reverse; }
+  @keyframes spin{ to{ transform: rotate(360deg);} }
+  .legpick circle.leg{ cursor:pointer; }
+  .check-item{ display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--line); }
+  .check-item:last-child{ border-bottom:none; }
+  .check-item input{ margin-top:3px; width:16px; height:16px; accent-color:var(--accent-2); flex:none; }
+  .check-item label{ font-size:14.5px; line-height:1.5; }
+  .parts{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:6px; }
+  @media (max-width:640px){ .parts{ grid-template-columns:repeat(2,1fr); } }
+  .part{ border:1px solid var(--line); border-radius:12px; padding:12px; background:var(--surface-2); }
+  .part b{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em; }
+  .part p{ margin:0; font-size:13.5px; line-height:1.45; }
+  .part small{ display:block; margin-top:6px; color:var(--ink-soft); font-size:12.5px; }
+
+  .sch-wrap.on .led polygon{ fill:var(--led); filter:drop-shadow(0 0 7px var(--led)); }
+  .bar{ display:inline-block; height:10px; width:0; border-radius:5px; background:var(--accent); vertical-align:middle; transition:width .2s ease; }
+  .bar.on{ width:18px; } .bar.big.on{ width:120px; background:var(--accent-2); }
+  .grid2 > .sym-box svg{ max-width:360px; margin:0 auto; }
+
+  /* ---- semana 5: capacitor ---- */
+  .tank{ width:46px; height:70px; border:2px solid var(--cap); border-radius:6px 6px 8px 8px; background:var(--surface); position:relative; overflow:hidden; flex:none; }
+  .tank.sm{ width:38px; height:54px; margin:6px 0; }
+  .tank-fill{ position:absolute; left:0; right:0; bottom:0; background:color-mix(in srgb, var(--cap) 70%, transparent); }
+  .hint-small{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink-faint); margin:10px 0 0; }
+  .slider:disabled{ opacity:.35; cursor:not-allowed; }
+
+  /* ---- semana 6: fotorresistencia y zumbador ---- */
+  input.light{ flex:1; min-width:140px; accent-color:var(--n-a); height:28px; }
+  .bz .waves{ opacity:0; transition:opacity .15s ease; }
+  .bz .waves.ring path{ animation: ring .5s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: left center; }
+  .bz .waves.ring path:nth-child(2){ animation-delay:.25s; }
+  @keyframes ring{ from{ transform:scaleX(.8);} to{ transform:scaleX(1.15);} }
+  @media (prefers-reduced-motion: reduce){ .bz .waves.ring path{ animation:none; } }
+  .d2{ transition:opacity .2s ease; }
+  .grid-gate{ display:grid; grid-template-columns:1.6fr 1fr; gap:16px; align-items:start; }
+  @media (max-width:640px){ .grid-gate{ grid-template-columns:1fr; } }
+</style>
+
+<style>
+  .vid{ display:flex; gap:14px; align-items:center; margin-top:16px; padding:10px; border:1px solid var(--line); border-radius:12px; background:var(--surface-2); text-decoration:none; color:var(--ink); }
+  .vid:hover{ border-color:var(--accent); }
+  .vid img{ width:168px; aspect-ratio:16/9; object-fit:cover; border-radius:8px; flex:none; background:var(--line); }
+  .vid-t{ display:flex; flex-direction:column; gap:3px; font-size:14px; line-height:1.4; min-width:0; }
+  .vid-k{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); }
+  .vid-c{ color:var(--ink-soft); font-size:13px; }
+  .vid-n{ color:var(--ink-soft); font-size:12.5px; font-style:italic; }
+  @media (max-width:520px){ .vid{ flex-direction:column; align-items:stretch; } .vid img{ width:100%; } }
+</style>
+
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="eyebrow">Electrónica · Grado octavo</span>
+    <span class="title">Semana 8 — Compuertas lógicas básicas</span>
+  </div>
+  <div class="spacer"></div>
+  <div class="progress-wrap">
+    <span class="progress-label mono" id="slideCounter">1 / 1</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+</div>
+
+<div class="stage"><div class="slide" id="slideHost"></div></div>
+
+<div class="navbar">
+  <button class="btn" id="prevBtn" aria-label="Diapositiva anterior">← Anterior</button>
+  <div class="dots" id="dots"></div>
+  <button class="btn primary" id="nextBtn" aria-label="Siguiente diapositiva">Siguiente →</button>
+</div>
+<footer class="hint">Usa las flechas ← → del teclado, o haz clic en los puntos, para moverte entre diapositivas.</footer>
+
+<script>
+const SVG = {"circuito1": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-50 20 880 490\" class=\"sch\" font-family=\"DejaVu Sans, Archivo, sans-serif\"><circle cx=\"80\" cy=\"275\" r=\"30\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"3\"/><text x=\"80\" y=\"269\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">+</text><text x=\"80\" y=\"296\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">−</text><line x1=\"80\" y1=\"233\" x2=\"80\" y2=\"245\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"80\" y1=\"305\" x2=\"80\" y2=\"317\" stroke=\"var(--ink)\" stroke-width=\"3\"/><text x=\"38\" y=\"273\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"end\">PS1</text><text x=\"38\" y=\"297\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"end\">fuente</text><text x=\"38\" y=\"317\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"end\">5 V</text><polyline points=\"80,70 80,233\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,317 80,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,70 540,70\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"200\" cy=\"70\" r=\"5.5\" fill=\"var(--ink-soft)\"/><circle cx=\"330\" cy=\"70\" r=\"5.5\" fill=\"var(--ink-soft)\"/><polyline points=\"200,70 200,110\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"200\" y1=\"110\" x2=\"200\" y2=\"126\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"200\" y1=\"160\" x2=\"200\" y2=\"170\" stroke=\"var(--ink)\" stroke-width=\"3\"/><circle cx=\"200\" cy=\"126\" r=\"3\" fill=\"var(--ink)\"/><circle cx=\"200\" cy=\"155\" r=\"5\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"2.5\"/><g class=\"sw\"><line class=\"lev-o\" x1=\"200\" y1=\"126\" x2=\"215\" y2=\"152\" stroke=\"var(--accent)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line class=\"lev-c\" x1=\"200\" y1=\"126\" x2=\"203\" y2=\"151\" stroke=\"var(--accent-2)\" stroke-width=\"3\" stroke-linecap=\"round\" style=\"display:none\"/></g><text x=\"220\" y=\"136\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">SA</text><text x=\"220\" y=\"159\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">interruptor</text><polyline points=\"200,170 200,330\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"200\" cy=\"245\" r=\"5.5\" fill=\"var(--ink-soft)\"/><line x1=\"200\" y1=\"330\" x2=\"200\" y2=\"338\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"200\" y1=\"382\" x2=\"200\" y2=\"390\" stroke=\"var(--ink)\" stroke-width=\"3\"/><rect x=\"190\" y=\"338\" width=\"20\" height=\"44\" rx=\"3\" fill=\"var(--surface)\" stroke=\"var(--accent)\" stroke-width=\"3\"/><text x=\"222\" y=\"356\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">RA</text><text x=\"222\" y=\"379\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">10 kΩ</text><polyline points=\"200,390 200,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"200\" cy=\"480\" r=\"5.5\" fill=\"var(--ink-soft)\"/><polyline points=\"330,70 330,110\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"330\" y1=\"110\" x2=\"330\" y2=\"126\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"330\" y1=\"160\" x2=\"330\" y2=\"170\" stroke=\"var(--ink)\" stroke-width=\"3\"/><circle cx=\"330\" cy=\"126\" r=\"3\" fill=\"var(--ink)\"/><circle cx=\"330\" cy=\"155\" r=\"5\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"2.5\"/><g class=\"sw\"><line class=\"lev-o\" x1=\"330\" y1=\"126\" x2=\"345\" y2=\"152\" stroke=\"var(--accent)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line class=\"lev-c\" x1=\"330\" y1=\"126\" x2=\"333\" y2=\"151\" stroke=\"var(--accent-2)\" stroke-width=\"3\" stroke-linecap=\"round\" style=\"display:none\"/></g><text x=\"350\" y=\"136\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">SB</text><text x=\"350\" y=\"159\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">interruptor</text><polyline points=\"330,170 330,330\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"330\" cy=\"285\" r=\"5.5\" fill=\"var(--ink-soft)\"/><line x1=\"330\" y1=\"330\" x2=\"330\" y2=\"338\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"330\" y1=\"382\" x2=\"330\" y2=\"390\" stroke=\"var(--ink)\" stroke-width=\"3\"/><rect x=\"320\" y=\"338\" width=\"20\" height=\"44\" rx=\"3\" fill=\"var(--surface)\" stroke=\"var(--accent)\" stroke-width=\"3\"/><text x=\"352\" y=\"356\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">RB</text><text x=\"352\" y=\"379\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">10 kΩ</text><polyline points=\"330,390 330,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"330\" cy=\"480\" r=\"5.5\" fill=\"var(--ink-soft)\"/><path d=\"M200,245 H321 A9,9 0 0 1 339,245 H500\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"330,285 500,285\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M500,220 H545 A45,45 0 0 1 545,310 H500 Z\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><text x=\"460\" y=\"237\" font-size=\"18\" font-weight=\"700\" fill=\"var(--accent)\" text-anchor=\"middle\">A</text><text x=\"460\" y=\"307\" font-size=\"18\" font-weight=\"700\" fill=\"var(--accent)\" text-anchor=\"middle\">B</text><text x=\"488\" y=\"237\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">1</text><text x=\"488\" y=\"305\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">2</text><polyline points=\"540,70 540,220\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"548\" y=\"210\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"start\" font-family=\"JetBrains Mono, monospace\">14</text><polyline points=\"540,310 540,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"540\" cy=\"480\" r=\"5.5\" fill=\"var(--ink-soft)\"/><text x=\"548\" y=\"330\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"start\" font-family=\"JetBrains Mono, monospace\">7</text><text x=\"562\" y=\"360\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">U1</text><text x=\"562\" y=\"383\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">74HC08 (AND)</text><polyline points=\"590,265 700,265 700,300\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"600\" y=\"257\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"start\" font-family=\"JetBrains Mono, monospace\">3</text><text x=\"620\" y=\"257\" font-size=\"15\" fill=\"var(--ink-soft)\" text-anchor=\"start\" font-style=\"italic\">salida</text><line x1=\"700\" y1=\"300\" x2=\"700\" y2=\"308\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"700\" y1=\"352\" x2=\"700\" y2=\"360\" stroke=\"var(--ink)\" stroke-width=\"3\"/><rect x=\"690\" y=\"308\" width=\"20\" height=\"44\" rx=\"3\" fill=\"var(--surface)\" stroke=\"var(--accent)\" stroke-width=\"3\"/><text x=\"722\" y=\"326\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">R1</text><text x=\"722\" y=\"349\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">470 Ω</text><polyline points=\"700,360 700,380\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"700\" y1=\"380\" x2=\"700\" y2=\"398\" stroke=\"var(--led)\" stroke-width=\"3\"/><line x1=\"700\" y1=\"422\" x2=\"700\" y2=\"440\" stroke=\"var(--led)\" stroke-width=\"3\"/><g class=\"led\"><polygon points=\"687,398 713,398 700,422\" fill=\"var(--led)\" fill-opacity=\"0.22\" stroke=\"var(--led)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><line x1=\"686\" y1=\"422\" x2=\"714\" y2=\"422\" stroke=\"var(--led)\" stroke-width=\"3\"/></g><path d=\"M718,408 l12,-9 M718,418 l12,-9\" stroke=\"var(--led)\" stroke-width=\"2\" fill=\"none\"/><text x=\"740\" y=\"406\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">LED1</text><text x=\"740\" y=\"429\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">rojo</text><polyline points=\"700,440 700,480 80,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>", "circuito2": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-50 20 880 490\" class=\"sch\" font-family=\"DejaVu Sans, Archivo, sans-serif\"><circle cx=\"80\" cy=\"275\" r=\"30\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"3\"/><text x=\"80\" y=\"269\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">+</text><text x=\"80\" y=\"296\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">−</text><line x1=\"80\" y1=\"233\" x2=\"80\" y2=\"245\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"80\" y1=\"305\" x2=\"80\" y2=\"317\" stroke=\"var(--ink)\" stroke-width=\"3\"/><text x=\"38\" y=\"273\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"end\">PS1</text><text x=\"38\" y=\"297\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"end\">fuente</text><text x=\"38\" y=\"317\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"end\">5 V</text><polyline points=\"80,70 80,233\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,317 80,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,70 540,70\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"200\" cy=\"70\" r=\"5.5\" fill=\"var(--ink-soft)\"/><circle cx=\"330\" cy=\"70\" r=\"5.5\" fill=\"var(--ink-soft)\"/><polyline points=\"200,70 200,110\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"200\" y1=\"110\" x2=\"200\" y2=\"126\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"200\" y1=\"160\" x2=\"200\" y2=\"170\" stroke=\"var(--ink)\" stroke-width=\"3\"/><circle cx=\"200\" cy=\"126\" r=\"3\" fill=\"var(--ink)\"/><circle cx=\"200\" cy=\"155\" r=\"5\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"2.5\"/><g class=\"sw\"><line class=\"lev-o\" x1=\"200\" y1=\"126\" x2=\"215\" y2=\"152\" stroke=\"var(--accent)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line class=\"lev-c\" x1=\"200\" y1=\"126\" x2=\"203\" y2=\"151\" stroke=\"var(--accent-2)\" stroke-width=\"3\" stroke-linecap=\"round\" style=\"display:none\"/></g><text x=\"220\" y=\"136\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">SA</text><text x=\"220\" y=\"159\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">interruptor</text><polyline points=\"200,170 200,330\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"200\" cy=\"245\" r=\"5.5\" fill=\"var(--ink-soft)\"/><line x1=\"200\" y1=\"330\" x2=\"200\" y2=\"338\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"200\" y1=\"382\" x2=\"200\" y2=\"390\" stroke=\"var(--ink)\" stroke-width=\"3\"/><rect x=\"190\" y=\"338\" width=\"20\" height=\"44\" rx=\"3\" fill=\"var(--surface)\" stroke=\"var(--accent)\" stroke-width=\"3\"/><text x=\"222\" y=\"356\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">RA</text><text x=\"222\" y=\"379\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">10 kΩ</text><polyline points=\"200,390 200,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"200\" cy=\"480\" r=\"5.5\" fill=\"var(--ink-soft)\"/><polyline points=\"330,70 330,110\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"330\" y1=\"110\" x2=\"330\" y2=\"126\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"330\" y1=\"160\" x2=\"330\" y2=\"170\" stroke=\"var(--ink)\" stroke-width=\"3\"/><circle cx=\"330\" cy=\"126\" r=\"3\" fill=\"var(--ink)\"/><circle cx=\"330\" cy=\"155\" r=\"5\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"2.5\"/><g class=\"sw\"><line class=\"lev-o\" x1=\"330\" y1=\"126\" x2=\"345\" y2=\"152\" stroke=\"var(--accent)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line class=\"lev-c\" x1=\"330\" y1=\"126\" x2=\"333\" y2=\"151\" stroke=\"var(--accent-2)\" stroke-width=\"3\" stroke-linecap=\"round\" style=\"display:none\"/></g><text x=\"350\" y=\"136\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">SB</text><text x=\"350\" y=\"159\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">interruptor</text><polyline points=\"330,170 330,330\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"330\" cy=\"285\" r=\"5.5\" fill=\"var(--ink-soft)\"/><line x1=\"330\" y1=\"330\" x2=\"330\" y2=\"338\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"330\" y1=\"382\" x2=\"330\" y2=\"390\" stroke=\"var(--ink)\" stroke-width=\"3\"/><rect x=\"320\" y=\"338\" width=\"20\" height=\"44\" rx=\"3\" fill=\"var(--surface)\" stroke=\"var(--accent)\" stroke-width=\"3\"/><text x=\"352\" y=\"356\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">RB</text><text x=\"352\" y=\"379\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">10 kΩ</text><polyline points=\"330,390 330,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"330\" cy=\"480\" r=\"5.5\" fill=\"var(--ink-soft)\"/><path d=\"M200,245 H321 A9,9 0 0 1 339,245 H514\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"330,285 518,285\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M500,220 Q528,265 500,310 Q562,310 592,265 Q562,220 500,220 Z\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><text x=\"460\" y=\"237\" font-size=\"18\" font-weight=\"700\" fill=\"var(--accent)\" text-anchor=\"middle\">A</text><text x=\"460\" y=\"307\" font-size=\"18\" font-weight=\"700\" fill=\"var(--accent)\" text-anchor=\"middle\">B</text><text x=\"488\" y=\"237\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">1</text><text x=\"488\" y=\"305\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">2</text><polyline points=\"540,70 540,226\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"548\" y=\"210\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"start\" font-family=\"JetBrains Mono, monospace\">14</text><polyline points=\"540,304 540,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"540\" cy=\"480\" r=\"5.5\" fill=\"var(--ink-soft)\"/><text x=\"548\" y=\"330\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"start\" font-family=\"JetBrains Mono, monospace\">7</text><text x=\"562\" y=\"360\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">U1</text><text x=\"562\" y=\"383\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">74HC32 (OR)</text><polyline points=\"592,265 700,265 700,300\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"602\" y=\"257\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"start\" font-family=\"JetBrains Mono, monospace\">3</text><text x=\"622\" y=\"257\" font-size=\"15\" fill=\"var(--ink-soft)\" text-anchor=\"start\" font-style=\"italic\">salida</text><line x1=\"700\" y1=\"300\" x2=\"700\" y2=\"308\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"700\" y1=\"352\" x2=\"700\" y2=\"360\" stroke=\"var(--ink)\" stroke-width=\"3\"/><rect x=\"690\" y=\"308\" width=\"20\" height=\"44\" rx=\"3\" fill=\"var(--surface)\" stroke=\"var(--accent)\" stroke-width=\"3\"/><text x=\"722\" y=\"326\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">R1</text><text x=\"722\" y=\"349\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">470 Ω</text><polyline points=\"700,360 700,380\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"700\" y1=\"380\" x2=\"700\" y2=\"398\" stroke=\"var(--led)\" stroke-width=\"3\"/><line x1=\"700\" y1=\"422\" x2=\"700\" y2=\"440\" stroke=\"var(--led)\" stroke-width=\"3\"/><g class=\"led\"><polygon points=\"687,398 713,398 700,422\" fill=\"var(--led)\" fill-opacity=\"0.22\" stroke=\"var(--led)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><line x1=\"686\" y1=\"422\" x2=\"714\" y2=\"422\" stroke=\"var(--led)\" stroke-width=\"3\"/></g><path d=\"M718,408 l12,-9 M718,418 l12,-9\" stroke=\"var(--led)\" stroke-width=\"2\" fill=\"none\"/><text x=\"740\" y=\"406\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">LED1</text><text x=\"740\" y=\"429\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">rojo</text><polyline points=\"700,440 700,480 80,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>", "circuito3": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-50 20 880 490\" class=\"sch\" font-family=\"DejaVu Sans, Archivo, sans-serif\"><circle cx=\"80\" cy=\"275\" r=\"30\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"3\"/><text x=\"80\" y=\"269\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">+</text><text x=\"80\" y=\"296\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">−</text><line x1=\"80\" y1=\"233\" x2=\"80\" y2=\"245\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"80\" y1=\"305\" x2=\"80\" y2=\"317\" stroke=\"var(--ink)\" stroke-width=\"3\"/><text x=\"38\" y=\"273\" font-size=\"20\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"end\">PS1</text><text x=\"38\" y=\"297\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"end\">fuente</text><text x=\"38\" y=\"317\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"end\">5 V</text><polyline points=\"80,70 80,233\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,317 80,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"80,70 505,70\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"240\" cy=\"70\" r=\"5.5\" fill=\"var(--ink-soft)\"/><polyline points=\"240,70 240,110\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"240\" y1=\"110\" x2=\"240\" y2=\"126\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"240\" y1=\"160\" x2=\"240\" y2=\"170\" stroke=\"var(--ink)\" stroke-width=\"3\"/><circle cx=\"240\" cy=\"126\" r=\"3\" fill=\"var(--ink)\"/><circle cx=\"240\" cy=\"155\" r=\"5\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"2.5\"/><g class=\"sw\"><line class=\"lev-o\" x1=\"240\" y1=\"126\" x2=\"255\" y2=\"152\" stroke=\"var(--accent)\" stroke-width=\"3\" stroke-linecap=\"round\"/><line class=\"lev-c\" x1=\"240\" y1=\"126\" x2=\"243\" y2=\"151\" stroke=\"var(--accent-2)\" stroke-width=\"3\" stroke-linecap=\"round\" style=\"display:none\"/></g><text x=\"260\" y=\"136\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">SA</text><text x=\"260\" y=\"159\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">interruptor</text><polyline points=\"240,170 240,330\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"240\" cy=\"265\" r=\"5.5\" fill=\"var(--ink-soft)\"/><line x1=\"240\" y1=\"330\" x2=\"240\" y2=\"338\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"240\" y1=\"382\" x2=\"240\" y2=\"390\" stroke=\"var(--ink)\" stroke-width=\"3\"/><rect x=\"230\" y=\"338\" width=\"20\" height=\"44\" rx=\"3\" fill=\"var(--surface)\" stroke=\"var(--accent)\" stroke-width=\"3\"/><text x=\"262\" y=\"356\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">RA</text><text x=\"262\" y=\"379\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">10 kΩ</text><polyline points=\"240,390 240,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"240\" cy=\"480\" r=\"5.5\" fill=\"var(--ink-soft)\"/><polyline points=\"240,265 470,265\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polygon points=\"470,230 470,300 538,265\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><circle cx=\"545\" cy=\"265\" r=\"7\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"3\"/><text x=\"425\" y=\"257\" font-size=\"18\" font-weight=\"700\" fill=\"var(--accent)\" text-anchor=\"middle\">A</text><text x=\"458\" y=\"257\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">1</text><polyline points=\"505,70 505,248\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"513\" y=\"225\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"start\" font-family=\"JetBrains Mono, monospace\">14</text><polyline points=\"505,282 505,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"505\" cy=\"480\" r=\"5.5\" fill=\"var(--ink-soft)\"/><text x=\"513\" y=\"317\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"start\" font-family=\"JetBrains Mono, monospace\">7</text><text x=\"527\" y=\"360\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">U1</text><text x=\"527\" y=\"383\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">74HC04 (NOT)</text><polyline points=\"552,265 700,265 700,300\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"562\" y=\"257\" font-size=\"15\" font-weight=\"700\" fill=\"var(--accent-2)\" text-anchor=\"start\" font-family=\"JetBrains Mono, monospace\">2</text><text x=\"582\" y=\"257\" font-size=\"15\" fill=\"var(--ink-soft)\" text-anchor=\"start\" font-style=\"italic\">salida</text><line x1=\"700\" y1=\"300\" x2=\"700\" y2=\"308\" stroke=\"var(--ink)\" stroke-width=\"3\"/><line x1=\"700\" y1=\"352\" x2=\"700\" y2=\"360\" stroke=\"var(--ink)\" stroke-width=\"3\"/><rect x=\"690\" y=\"308\" width=\"20\" height=\"44\" rx=\"3\" fill=\"var(--surface)\" stroke=\"var(--accent)\" stroke-width=\"3\"/><text x=\"722\" y=\"326\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">R1</text><text x=\"722\" y=\"349\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">470 Ω</text><polyline points=\"700,360 700,380\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"700\" y1=\"380\" x2=\"700\" y2=\"398\" stroke=\"var(--led)\" stroke-width=\"3\"/><line x1=\"700\" y1=\"422\" x2=\"700\" y2=\"440\" stroke=\"var(--led)\" stroke-width=\"3\"/><g class=\"led\"><polygon points=\"687,398 713,398 700,422\" fill=\"var(--led)\" fill-opacity=\"0.22\" stroke=\"var(--led)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><line x1=\"686\" y1=\"422\" x2=\"714\" y2=\"422\" stroke=\"var(--led)\" stroke-width=\"3\"/></g><path d=\"M718,408 l12,-9 M718,418 l12,-9\" stroke=\"var(--led)\" stroke-width=\"2\" fill=\"none\"/><text x=\"740\" y=\"406\" font-size=\"19\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"start\">LED1</text><text x=\"740\" y=\"429\" font-size=\"16\" fill=\"var(--ink-soft)\" text-anchor=\"start\">rojo</text><polyline points=\"700,440 700,480 80,480\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>", "simbolos_compuertas": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-25 30 790 200\" class=\"sch\" font-family=\"DejaVu Sans, Archivo, sans-serif\"><polyline points=\"20,75 60,75\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"20,115 60,115\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M60,50 H105 A45,45 0 0 1 105,140 H60 Z\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><polyline points=\"150,95 185,95\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"14\" y=\"81\" font-size=\"17\" font-weight=\"700\" fill=\"var(--accent)\" text-anchor=\"end\">A</text><text x=\"14\" y=\"121\" font-size=\"17\" font-weight=\"700\" fill=\"var(--accent)\" text-anchor=\"end\">B</text><text x=\"105\" y=\"185\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">AND</text><text x=\"105\" y=\"210\" font-size=\"17\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">“Y”</text><polyline points=\"290,75 344,75\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"290,115 344,115\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M330,50 Q358,95 330,140 Q392,140 422,95 Q392,50 330,50 Z\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><polyline points=\"422,95 455,95\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"284\" y=\"81\" font-size=\"17\" font-weight=\"700\" fill=\"var(--accent)\" text-anchor=\"end\">A</text><text x=\"284\" y=\"121\" font-size=\"17\" font-weight=\"700\" fill=\"var(--accent)\" text-anchor=\"end\">B</text><text x=\"375\" y=\"185\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">OR</text><text x=\"375\" y=\"210\" font-size=\"17\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">“O”</text><polyline points=\"560,95 600,95\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polygon points=\"600,60 600,130 668,95\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"3\" stroke-linejoin=\"round\"/><circle cx=\"675\" cy=\"95\" r=\"7\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"3\"/><polyline points=\"682,95 715,95\" fill=\"none\" stroke=\"var(--ink-soft)\" stroke-width=\"3\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"554\" y=\"101\" font-size=\"17\" font-weight=\"700\" fill=\"var(--accent)\" text-anchor=\"end\">A</text><text x=\"640\" y=\"185\" font-size=\"22\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\">NOT</text><text x=\"640\" y=\"210\" font-size=\"17\" fill=\"var(--ink-soft)\" text-anchor=\"middle\">“NO”</text></svg>", "chip_and_or": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"30 40 740 290\" class=\"sch\" font-family=\"DejaVu Sans, Archivo, sans-serif\"><rect x=\"120\" y=\"120\" width=\"560\" height=\"110\" rx=\"8\" fill=\"#2b2f2d\" stroke=\"var(--ink)\" stroke-width=\"2\"/><path d=\"M120,157.0 A18,18 0 0 1 120,193.0\" fill=\"var(--surface)\" stroke=\"var(--ink)\" stroke-width=\"2\"/><circle cx=\"160\" cy=\"206\" r=\"7\" fill=\"#9aa39e\"/><text x=\"400.0\" y=\"183.0\" font-size=\"24\" font-weight=\"700\" fill=\"#f2efe3\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">74HC08 · 74HC32</text><rect x=\"152.0\" y=\"230\" width=\"16\" height=\"22\" fill=\"var(--accent)\"/><text x=\"160.0\" y=\"274\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">1</text><text x=\"160.0\" y=\"300\" font-size=\"15\" fill=\"var(--accent-2)\" text-anchor=\"middle\">entrada A</text><rect x=\"152.0\" y=\"98\" width=\"16\" height=\"22\" fill=\"var(--accent)\"/><text x=\"160.0\" y=\"90\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">14</text><text x=\"160.0\" y=\"64\" font-size=\"15\" fill=\"var(--accent-2)\" text-anchor=\"middle\">+ (positivo)</text><rect x=\"232.0\" y=\"230\" width=\"16\" height=\"22\" fill=\"var(--accent)\"/><text x=\"240.0\" y=\"274\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">2</text><text x=\"240.0\" y=\"300\" font-size=\"15\" fill=\"var(--accent-2)\" text-anchor=\"middle\">entrada B</text><rect x=\"232.0\" y=\"98\" width=\"16\" height=\"22\" fill=\"#b9b19a\"/><text x=\"240.0\" y=\"90\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink-soft)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">13</text><rect x=\"312.0\" y=\"230\" width=\"16\" height=\"22\" fill=\"var(--accent)\"/><text x=\"320.0\" y=\"274\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">3</text><text x=\"320.0\" y=\"300\" font-size=\"15\" fill=\"var(--accent-2)\" text-anchor=\"middle\">salida</text><rect x=\"312.0\" y=\"98\" width=\"16\" height=\"22\" fill=\"#b9b19a\"/><text x=\"320.0\" y=\"90\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink-soft)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">12</text><rect x=\"392.0\" y=\"230\" width=\"16\" height=\"22\" fill=\"#b9b19a\"/><text x=\"400.0\" y=\"274\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink-soft)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">4</text><rect x=\"392.0\" y=\"98\" width=\"16\" height=\"22\" fill=\"#b9b19a\"/><text x=\"400.0\" y=\"90\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink-soft)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">11</text><rect x=\"472.0\" y=\"230\" width=\"16\" height=\"22\" fill=\"#b9b19a\"/><text x=\"480.0\" y=\"274\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink-soft)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">5</text><rect x=\"472.0\" y=\"98\" width=\"16\" height=\"22\" fill=\"#b9b19a\"/><text x=\"480.0\" y=\"90\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink-soft)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">10</text><rect x=\"552.0\" y=\"230\" width=\"16\" height=\"22\" fill=\"#b9b19a\"/><text x=\"560.0\" y=\"274\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink-soft)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">6</text><rect x=\"552.0\" y=\"98\" width=\"16\" height=\"22\" fill=\"#b9b19a\"/><text x=\"560.0\" y=\"90\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink-soft)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">9</text><rect x=\"632.0\" y=\"230\" width=\"16\" height=\"22\" fill=\"var(--accent)\"/><text x=\"640.0\" y=\"274\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">7</text><text x=\"640.0\" y=\"300\" font-size=\"15\" fill=\"var(--accent-2)\" text-anchor=\"middle\">− (negativo)</text><rect x=\"632.0\" y=\"98\" width=\"16\" height=\"22\" fill=\"#b9b19a\"/><text x=\"640.0\" y=\"90\" font-size=\"17\" font-weight=\"700\" fill=\"var(--ink-soft)\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\">8</text><text x=\"106\" y=\"181.0\" font-size=\"15\" fill=\"var(--ink-soft)\" text-anchor=\"end\" font-style=\"italic\">muesca</text></svg>"};
+function kicker(tagText, key){
+  return `<div class="kicker"><span class="tag${key?' key':''}">${tagText}</span></div>`;
+}
+function sch(key, extraClass, id){
+  return `<div class="sch-wrap ${extraClass||''}" ${id?`id="${id}"`:''}>${SVG[key]}</div>`;
+}
+let slideDefs = [];
+const after = {};
+let anim = null;
+function stopAnim(){ if(anim){ cancelAnimationFrame(anim); anim=null; } }
+
+/* Brillo de un LED del esquemático: b entre 0 y 1 */
+function setLed(svgHost, idx, b){
+  const g = svgHost.querySelectorAll('.led')[idx]; if(!g) return;
+  const poly = g.querySelector('polygon');
+  poly.style.fillOpacity = (0.22 + 0.78*b).toFixed(3);
+  g.style.filter = b>0.03 ? `drop-shadow(0 0 ${(2+8*b).toFixed(1)}px var(--led))` : 'none';
+}
+/* Palanca de un interruptor del esquemático */
+function setSw(svgHost, idx, on){
+  const g = svgHost.querySelectorAll('.sw')[idx]; if(!g) return;
+  g.querySelector('.lev-o').style.display = on ? 'none' : '';
+  g.querySelector('.lev-c').style.display = on ? '' : 'none';
+}
+const fmtV = v => v.toLocaleString('es-CO',{minimumFractionDigits:1, maximumFractionDigits:1})+' V';
+
+/* Tarjeta de video de YouTube (abre en una pestaña nueva) */
+function video(id, title, channel, dur, note){
+  return `<a class="vid" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">
+    <img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+    <span class="vid-t"><span class="vid-k">▶ Video · ${dur}</span><strong>${title}</strong><span class="vid-c">${channel}</span>${note?`<span class="vid-n">${note}</span>`:''}</span>
+  </a>`;
+}
+
+
+/* Reglas de las compuertas */
+const GATE = { and:(a,b)=>a&&b?1:0, or:(a,b)=>a||b?1:0, not:(a)=>a?0:1 };
+
+/* Mini tabla de verdad con la fila actual resaltada */
+function ttable(kind, a, b){
+  const rows = kind==='not' ? [[0],[1]] : [[0,0],[0,1],[1,0],[1,1]];
+  const head = kind==='not' ? '<tr><th>A</th><th>Salida</th></tr>' : '<tr><th>A</th><th>B</th><th>Salida</th></tr>';
+  return `<div class="tbl-wrap"><table class="formula" style="text-align:center">${head}${rows.map(r=>{
+    const cur = kind==='not' ? r[0]===a : (r[0]===a && r[1]===b);
+    const out = kind==='not' ? GATE.not(r[0]) : GATE[kind](r[0],r[1]);
+    return `<tr style="${cur?'background:var(--board-hl);font-weight:700':''}">${r.map(v=>`<td>${v}</td>`).join('')}<td class="f">${out}</td></tr>`;
+  }).join('')}</table></div>`;
+}
+
+/* Slide interactiva de un circuito de compuerta */
+function gateSlide(n, kind, title, chip, outPin){
+  const two = kind!=='not';
+  slideDefs.push({render:()=>`
+    ${kicker(`Interactivo · Circuito ${n}`)}
+    <h2>${title}</h2>
+    <p class="sub">Mueve ${two?'SA y SB':'SA'}: cerrado = <strong>1</strong>, abierto = <strong>0</strong>. Observa LED1 y la fila de la tabla de verdad.</p>
+    <div class="grid-gate">
+      ${sch('circuito'+n,'','g'+n+'Sch')}
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><button class="slider" id="g${n}A" aria-label="Interruptor SA"></button><span class="mono" style="font-size:12px">SA → A</span></div>
+          ${two?`<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><button class="slider" id="g${n}B" aria-label="Interruptor SB"></button><span class="mono" style="font-size:12px">SB → B</span></div>`:''}
+        </div>
+        <div id="g${n}T"></div>
+      </div>
+    </div>
+    <div class="callout" id="g${n}Txt"></div>
+    <p class="hint-small">Voltajes aproximados: la salida en 1 queda un poco por debajo de 5 V al encender el LED.</p>
+  `});
+  after[slideDefs.length-1] = ()=>{
+    const host=document.getElementById('g'+n+'Sch'); let a=0,b=0;
+    const upd=()=>{
+      const out = two ? GATE[kind](a,b) : GATE.not(a);
+      document.getElementById('g'+n+'A').classList.toggle('on',!!a); setSw(host,0,!!a);
+      if(two){ document.getElementById('g'+n+'B').classList.toggle('on',!!b); setSw(host,1,!!b); }
+      setLed(host,0,out);
+      document.getElementById('g'+n+'T').innerHTML = ttable(kind,a,b);
+      const ent = two ? `A = <strong>${a}</strong> (pata 1: ${a?'5 V':'0 V'}), B = <strong>${b}</strong> (pata 2: ${b?'5 V':'0 V'})` : `A = <strong>${a}</strong> (pata 1: ${a?'5 V':'0 V'})`;
+      document.getElementById('g'+n+'Txt').innerHTML = `<span class="callout-label">${chip}</span>${ent} → salida (pata ${outPin}) = <strong>${out}</strong>: LED1 <strong>${out?'encendido':'apagado'}</strong>.`;
+    };
+    document.getElementById('g'+n+'A').onclick=()=>{ a=a?0:1; upd(); };
+    if(two) document.getElementById('g'+n+'B').onclick=()=>{ b=b?0:1; upd(); };
+    upd();
+  };
+}
+
+/* 1. Portada */
+slideDefs.push({render:()=>`
+  ${kicker("Portada")}
+  <h2>Compuertas lógicas básicas</h2>
+  <p class="sub">Grado octavo · Periodo 3 · Semana 8 de 10</p>
+  <div class="body-text">
+    <p>La semana pasada viste que un <strong>bit</strong> vale 1 o 0. Esta semana vas a usar circuitos que <strong>reciben bits y toman una decisión</strong>: las <strong>compuertas lógicas</strong> <strong>AND</strong>, <strong>OR</strong> y <strong>NOT</strong>.</p>
+    <p>Las vas a construir en Tinkercad con <strong>chips</strong> de verdad y vas a elaborar su <strong>tabla de verdad</strong>.</p>
+  </div>
+  <div class="callout">
+    <span class="callout-label">Necesitas</span>
+    Tu cuenta de Tinkercad, tu cuaderno, la lectura de esta semana y la guía del taller.
+  </div>
+`});
+
+/* 2. Cómo funciona esta semana */
+slideDefs.push({render:()=>`
+  ${kicker("Esta semana")}
+  <h2>Cómo funciona la semana 8</h2>
+  <ol class="steps">
+    <li><span class="num">1</span><span>Esta presentación (con <strong>3 videos cortos</strong>) y la <strong>lectura</strong>. Transcribe a tu cuaderno las partes marcadas con 📓.</span></li>
+    <li><span class="num">2</span><span>El <strong>taller</strong>: construyes <strong>3 circuitos</strong> en Tinkercad (AND, OR y NOT), completas sus <strong>3 tablas de verdad</strong> y respondes <strong>8 preguntas</strong> en tu cuaderno.</span></li>
+    <li><span class="num">3</span><span>El <strong>formulario de Google</strong>: pegas los <strong>3 enlaces</strong> de tus circuitos y respondes las 8 preguntas de selección múltiple.</span></li>
+  </ol>
+  <div class="callout ok">
+    <span class="callout-label">Tiempo y modalidad</span>
+    Trabajo <strong>individual</strong>. Lectura + taller + formulario: <strong>máximo 2 horas</strong>. Los videos los puedes ver mientras recorres la presentación.
+  </div>
+`});
+
+/* 3. Repaso y objetivo */
+slideDefs.push({render:()=>`
+  ${kicker("Repaso")}
+  <h2>Lo que ya sabes</h2>
+  <ul class="list">
+    <li><span>Un <strong>bit</strong> vale <strong>1</strong> (alto, hay voltaje, LED encendido) o <strong>0</strong> (bajo, 0 V, LED apagado).</span></li>
+    <li><span>Con <strong>2 bits</strong> se escriben 4 números: <strong>00, 01, 10, 11</strong> (del 0 al 3).</span></li>
+    <li><span>El <strong>interruptor deslizante</strong> se conecta con la pata del centro y una lateral.</span></li>
+    <li><span>El <strong>pulsador</strong> va sobre el canal central de la protoboard.</span></li>
+    <li><span><strong>Cada nodo del diagrama = una columna de la protoboard.</strong></span></li>
+  </ul>
+  <div class="callout ok">
+    <span class="callout-label">Objetivo de hoy</span>
+    Construir circuitos con compuertas AND, OR y NOT, y elaborar su tabla de verdad.
+  </div>
+`});
+
+/* 4. Qué es una compuerta */
+slideDefs.push({render:()=>`
+  ${kicker("Concepto 1 · Compuertas")}
+  <h2>¿Qué es una compuerta lógica?</h2>
+  <div class="body-text"><p>Es un circuito con una o más <strong>entradas</strong> y una <strong>salida</strong>. Todas son bits (1 o 0). La compuerta <strong>decide</strong> la salida según una regla.</p></div>
+  <div class="sym-box" style="margin:10px 0">${SVG.simbolos_compuertas}</div>
+  <div class="callout"><span class="callout-label">📓 Para tu cuaderno</span><strong>Compuerta lógica:</strong> circuito que recibe uno o más bits por sus entradas y entrega un bit por su salida, según una regla. Dibuja los tres símbolos.</div>
+  ${video('Gdf3-BJi8A4','COMPUERTAS LÓGICAS | OR, AND Y NOT','Orange Cat Programming','7:51')}
+`});
+
+/* 5. Tabla de verdad */
+slideDefs.push({render:()=>`
+  ${kicker("Concepto 2 · Tabla de verdad")}
+  <h2>La tabla de verdad</h2>
+  <p class="sub">Muestra el valor de la salida para <strong>cada combinación</strong> de las entradas.</p>
+  <div class="grid2">
+    <div class="tbl-wrap"><table class="formula" style="text-align:center">
+      <tr><th>A</th><th>B</th><th>Es el…</th></tr>
+      <tr><td>0</td><td>0</td><td class="f">0</td></tr>
+      <tr><td>0</td><td>1</td><td class="f">1</td></tr>
+      <tr><td>1</td><td>0</td><td class="f">2</td></tr>
+      <tr><td>1</td><td>1</td><td class="f">3</td></tr>
+    </table></div>
+    <div class="body-text">
+      <p>Con <strong>2 entradas</strong> hay <strong>4 combinaciones</strong>: son los números del 0 al 3 en binario, como en la semana 7.</p>
+      <p>Con <strong>1 entrada</strong> solo hay <strong>2</strong>: 0 y 1.</p>
+      <p>Escríbelas <strong>siempre en orden</strong> para que no se te quede ninguna.</p>
+    </div>
+  </div>
+  <div class="callout"><span class="callout-label">📓 Para tu cuaderno</span><strong>Tabla de verdad:</strong> muestra la salida para cada combinación de las entradas. Con 2 entradas: <strong>00, 01, 10, 11</strong>. Con 1 entrada: <strong>0 y 1</strong>.</div>
+`});
+
+/* 6. AND */
+slideDefs.push({render:()=>`
+  ${kicker("Concepto 3 · AND")}
+  <h2>La compuerta AND ("Y")</h2>
+  <div class="grid2">
+    <div class="body-text">
+      <p>La salida vale <strong>1 solo si A y B son 1</strong>. Si cualquiera de las dos es 0, la salida es 0.</p>
+      <p><strong>Ejemplo:</strong> una máquina que, por seguridad, solo arranca si el operario presiona <strong>dos botones a la vez</strong>.</p>
+    </div>
+    ${ttable('and',-1,-1)}
+  </div>
+  <div class="callout"><span class="callout-label">📓 Para tu cuaderno</span><strong>AND ("Y"):</strong> la salida es 1 solo si A <strong>y</strong> B son 1. Copia la tabla de verdad.</div>
+`});
+
+gateSlide(1,'and','Circuito 1: compuerta AND','74HC08 · AND',3);
+
+/* 8. OR */
+slideDefs.push({render:()=>`
+  ${kicker("Concepto 4 · OR")}
+  <h2>La compuerta OR ("O")</h2>
+  <div class="grid2">
+    <div class="body-text">
+      <p>La salida vale <strong>1 si A o B (o las dos) son 1</strong>. Solo vale 0 cuando las dos entradas son 0.</p>
+      <p><strong>Ejemplo:</strong> el timbre de un bus suena si presionan el botón de la puerta de adelante <strong>o</strong> el de la de atrás.</p>
+    </div>
+    ${ttable('or',-1,-1)}
+  </div>
+  <div class="callout"><span class="callout-label">📓 Para tu cuaderno</span><strong>OR ("O"):</strong> la salida es 1 si A <strong>o</strong> B (o las dos) son 1. Copia la tabla de verdad.</div>
+`});
+
+gateSlide(2,'or','Circuito 2: compuerta OR','74HC32 · OR',3);
+
+/* 10. NOT */
+slideDefs.push({render:()=>`
+  ${kicker("Concepto 5 · NOT")}
+  <h2>La compuerta NOT ("NO")</h2>
+  <div class="grid2">
+    <div class="body-text">
+      <p>Tiene <strong>una sola entrada</strong>. Su salida es <strong>lo contrario</strong>: entra 1, sale 0; entra 0, sale 1. También se llama <strong>inversor</strong>; el circulito del símbolo indica la inversión.</p>
+      <p><strong>Ejemplo:</strong> la luz automática de la semana 6, que se enciende cuando <strong>no</strong> hay luz.</p>
+    </div>
+    ${ttable('not',-1)}
+  </div>
+  <div class="callout"><span class="callout-label">📓 Para tu cuaderno</span><strong>NOT ("NO") o inversor:</strong> la salida es lo contrario de la entrada. Copia la tabla de verdad.</div>
+`});
+
+gateSlide(3,'not','Circuito 3: compuerta NOT','74HC04 · NOT',2);
+
+/* 12. Práctica */
+const PRAC = [
+  ["AND con A = 1 y B = 0", 0, "La AND necesita las dos entradas en 1."],
+  ["OR con A = 0 y B = 1", 1, "A la OR le basta una entrada en 1."],
+  ["NOT con A = 0", 1, "La NOT entrega lo contrario: entra 0, sale 1."],
+  ["OR con A = 0 y B = 0", 0, "La OR solo da 0 cuando las dos entradas son 0."]
+];
+slideDefs.push({render:()=>`
+  ${kicker("Práctica")}
+  <h2>¿Cuánto vale la salida?</h2>
+  <p class="sub">Elige 0 o 1. No cuenta para la nota.</p>
+  <div class="grid2">${PRAC.map(([q],i)=>`
+    <div class="q-card"><div style="font-size:15px;line-height:1.5"><strong>${q}</strong></div>
+      <div style="display:flex;gap:8px;align-items:center"><button class="btn" onclick="pracCheck(${i},0)">0</button><button class="btn" onclick="pracCheck(${i},1)">1</button></div>
+      <div class="fb" id="prFb${i}"></div></div>`).join('')}
+  </div>
+`});
+function pracCheck(i,v){
+  const [, ok, why] = PRAC[i]; const fb=document.getElementById('prFb'+i); const good = v===ok;
+  fb.className='fb '+(good?'good':'bad'); fb.textContent=(good?'✓ Correcto: ':'✗ La salida es '+ok+': ')+why;
+}
+
+/* 13. Chips */
+slideDefs.push({render:()=>`
+  ${kicker("Concepto 6 · Los chips")}
+  <h2>Las compuertas vienen dentro de chips</h2>
+  <div class="tbl-wrap"><table class="formula">
+    <tr><th>Chip</th><th>Nombre en Tinkercad</th><th>Trae por dentro</th><th>Entradas → salida</th></tr>
+    <tr><td class="f">74HC08</td><td>Puerta AND cuádruple</td><td>4 AND</td><td>patas 1 y 2 → 3</td></tr>
+    <tr><td class="f">74HC32</td><td>Puerta OR cuádruple</td><td>4 OR</td><td>patas 1 y 2 → 3</td></tr>
+    <tr><td class="f">74HC04</td><td>Inversor hexagonal</td><td>6 NOT</td><td>pata 1 → 2</td></tr>
+  </table></div>
+  <div class="sym-box" style="margin-top:12px">${SVG.chip_and_or}</div>
+  <div class="callout"><span class="callout-label">📓 Para tu cuaderno</span>Chips de 14 patas: <strong>74HC08</strong> (AND), <strong>74HC32</strong> (OR), <strong>74HC04</strong> (NOT). La pata <strong>1</strong> está junto a la <strong>muesca</strong>. Pata <strong>14 al +</strong> y pata <strong>7 al −</strong>.</div>
+  ${video('qM0R-7Vkgkc','¿Cómo usar Tinkercad? Compuerta AND en 3 minutos. Chip 74HC08 CMOS','Magali Manjoud','2:47','El montaje del video puede ser distinto: en el taller sigue el diagrama.')}
+`});
+
+/* 14. Fuente y resistencias */
+slideDefs.push({render:()=>`
+  ${kicker("Concepto 7 · Dos cambios")}
+  <h2>Fuente de 5 V y una resistencia por entrada</h2>
+  <div class="grid2">
+    <div class="part"><b>Fuente de 5 V</b><p>Estos chips funcionan entre <strong>2 V y 6 V</strong>. Por eso esta semana no usas la pila de 9 V, sino la <strong>Fuente de alimentación</strong> ajustada a <strong>5 V</strong>.</p></div>
+    <div class="part"><b>Resistencia de 10 kΩ</b><p><strong>Interruptor cerrado</strong> → la entrada recibe 5 V → <strong>1</strong>. <strong>Abierto</strong> → la resistencia la lleva al negativo → 0 V → <strong>0</strong>. Sin ella, la entrada quedaría "al aire".</p></div>
+  </div>
+  <div class="callout"><span class="callout-label">📓 Para tu cuaderno</span>Los chips de compuertas funcionan entre 2 V y 6 V: se alimentan con una <strong>fuente de 5 V</strong>. Interruptor cerrado → 5 V → 1. Interruptor abierto → la resistencia de 10 kΩ la lleva a 0 V → 0.</div>
+`});
+
+/* 15. En Tinkercad */
+slideDefs.push({render:()=>`
+  ${kicker("En Tinkercad", true)}
+  <h2>Los circuitos en la protoboard</h2>
+  <ol class="steps">
+    <li><span class="num">1</span><span><strong>Fuente:</strong> busca <code>fuente</code> → <em>Fuente de alimentación</em>. Ajústala a <strong>5 V</strong>; su + al riel positivo y su − al negativo.</span></li>
+    <li><span class="num">2</span><span><strong>Chip:</strong> búscalo por su nombre y ponlo <strong>sobre el canal central</strong>, como el pulsador. Ubica la <strong>muesca</strong>: la pata 1 queda junto a ella, abajo a la izquierda. Pasa el mouse sobre las patas para ver su nombre.</span></li>
+    <li><span class="num">3</span><span>Conecta la pata <strong>14 al +</strong> y la pata <strong>7 al −</strong>.</span></li>
+    <li><span class="num">4</span><span><strong>Entradas:</strong> cada interruptor (pata del centro y una lateral) entre el + y su pata de entrada; cada resistencia de 10 kΩ entre esa pata y el −.</span></li>
+    <li><span class="num">5</span><span><strong>Salida:</strong> de la pata de salida a R1 (470 Ω), LED1 y el −.</span></li>
+    <li><span class="num">6</span><span>Simula, prueba <strong>todas las combinaciones en orden</strong>, completa la tabla y copia el enlace con <em>Share</em>.</span></li>
+  </ol>
+  ${video('cjRSCJ5wefU','Compuerta OR en 3 minutos con Tinkercad. Chip 74HC32 CMOS.','Magali Manjoud','2:59','El montaje del video puede ser distinto: en el taller sigue el diagrama.')}
+`});
+
+/* 16. Errores frecuentes */
+slideDefs.push({render:()=>`
+  ${kicker("Errores frecuentes")}
+  <h2>Lo que más falla esta semana</h2>
+  <div class="tbl-wrap"><table class="formula">
+    <tr><th>Error</th><th>Qué pasa</th><th>Cómo evitarlo</th></tr>
+    <tr><td>Usar la pila de 9 V</td><td>El chip trabaja fuera de su rango</td><td>Fuente de alimentación en <strong>5 V</strong></td></tr>
+    <tr><td>No conectar las patas 14 y 7</td><td>El chip no funciona: el LED nunca cambia</td><td>14 al +, 7 al −</td></tr>
+    <tr><td>Contar las patas al revés</td><td>Los cables quedan en otras patas</td><td>La pata 1 está junto a la muesca</td></tr>
+    <tr><td>Chip fuera del canal central</td><td>Patas de arriba y de abajo unidas</td><td>Sobre el canal central</td></tr>
+    <tr><td>Olvidar RA o RB</td><td>La entrada queda al aire</td><td>10 kΩ de cada entrada al −</td></tr>
+    <tr><td>Salida del NOT en la pata 3</td><td>LED1 no cambia</td><td>En el 74HC04 la salida es la <strong>pata 2</strong></td></tr>
+  </table></div>
+`});
+
+/* 17. El taller */
+slideDefs.push({render:()=>`
+  ${kicker("Taller", true)}
+  <h2>Taller: 3 circuitos, 3 tablas, 8 preguntas</h2>
+  <div class="tbl-wrap"><table class="formula">
+    <tr><th>#</th><th>Circuito</th><th>Tabla y preguntas</th><th>Tiempo</th></tr>
+    <tr><td>—</td><td>Lectura de la semana</td><td>—</td><td>15 min</td></tr>
+    <tr><td>1</td><td>Compuerta AND (74HC08)</td><td>Tabla 1 · preguntas 1 y 2</td><td>35 min</td></tr>
+    <tr><td>2</td><td>Compuerta OR (74HC32)</td><td>Tabla 2 · preguntas 3, 4 y 5</td><td>25 min</td></tr>
+    <tr><td>3</td><td>Compuerta NOT (74HC04)</td><td>Tabla 3 · preguntas 6, 7 y 8</td><td>25 min</td></tr>
+    <tr><td>—</td><td>Formulario de Google</td><td>—</td><td>15 min</td></tr>
+  </table></div>
+  <div class="callout warn"><span class="callout-label">Para cada circuito</span>1) constrúyelo en la protoboard desde el diagrama, 2) simula y prueba todas las combinaciones, 3) completa su tabla de verdad, 4) responde sus preguntas en tu cuaderno, 5) copia el enlace compartido.</div>
+`});
+
+/* 18. Entregable */
+slideDefs.push({render:()=>`
+  ${kicker("Entregable")}
+  <h2>Qué debes entregar</h2>
+  <div class="check-item"><input type="checkbox" id="e1"><label for="e1">En el formulario: los <strong>3 enlaces compartidos</strong> de Tinkercad, uno por circuito (sin ellos el formulario no se puede enviar).</label></div>
+  <div class="check-item"><input type="checkbox" id="e2"><label for="e2">En el formulario: las <strong>8 preguntas</strong> de selección múltiple.</label></div>
+  <div class="check-item"><input type="checkbox" id="e3"><label for="e3">En tu cuaderno: las <strong>3 tablas de verdad</strong> (columnas A, B, LED1 y Salida; combinaciones en orden).</label></div>
+  <div class="check-item"><input type="checkbox" id="e4"><label for="e4">En tu cuaderno: las 8 respuestas (en las preguntas 1 y 7, los valores medidos con su unidad) y la transcripción de las partes 📓 de la lectura.</label></div>
+  <div class="callout ok"><span class="callout-label">Cómo se califica</span>El formulario se califica solo: cada pregunta vale <strong>1 punto</strong> (total 8). Las <strong>tablas de verdad</strong> se califican con una <strong>rúbrica</strong>.</div>
+  <p class="sub" style="margin-top:14px">La fecha de entrega la indica tu docente.</p>
+`});
+
+/* 19. Cierre */
+slideDefs.push({render:()=>`
+  ${kicker("Cierre")}
+  <h2>Resumen de la Semana 8</h2>
+  <ul class="list">
+    <li><span>Una <strong>compuerta lógica</strong> recibe bits y entrega un bit según una regla.</span></li>
+    <li><span><strong>AND:</strong> 1 solo si A y B son 1. <strong>OR:</strong> 1 si A o B son 1. <strong>NOT:</strong> lo contrario de la entrada.</span></li>
+    <li><span>La <strong>tabla de verdad</strong> muestra la salida para cada combinación: 00, 01, 10, 11.</span></li>
+    <li><span>Las compuertas vienen en <strong>chips</strong>: 74HC08, 74HC32 y 74HC04; pata 14 al +, pata 7 al −, alimentados con <strong>5 V</strong>.</span></li>
+  </ul>
+  <div class="callout"><span class="callout-label">Próxima semana</span>Semana 9: circuitos combinacionales simples (combinar dos o tres compuertas).</div>
+`});
+
+/* ====================== MOTOR DE DIAPOSITIVAS ====================== */
+let current = 0;
+const host = document.getElementById('slideHost');
+const dotsEl = document.getElementById('dots');
+function buildDots(){
+  dotsEl.innerHTML = slideDefs.map((_,i)=>`<button class="dot" aria-label="Ir a diapositiva ${i+1}" onclick="goTo(${i})"></button>`).join('');
+}
+function renderSlide(){
+  stopAnim();
+  host.innerHTML = slideDefs[current].render();
+  document.getElementById('slideCounter').textContent = `${current+1} / ${slideDefs.length}`;
+  document.getElementById('progressFill').style.width = `${((current+1)/slideDefs.length)*100}%`;
+  [...dotsEl.children].forEach((d,i)=>{ d.classList.toggle('active', i===current); d.classList.toggle('done', i<current); });
+  document.getElementById('prevBtn').disabled = current===0;
+  const nb = document.getElementById('nextBtn');
+  nb.textContent = current===slideDefs.length-1 ? 'Fin ✓' : 'Siguiente →';
+  nb.disabled = current===slideDefs.length-1;
+  if(after[current]) after[current]();
+}
+function goTo(i){ const n = Math.max(0, Math.min(slideDefs.length-1, i)); if(n!==current){ current=n; renderSlide(); window.scrollTo({top:0}); } }
+document.getElementById('prevBtn').onclick = ()=>goTo(current-1);
+document.getElementById('nextBtn').onclick = ()=>goTo(current+1);
+document.addEventListener('keydown', e=>{
+  const tg = e.target.tagName;
+  if(tg==='INPUT' || tg==='SELECT' || tg==='TEXTAREA' || tg==='BUTTON' && (e.key===' '||e.key==='Enter')) return;
+  if(e.key==='ArrowRight') goTo(current+1);
+  if(e.key==='ArrowLeft') goTo(current-1);
+});
+try{ const h = location.hash.replace('#s',''); if(/^\d+$/.test(h)) current = Math.min(slideDefs.length-1, Math.max(0, parseInt(h)-1)); }catch(e){}
+buildDots();
+renderSlide();
+
+</script>
+</body>
+</html>

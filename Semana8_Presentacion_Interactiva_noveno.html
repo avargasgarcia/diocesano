@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semana 8 — Diseño del prototipo</title>
+<style>
+  :root{
+    --accent:#1F5C99;
+    --accent-light:#EAF2FA;
+    --accent-dark:#123A61;
+    --ink:#22252A;
+    --ink-soft:#565B63;
+    --line:#E1E4E8;
+    --bg:#F7F9FB;
+    --card:#FFFFFF;
+    --ok:#1E8E5A;
+    --ok-bg:#E7F6EE;
+    --bad:#B42318;
+    --bad-bg:#FDECEA;
+    --warn:#B5560B;
+    --warn-bg:#FBECDD;
+    --note:#6B4E00;
+    --note-bg:#FFF6D6;
+    --radius:14px;
+    /* colores de las categorías de bloques de micro:bit en Tinkercad */
+    --k-ctl:#FFAB19;
+    --k-out:#4C97FF;
+    --k-inp:#9966FF;
+    --k-math:#40BF4A;
+    --k-var:#D65CD6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;
+    padding-bottom:84px;
+  }
+  /* ---------- barra superior ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg,var(--accent-dark),var(--accent));
+    color:#fff;padding:10px 16px 12px;
+    box-shadow:0 2px 10px rgba(15,40,70,.18);
+  }
+  .topbar-inner{max-width:960px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;}
+  .topbar .t-title{font-weight:700;font-size:15px;flex:1 1 260px;}
+  .topbar .t-title small{display:block;font-weight:400;opacity:.85;font-size:12px;letter-spacing:.04em;}
+  .topbar .t-prog{flex:1 1 240px;min-width:200px;}
+  .bar-track{background:rgba(255,255,255,.25);border-radius:999px;height:10px;overflow:hidden;}
+  .bar-fill{background:#fff;height:100%;width:0%;transition:width .35s ease;}
+  .t-prog .lbl{font-size:12px;opacity:.92;margin-top:4px;display:flex;justify-content:space-between;gap:8px;}
+
+  .wrap{max-width:960px;margin:0 auto;padding:22px 16px 20px;}
+
+  /* ---------- diapositivas ---------- */
+  .slide{display:none;animation:fade .25s ease;}
+  .slide.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:28px 30px 24px;box-shadow:0 4px 14px rgba(15,40,70,.05);
+  }
+  .eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--accent);font-weight:700;margin-bottom:4px;}
+  h1{font-size:30px;line-height:1.2;margin:0 0 10px;color:var(--accent-dark);}
+  h2{font-size:24px;line-height:1.25;margin:0 0 12px;color:var(--accent-dark);}
+  h3{font-size:17px;margin:18px 0 8px;color:var(--ink);}
+  p{margin:0 0 12px;}
+  .lead{font-size:17px;color:var(--ink-soft);}
+  .muted{color:var(--ink-soft);font-size:14px;}
+  a{color:var(--accent);}
+
+  .hero{
+    background:linear-gradient(160deg,var(--accent-dark),var(--accent));
+    color:#fff;border-radius:var(--radius);padding:40px 30px;text-align:center;
+  }
+  .hero h1{color:#fff;font-size:32px;}
+  .hero p{opacity:.93;max-width:660px;margin:0 auto 12px;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px;}
+  .badge{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);padding:5px 13px;border-radius:999px;font-size:13px;}
+
+  .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;}
+  .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;}
+  @media (max-width:760px){
+    .grid2,.grid3{grid-template-columns:1fr;}
+    .card{padding:22px 18px 20px;}
+    h1{font-size:26px;} h2{font-size:21px;}
+  }
+
+  .box{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:#FBFCFD;}
+  .box h3{margin-top:0;}
+  .tip{background:var(--accent-light);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--accent-dark);margin:14px 0;}
+  .tip > b:first-child{display:block;margin-bottom:2px;}
+  .warn{background:var(--warn-bg);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--warn);margin:14px 0;}
+  .warn > b:first-child{display:block;margin-bottom:2px;}
+  .note{background:var(--note-bg);border:1.5px dashed #D9B84A;border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--note);margin:14px 0;}
+  .note b.h{display:block;margin-bottom:4px;}
+  .men{border-left:5px solid var(--accent);background:var(--card);border-radius:10px;padding:14px 18px;margin:16px 0;font-size:14.5px;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+
+  ol.steps-list{padding-left:22px;margin:8px 0 12px;}
+  ol.steps-list li{margin:7px 0;}
+  ul.clean{padding-left:20px;margin:8px 0 12px;}
+  ul.clean li{margin:5px 0;}
+
+  .kbd{display:inline-block;background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:0 7px;font-size:13px;font-weight:600;color:var(--ink);}
+  .ui{display:inline-block;background:#fff;border:1.5px solid var(--accent);color:var(--accent-dark);border-radius:7px;padding:0 8px;font-size:13.5px;font-weight:600;white-space:nowrap;}
+  .ui.g{border-color:#DADCE0;color:#3C4043;}
+  code{background:#F1F3F5;border-radius:5px;padding:1px 6px;font-size:13.5px;}
+
+  /* ---------- botones ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;
+    background:var(--accent);color:#fff;text-decoration:none;
+    padding:10px 16px;border-radius:9px;font-size:14px;font-weight:600;font-family:inherit;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn:focus-visible{outline:3px solid #9CC3EA;outline-offset:2px;}
+  .btn.secondary{background:#fff;color:var(--accent);border:1.5px solid var(--accent);}
+  .btn.small{padding:6px 11px;font-size:13px;}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;}
+  .btn-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+
+  /* ---------- tareas ---------- */
+  .tasks{margin:16px 0 4px;border:1px dashed #BFD3E8;border-radius:12px;padding:6px 14px;background:#FAFCFE;}
+  .task{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--line);}
+  .task:first-of-type{border-top:none;}
+  .task input{margin-top:4px;width:18px;height:18px;accent-color:var(--ok);flex:0 0 auto;cursor:pointer;}
+  .task label{cursor:pointer;font-size:14.5px;}
+  .task label span{display:block;color:var(--ink-soft);font-size:13px;}
+  .task.auto label::after{content:" (se marca sola al completar)";color:var(--ink-soft);font-size:12px;font-weight:400;}
+
+  /* ---------- pestañas ---------- */
+  .seg{display:inline-flex;border:1.5px solid var(--accent);border-radius:9px;overflow:hidden;margin-bottom:8px;flex-wrap:wrap;}
+  .seg button{border:none;background:#fff;color:var(--accent);padding:8px 14px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px;}
+  .seg button.on{background:var(--accent);color:#fff;}
+
+  /* ---------- preguntas rápidas ---------- */
+  .qq{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0;background:#fff;}
+  .qq .q{font-weight:600;margin-bottom:8px;}
+  .qq .opts{display:flex;flex-direction:column;gap:6px;}
+  .qq .opt{
+    text-align:left;border:1.5px solid var(--line);background:#FBFCFD;border-radius:9px;padding:9px 12px;
+    font-size:14.5px;cursor:pointer;font-family:inherit;color:var(--ink);
+  }
+  .qq .opt:hover{border-color:var(--accent);}
+  .qq .opt.right{border-color:var(--ok);background:var(--ok-bg);}
+  .qq .opt.wrong{border-color:var(--bad);background:var(--bad-bg);}
+  .qq .fb{display:none;margin-top:8px;font-size:14px;border-radius:8px;padding:9px 12px;}
+  .qq .fb.show{display:block;}
+  .qq .fb.ok{background:var(--ok-bg);color:#135C3B;}
+  .qq .fb.no{background:var(--bad-bg);color:#8A1C13;}
+
+  /* ---------- maqueta de pantallas (cuentas) ---------- */
+  .mock{border:1px solid var(--line);border-radius:12px;background:#3D6FD1;padding:16px;}
+  .mock .panel{background:#F1F3F5;border-radius:10px;max-width:320px;margin:0 auto;padding:14px 16px;text-align:center;font-size:13.5px;}
+  .mock .panel .ttl{font-weight:700;font-size:16px;margin-bottom:6px;}
+  .mock .panel .sub{color:var(--ink-soft);margin:6px 0 8px;}
+  .mock .mb{display:block;width:100%;border-radius:6px;padding:7px 8px;margin:6px 0;font-weight:600;font-size:13px;border:1px solid transparent;}
+  .mock .b1{background:#4A90D9;color:#fff;}
+  .mock .b2{background:#5CB85C;color:#fff;}
+  .mock .b3{background:#5D7FD6;color:#fff;}
+  .mock .b4{background:#fff;color:#3C4043;border-color:#DADCE0;}
+  .mock .b5{background:#111;color:#fff;}
+  .mock .lnk{color:#1F4FB5;font-weight:700;}
+  .mock .hl{outline:3px solid #FFD84D;outline-offset:2px;}
+
+  /* ---------- interfaz de Tinkercad (maqueta con puntos) ---------- */
+  .tk{position:relative;border:1px solid #CBD2D9;border-radius:12px;overflow:hidden;background:#F4F6F8;font-size:12.5px;user-select:none;}
+  .tk .tbar{display:flex;align-items:center;gap:8px;background:#fff;border-bottom:1px solid #E1E4E8;padding:8px 10px;}
+  .tk .logo{display:grid;grid-template-columns:repeat(3,9px);gap:1px;}
+  .tk .logo i{width:9px;height:9px;display:block;}
+  .tk .name{border:1px solid #CBD2D9;border-radius:999px;padding:3px 10px;font-weight:600;}
+  .tk .circ{margin-left:auto;border:1.5px solid #1F5C99;color:#1F5C99;border-radius:999px;padding:3px 10px;font-weight:600;}
+  .tk .ava{width:26px;height:26px;border-radius:50%;background:#6A8DD6;}
+  .tk .tools{display:flex;align-items:center;gap:6px;background:#fff;border-bottom:1px solid #E1E4E8;padding:6px 10px;flex-wrap:wrap;}
+  .tk .ic{width:22px;height:22px;border-radius:5px;background:#EEF1F4;display:inline-flex;align-items:center;justify-content:center;color:#6B7280;font-size:12px;}
+  .tk .tbtn{border:1px solid #CBD2D9;border-radius:6px;padding:3px 9px;font-weight:600;background:#fff;}
+  .tk .tbtn.sim{border-color:#2E9E4F;}
+  .tk .body{display:grid;grid-template-columns:1fr 190px;min-height:250px;}
+  .tk .canvas{position:relative;padding:14px;}
+  .tk .mini-mb{width:120px;height:92px;border-radius:12px;background:#1E1F22;margin:28px auto 0;position:relative;box-shadow:inset 0 0 0 2px #333;}
+  .tk .mini-mb::after{content:"0   1   2  3V GND";position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:9px;color:#C9A227;letter-spacing:.5px;}
+  .tk .side{border-left:1px solid #E1E4E8;background:#fff;padding:8px;}
+  .tk .side .ddx{border:1px solid #CBD2D9;border-radius:6px;padding:4px 8px;margin-bottom:6px;}
+  .tk .side .srch{border:1px solid #CBD2D9;border-radius:6px;padding:4px 8px;color:#9AA0A6;margin-bottom:8px;}
+  .tk .side .parts{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+  .tk .side .parts span{background:#F4F6F8;border-radius:6px;text-align:center;padding:6px 2px;font-size:10.5px;}
+  .tk .fit{position:absolute;left:10px;top:10px;width:24px;height:24px;border-radius:50%;border:1px solid #CBD2D9;background:#fff;}
+  .hs{position:relative;flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:#E8590C;color:#fff;font-weight:700;font-size:13px;border:2px solid #fff;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);display:inline-flex;vertical-align:middle;align-items:center;justify-content:center;animation:pulse 1.8s infinite;font-family:inherit;padding:0;}
+  .hs.seen{background:#1E8E5A;animation:none;}
+  .hs.cur{outline:3px solid #FFD84D;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(232,89,12,.55);}70%{box-shadow:0 0 0 10px rgba(232,89,12,0);}100%{box-shadow:0 0 0 0 rgba(232,89,12,0);}}
+  .hs-info{min-height:96px;margin-top:10px;}
+  @media (max-width:760px){ .tk .body{grid-template-columns:1fr 130px;} .tk .side .parts{grid-template-columns:1fr 1fr;} }
+
+  /* ---------- bloques estilo Tinkercad (imitación visual) ---------- */
+  .code{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:13px;color:#fff;line-height:1.35;overflow-x:auto;padding:4px 0;}
+  .tb{border-radius:6px;padding:6px 10px;margin:3px 0;display:block;width:max-content;max-width:100%;font-weight:600;transition:box-shadow .15s, filter .15s;}
+  .tb.hat{border-radius:16px 16px 6px 6px;padding-top:9px;}
+  .tb.ctl{background:var(--k-ctl);}
+  .tb.out{background:var(--k-out);}
+  .tb.inp{background:var(--k-inp);}
+  .tb.mth{background:var(--k-math);}
+  .tb.var{background:var(--k-var);}
+  .tb .in{margin:6px 0 2px 12px;border-left:3px solid rgba(255,255,255,.45);padding-left:8px;}
+  .tb .lbl{display:block;margin-top:6px;}
+  .pv{display:inline-block;background:#fff;color:#22252A;border-radius:999px;padding:0 9px;margin:0 3px;font-weight:600;}
+  .pr{display:inline-block;border-radius:999px;padding:0 9px;margin:0 3px;border:2px solid rgba(255,255,255,.7);}
+  .pr.var{background:var(--k-var);} .pr.inp{background:var(--k-inp);}
+  .hx{display:inline-block;background:var(--k-math);border:2px solid rgba(255,255,255,.7);padding:0 10px;margin:0 3px;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 50%,calc(100% - 8px) 100%,8px 100%,0 50%);}
+  .dd{display:inline-block;background:rgba(0,0,0,.15);border-radius:5px;padding:0 6px;margin:0 2px;}
+  .dd::after{content:" ▾";font-size:10px;}
+  .tb.run{box-shadow:0 0 0 3px #FFE14D, 0 0 12px 2px rgba(255,200,0,.8);}
+  .cmt{color:var(--ink-soft);font-size:12.5px;font-weight:400;font-style:italic;margin:2px 0 0 2px;}
+
+  /* ---------- micro:bit simulada ---------- */
+  .sim-area{display:grid;grid-template-columns:270px 1fr;gap:18px;align-items:start;}
+  @media (max-width:760px){.sim-area{grid-template-columns:1fr;}}
+  .mb{
+    background:#23262B;border-radius:18px;padding:18px 14px 14px;width:250px;margin:0 auto;
+    box-shadow:inset 0 0 0 3px #3A3F46,0 6px 16px rgba(0,0,0,.15);color:#fff;
+  }
+  .mb-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .mb-screen{display:grid;grid-template-columns:repeat(5,22px);grid-template-rows:repeat(5,22px);gap:6px;padding:8px;background:#15171A;border-radius:8px;}
+  .led{width:22px;height:22px;border-radius:4px;background:#3A1E1E;transition:background .08s, box-shadow .08s;}
+  .led.on{background:#FF3B30;box-shadow:0 0 8px #FF3B30;}
+  .mb-btn{
+    width:38px;height:38px;border-radius:50%;border:3px solid #9AA0A6;background:#111;color:#fff;
+    font-weight:700;cursor:pointer;font-family:inherit;font-size:14px;
+  }
+  .mb-btn:active{transform:scale(.94);background:#333;}
+  .mb-btn[disabled]{opacity:.35;cursor:not-allowed;}
+  .mb-pins{display:flex;justify-content:space-between;margin-top:12px;padding:6px 6px 0;border-top:2px solid #C9A227;font-size:11px;color:#C9A227;}
+  .sensor{margin-top:12px;background:#fff;color:var(--ink);border-radius:10px;padding:10px 12px;border:1px solid var(--line);font-size:13.5px;}
+  .sensor input[type=range]{width:100%;accent-color:#E8590C;}
+  .sensor .val{font-weight:700;color:#C2410C;}
+  .sim-log{font-size:13.5px;color:var(--ink-soft);margin-top:8px;min-height:22px;text-align:center;}
+
+  /* ---------- caja de variable ---------- */
+  .varbox{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:10px 0;}
+  .vb{width:130px;border:3px solid var(--k-var);border-radius:12px;background:#FCEFFC;text-align:center;padding:8px 6px;}
+  .vb .vn{font-size:13px;font-weight:700;color:#8E2A8E;}
+  .vb .vv{font-size:40px;font-weight:800;color:#5C1A5C;line-height:1.1;transition:transform .2s;}
+  .vb .vv.pop{transform:scale(1.25);}
+  .watch{display:inline-flex;gap:14px;flex-wrap:wrap;background:#FCEFFC;border:1.5px solid var(--k-var);border-radius:10px;padding:6px 12px;font-size:14px;margin-top:8px;}
+  .watch b{color:#8E2A8E;}
+
+  /* ---------- traza de cuenta regresiva ---------- */
+  table.simple{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0;}
+  table.simple th, table.simple td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top;}
+  table.simple th{background:var(--accent-light);color:var(--accent-dark);}
+  table.simple tr.nowrow td{background:#FFF6D6;}
+  .trace-wrap{max-height:230px;overflow:auto;border-radius:8px;}
+
+  /* ---------- semáforo ---------- */
+  .tl-wrap{display:flex;gap:18px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
+  .tl{background:#2B2F36;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;box-shadow:inset 0 0 0 3px #444;}
+  .lamp{width:46px;height:46px;border-radius:50%;opacity:.22;transition:opacity .08s, box-shadow .08s;}
+  .lamp.r{background:#FF3B30;} .lamp.y{background:#FFC400;} .lamp.g{background:#22C55E;}
+  .lamp.on{opacity:1;}
+  .lamp.r.on{box-shadow:0 0 16px #FF3B30;} .lamp.y.on{box-shadow:0 0 16px #FFC400;} .lamp.g.on{box-shadow:0 0 16px #22C55E;}
+  .tl-lbl{font-size:11px;color:#C9A227;text-align:center;margin-top:-6px;}
+  .mode{display:inline-block;border-radius:999px;padding:2px 12px;font-weight:700;font-size:13px;}
+  .mode.dia{background:#FFF1C2;color:#8A5A00;} .mode.noche{background:#1F2A44;color:#E6ECFF;}
+
+  /* ---------- esquema de conexiones (SVG) ---------- */
+  .schem{width:100%;max-width:560px;height:auto;display:block;margin:6px auto;}
+
+  /* ---------- navegación inferior ---------- */
+  .nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);
+    box-shadow:0 -4px 14px rgba(15,40,70,.06);padding:10px 16px;
+  }
+  .nav-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:10px;}
+  .nav select{flex:1;min-width:0;font-family:inherit;font-size:14px;padding:9px 10px;border-radius:9px;border:1.5px solid var(--line);background:#fff;}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:18px;}
+  .dots span{width:8px;height:8px;border-radius:50%;background:#D5DCE3;}
+  .dots span.seen{background:#9CC3EA;}
+  .dots span.cur{background:var(--accent);transform:scale(1.3);}
+  footer.close{text-align:center;padding:18px 10px 0;color:var(--ink-soft);font-size:12.5px;}
+
+  /* ---------- semana 4: circuito abierto/cerrado ---------- */
+  .circ-demo{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .circ-demo svg{width:100%;max-width:420px;height:auto;}
+  .wire{stroke:#2F9E44;stroke-width:4;fill:none;stroke-linecap:round;}
+  .wire.flow{stroke-dasharray:8 8;animation:flow .8s linear infinite;}
+  @keyframes flow{to{stroke-dashoffset:-16;}}
+  .ledbulb{fill:#5A2020;transition:fill .15s, filter .15s;}
+  .ledbulb.on{fill:#FF3B30;filter:drop-shadow(0 0 8px #FF3B30);}
+  .ledbulb.dim{fill:#C9463F;filter:drop-shadow(0 0 3px #FF3B30);}
+
+  /* ---------- tarjetas de magnitudes ---------- */
+  .mag{border-radius:12px;padding:14px 16px;border:1.5px solid var(--line);background:#FBFCFD;}
+  .mag h3{margin:0 0 6px;}
+  .mag .big{font-size:26px;font-weight:800;}
+  .mag.v{border-color:#E8590C;} .mag.v .big{color:#C2410C;}
+  .mag.i{border-color:#1F5C99;} .mag.i .big{color:#1F5C99;}
+  .mag.r{border-color:#8A6D3B;} .mag.r .big{color:#6B4E00;}
+
+  /* ---------- triángulo de Ohm ---------- */
+  .tri-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .tri{width:220px;height:190px;position:relative;}
+  .tri svg{width:100%;height:100%;}
+  .tri-btn{position:absolute;width:62px;height:52px;border:none;background:transparent;cursor:pointer;font-size:30px;font-weight:800;font-family:inherit;border-radius:10px;}
+  .tri-btn:hover,.tri-btn:focus-visible{background:rgba(31,92,153,.10);outline:none;}
+  .tri-btn.cov{background:#22252A;color:#22252A !important;}
+  .formula{font-size:22px;font-weight:800;color:var(--accent-dark);min-height:34px;text-align:center;}
+  .calc{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .calc label{font-size:13.5px;font-weight:600;display:block;margin-bottom:3px;}
+  .calc select{width:100%;font-family:inherit;font-size:14px;padding:8px 10px;border-radius:9px;border:1.5px solid var(--line);background:#fff;}
+  .calc-out{margin-top:10px;background:var(--accent-light);border-radius:10px;padding:12px 14px;font-size:15px;color:var(--accent-dark);}
+  .calc-out .res{font-size:24px;font-weight:800;}
+  .meter{height:14px;border-radius:999px;background:#E6EBF0;overflow:hidden;margin-top:8px;}
+  .meter i{display:block;height:100%;background:linear-gradient(90deg,#1F5C99,#4C97FF);width:0;transition:width .3s;}
+
+  /* ---------- símbolos ---------- */
+  .sym{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;}
+  .sym svg{width:120px;height:56px;}
+  .sym b{margin-top:4px;}
+
+  /* ---------- esquema paso a paso ---------- */
+  .seg-path{stroke:#9AA3AD;stroke-width:4;fill:none;transition:stroke .2s;}
+  .seg-path.lit{stroke:#E8590C;}
+  .step-note{min-height:56px;}
+
+  /* ---------- protoboard interactiva ---------- */
+  .bb-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px;}
+  .bb{display:block;margin:0 auto;}
+  .bb .hole{fill:#3A3F46;cursor:pointer;}
+  .bb .hole:hover{fill:#E8590C;}
+  .bb .hole.hi{fill:#22C55E;}
+  .bb .hole.sel{fill:#E8590C;}
+  .bb-info{margin-top:10px;min-height:48px;}
+
+  /* ---------- multímetro dibujado ---------- */
+  .mm{display:inline-flex;align-items:center;gap:8px;background:#F4B63F;border-radius:10px;padding:8px 10px;box-shadow:inset 0 0 0 2px #C98F1C;}
+  .mm .scr{background:#DDE3D8;border-radius:5px;padding:4px 10px;font-weight:800;font-size:20px;min-width:118px;text-align:right;font-family:ui-monospace,Menlo,Consolas,monospace;color:#22252A;}
+  .mm .md{display:flex;flex-direction:column;gap:3px;}
+  .mm .md span{width:18px;height:18px;border-radius:50%;border:1.5px solid #6B4E00;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;color:#6B4E00;background:#FBD98A;}
+  .mm .md span.on{background:#22252A;color:#fff;border-color:#22252A;}
+
+  /* ---------- hoja de registro ---------- */
+  table.reg input{width:100%;min-width:90px;font-family:inherit;font-size:14px;padding:6px 8px;border-radius:7px;border:1.5px solid var(--line);}
+  table.reg td{vertical-align:middle;}
+
+  /* ---------- ejercicios ---------- */
+  .ex-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+  .pill{display:inline-block;border-radius:999px;padding:2px 12px;font-size:12.5px;font-weight:700;}
+  .pill.src{background:#FFF1C2;color:#8A5A00;}
+  .pill.ctl{background:#E7F0FF;color:#1F4FB5;}
+  .pred{background:#F3F0FF;border:1.5px dashed #9966FF;border-radius:10px;padding:12px 14px;margin:12px 0;font-size:14.5px;color:#3F2A7A;}
+  .pred > b:first-child{display:block;margin-bottom:4px;}
+  .pred input{width:80px;font-family:inherit;font-size:14px;padding:4px 6px;border-radius:6px;border:1.5px solid #B9A3FF;margin:0 4px;}
+  .pred .ok{color:var(--ok);font-weight:700;} .pred .no{color:var(--bad);font-weight:700;}
+  .measure{background:#FFF6D6;border:1.5px solid #D9B84A;border-radius:10px;padding:12px 14px;margin:12px 0;font-size:14.5px;color:#6B4E00;}
+  .measure > b:first-child{display:block;margin-bottom:4px;}
+
+  /* ---------- semana 5 ---------- */
+  .code .tb .in{display:block;}
+  .code .tb.ctl .tb.ctl{background:#F2A21B;box-shadow:inset 0 0 0 2px rgba(0,0,0,.10);}
+  .bbview{width:100%;max-width:640px;height:auto;display:block;margin:6px auto;border-radius:10px;}
+  .sch-st .sh, #e2n .sh{transition:opacity .2s;}
+  .sch-st.dim .sh{opacity:.28;}
+  .sch-st.dim .sh.on, .sch-st.dim .sh.done{opacity:1;}
+  .sh.on polyline{stroke:#E8590C !important;}
+  .sh.on polygon{fill:#E8590C;}
+  .bbview .st{display:none;}
+  .bbview.all .st{display:inline;}
+  .bbview .st.show{display:inline;}
+  .bbview .st.cur{filter:drop-shadow(0 0 4px #FFB000) drop-shadow(0 0 2px #FFB000);}
+  .stepper{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;}
+  .step-box{background:#FFF6D6;border:1.5px solid #D9B84A;border-radius:10px;padding:12px 14px;font-size:15px;color:#4A3800;min-height:64px;}
+  .step-box .n{display:inline-block;background:#E8590C;color:#fff;border-radius:999px;padding:0 10px;margin-right:6px;font-weight:700;font-size:13px;}
+  .views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:12px;align-items:start;}
+  @media (max-width:860px){.views{grid-template-columns:1fr;}}
+  .vlabel{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin:2px 0 4px;}
+  .symgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+  .symcard{border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:10px;text-align:center;cursor:pointer;font-family:inherit;}
+  .symcard:hover{border-color:var(--accent);}
+  .symcard svg{width:130px;height:70px;display:block;margin:0 auto;}
+  .symcard .nm{font-weight:700;margin-top:4px;min-height:22px;color:var(--accent-dark);}
+  .symcard .nm.hid{color:var(--ink-soft);font-weight:600;}
+  .nodebtns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;}
+  .nodebtns button{border:2px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13.5px;}
+  .nodebtns button.on{color:#fff;}
+  .nodeov{display:none;}
+  .nodeov.on{display:inline;}
+  .pbdemo{display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:center;}
+  .pbbig{width:150px;height:150px;border-radius:14px;background:#3A3F46;position:relative;user-select:none;cursor:pointer;touch-action:none;}
+  .pbbig .cap{position:absolute;left:45px;top:45px;width:60px;height:60px;border-radius:50%;background:#15171A;border:3px solid #666;transition:transform .08s;}
+  .pbbig.down .cap{transform:scale(.88);background:#000;}
+  .pbbig .leg{position:absolute;width:26px;height:26px;border-radius:50%;background:#E9ECEF;border:2px solid #22252A;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+  .pbbig .bar{position:absolute;left:12px;width:4px;top:22px;height:106px;background:#E8590C;border-radius:3px;}
+  .pbbig .bar.r{left:auto;right:12px;}
+  .pbbig .bridge{position:absolute;top:73px;left:16px;right:16px;height:4px;background:#22C55E;border-radius:3px;display:none;}
+  .pbbig.down .bridge{display:block;}
+  .readout{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:28px;font-weight:800;background:#15171A;color:#7CFC8A;border-radius:10px;padding:8px 16px;min-width:90px;text-align:center;}
+  .checks{list-style:none;padding:0;margin:8px 0;}
+  .checks li{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-top:1px dashed var(--line);}
+  .checks li:first-child{border-top:none;}
+  .hintbtn{margin-top:6px;}
+  .hint{display:none;background:var(--accent-light);border-radius:10px;padding:10px 14px;margin-top:8px;font-size:14.5px;color:var(--accent-dark);}
+  .hint.show{display:block;}
+  .formbox{border:2px solid var(--accent);border-radius:12px;padding:14px 16px;background:var(--accent-light);}
+  .formbox .fld{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:14px;}
+
+
+  /* ---------- semana 6 ---------- */
+  .eps-flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin:10px 0 6px;}
+  .eps-box{flex:1 1 150px;border-radius:12px;padding:10px 12px;text-align:center;font-size:15px;}
+  .eps-box span{display:block;font-size:12.5px;color:var(--ink-soft);}
+  .eps-box.in{background:#F3F0FF;border:1.5px solid #9966FF;} .eps-box.pr{background:#FFF4E0;border:1.5px solid #FFAB19;} .eps-box.out{background:#E7F0FF;border:1.5px solid #4C97FF;}
+  .eps-arrow{align-self:center;font-size:22px;color:var(--ink-soft);}
+  .sorter{display:flex;flex-direction:column;gap:6px;}
+  .srow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff;}
+  .sname{font-weight:600;font-size:14.5px;}
+  .sbtns{display:flex;gap:6px;flex-wrap:wrap;}
+  .sb{border:1.5px solid var(--line);background:#FBFCFD;border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink);}
+  .sb:hover{border-color:var(--accent);}
+  .sb.right{border-color:var(--ok);background:var(--ok-bg);color:#135C3B;}
+  .sb.wrong{border-color:var(--bad);background:var(--bad-bg);color:#8A1C13;}
+  .bz-demo,.sv-demo{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .bz-svg{width:200px;height:150px;}
+  #bzWaves.pulse{animation:bzp .35s ease-in-out infinite alternate;}
+  @keyframes bzp{from{opacity:.25;}to{opacity:1;}}
+  #bzBtn{touch-action:none;user-select:none;}
+  .sv-svg{width:100%;max-width:260px;height:auto;}
+  #svArm{transition:transform .4s ease;}
+  .sv-demo input[type=range]{width:100%;max-width:260px;accent-color:#2F6FB6;}
+  .mt-svg{width:100%;max-width:320px;height:auto;display:block;margin:0 auto;}
+  #mtRotor{transform-box:view-box;transform-origin:130px 68px;} #tpRotor{transform-box:view-box;transform-origin:30px 30px;}
+  #mtRotor.spin,#tpRotor.spin{animation:spin .45s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .pw-out{margin:8px 0;border-radius:10px;padding:10px 14px;font-size:14.5px;background:#F4F6F8;}
+  .pw-out.ok{background:var(--ok-bg);color:#135C3B;} .pw-out.bad{background:var(--bad-bg);color:#8A1C13;}
+  .gc-svg{width:100%;max-width:320px;height:auto;display:block;}
+  .mini-slider{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:13px;}
+  .mini-slider i{flex:1;height:4px;background:#C9CED4;border-radius:3px;}
+  .tp-motor{display:flex;align-items:center;gap:12px;margin-top:10px;}
+  .code .cmt{margin:0 0 8px 2px;}
+  @media (max-width:760px){.eps-arrow{display:none;}}
+  /* ---------- semana 7 ---------- */
+  .sub-card{border-radius:12px;padding:12px 14px;border:2px solid var(--line);}
+  .sub-card h3{margin:0 0 6px;}
+  .sub-card p{margin:0 0 6px;font-size:14.5px;}
+  .sub-card.mec{border-color:#2F9E44;background:#E6F4EA;} .sub-card.mec h3{color:#1E7A33;}
+  .sub-card.ele{border-color:#1F5C99;background:#E7F0FA;} .sub-card.ele h3{color:#1F5C99;}
+  .sub-card.sof{border-color:#C77700;background:#FFF4E0;} .sub-card.sof h3{color:#A35F00;}
+  .sb.s0.right{border-color:#2F9E44;} .sb.s1.right{border-color:#1F5C99;} .sb.s2.right{border-color:#C77700;}
+  img.wide{width:100%;height:auto;display:block;margin:8px auto;border:1px solid var(--line);border-radius:10px;}
+  /* ---------- semana 8 ---------- */
+  .steps5{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+  .st5{flex:1 1 150px;border:2px solid var(--line);border-radius:12px;background:#fff;padding:10px;cursor:pointer;font-family:inherit;text-align:left;font-size:14px;color:var(--ink);}
+  .st5 .nn{display:inline-flex;width:26px;height:26px;border-radius:50%;color:#fff;font-weight:800;align-items:center;justify-content:center;margin-right:6px;}
+  .st5.seen{background:#F7FAFD;} .st5.cur{box-shadow:0 0 0 3px #FFD84D;}
+  .probgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:10px 0;}
+  .pc{border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:10px 12px;cursor:pointer;font-family:inherit;text-align:left;font-size:14px;color:var(--ink);}
+  .pc:hover{border-color:var(--accent);} .pc.cur{border-color:var(--accent);background:var(--accent-light);}
+  .pc b{display:block;}
+  .mtx select{font-family:inherit;font-size:14px;padding:4px 6px;border-radius:7px;border:1.5px solid var(--line);}
+  .mtx td.pt{font-weight:800;text-align:center;} .mtx td.w{font-weight:700;text-align:center;}
+  .mtx tr.tot td{background:#F4F6F8;font-weight:800;}
+  .mtx-res{min-height:26px;font-size:15px;margin:6px 0;}
+
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="t-title"><small>SEMANA 8 · GRADO 9°</small>Proyecto integrador I: definición y diseño del prototipo</div>
+    <div class="t-prog">
+      <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+      <div class="lbl"><span id="progressLabel">0 de 0 tareas</span><span id="slideLabel">Diapositiva 1</span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="deck">
+
+<section class="slide" data-title="Portada">
+  <div class="hero">
+    <div class="eyebrow" style="color:#fff;opacity:.85">Plan de 10 semanas · Proyecto integrador</div>
+    <h1>Semana 8 — Diseña tu prototipo</h1>
+    <p>Ya sabes <b>programar</b> la micro:bit, armar <b>circuitos</b>, usar <b>sensores</b> y <b>actuadores</b>, y reconocer los <b>subsistemas</b> de un aparato. Ahora, <b>en pareja</b>, vas a usar todo eso para <b>resolver un problema</b>. Esta semana <b>diseñan</b>; la próxima, <b>construyen</b>.</p>
+    <div class="badge-row">
+      <span class="badge">Nivel: básico</span>
+      <span class="badge">Tiempo total: unas 2 horas</span>
+      <span class="badge">👥 En pareja</span>
+      <span class="badge">Sin armar circuitos</span>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3 style="margin-top:0">🎯 Objetivo de la semana</h3>
+    <p>En pareja, elegir un <b>problema</b> de la lista, escribir sus <b>restricciones</b> y <b>especificaciones</b>, proponer <b>dos alternativas</b>, compararlas con <b>criterios ponderados</b> y <b>diseñar</b> la solución elegida (sin construirla todavía).</p>
+    <div class="men"><b>Evidencias de aprendizaje (MEN, grados 8°–9°):</b><br><i>"Reconozco que no hay soluciones perfectas, y que pueden existir varias soluciones a un mismo problema según los criterios utilizados y su ponderación."</i><br><i>"Interpreto ideas sobre diseños, innovaciones o protocolos mediante el uso de registros, textos, diagramas, figuras, planos, maquetas, modelos, simulaciones o prototipos."</i><br><span class="muted">Componente: Solución de problemas con T&amp;I</span></div>
+    <p class="muted">Usa los botones <span class="kbd">Siguiente →</span> y <span class="kbd">← Anterior</span> de la parte de abajo, o las flechas del teclado.</p>
+  </div>
+</section>
+
+<section class="slide" data-title="Tu ruta de la semana">
+  <div class="card">
+    <div class="eyebrow">Antes de empezar</div>
+    <h2>Tu ruta de la semana (≈ 2 horas)</h2>
+    <div class="grid2">
+      <div class="box"><h3>1️⃣ Video y los 5 pasos · 35 min</h3><p class="muted">Diapositivas 3 a 10: el proceso tecnológico, la lista de problemas, restricciones, especificaciones, alternativas y la tabla de criterios. Las preguntas rápidas <b>no tienen nota</b>.</p></div>
+      <div class="box"><h3>2️⃣ Lectura y cuaderno · 25 min</h3><p class="muted">Lee el <b>documento de lectura</b> y copia las partes con <b>📓 PARA TU CUADERNO</b>.</p></div>
+      <div class="box" style="grid-column:1/-1"><h3>3️⃣ La ficha de diseño, en pareja · 60 min</h3><p class="muted">Diapositivas 11 a 13: llenan juntos la <b>ficha de diseño</b> en Google Docs, la descargan en <b>PDF</b> y la suben al formulario.</p></div>
+    </div>
+    <div class="tip"><b>La nota de la semana</b>Es la <b>ficha de diseño</b> (100 puntos, con rúbrica). Esta semana <b>no hay preguntas</b> en el formulario y <b>no</b> entregan enlaces de Tinkercad.</div>
+    <div class="tip"><b>👥 Trabajo en pareja</b>Con un compañero o compañera <b>de tu mismo curso</b>. Los dos escriben en la <b>misma ficha</b> y entregan <b>una sola</b>. La misma pareja sigue en la Semana 9.</div>
+    <div class="note"><b class="h">La barra de progreso no se guarda</b>Si cierras o recargas la página, las casillas se borran. Es solo una ayuda para organizarte.</div>
+    <div class="tasks"><div class="task"><input type="checkbox" id="t-pair"><label for="t-pair"><b>Ya tengo pareja de mi mismo curso</b></label></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="El proceso tecnológico (video)">
+  <div class="card">
+    <div class="eyebrow">Tema 1 · Video de referencia</div>
+    <h2>🛠️ El proceso tecnológico</h2>
+    <div class="grid2">
+      <div>
+        <p>Los ingenieros no empiezan a construir de una vez: primero <b>piensan</b>, <b>comparan ideas</b> y <b>planean</b>.</p>
+        <div class="box" style="margin:10px 0">
+          <h3>▶️ Mira el video (5 min 39 s)</h3>
+          <p class="muted" style="margin-bottom:8px">"El proceso tecnológico" — canal <b>Mizar</b> (YouTube)</p>
+          <a class="btn" href="https://www.youtube.com/watch?v=eGCkeh8B9D0" target="_blank" rel="noopener">Abrir el video en YouTube ↗</a>
+        </div>
+        <p class="muted">En el video, Álex tiene que estudiar de pie y necesita algo para sentarse. Así recorren todas las fases.</p>
+      </div>
+      <div>
+        <p><b>Las fases que muestra el video:</b></p>
+        <ol class="steps-list">
+          <li><b>Problema</b> o necesidad.</li>
+          <li><b>Información:</b> qué se ha hecho antes.</li>
+          <li><b>Ideas:</b> varias opciones; se escoge la más adecuada.</li>
+          <li><b>Planificación:</b> diseño, materiales, presupuesto, plan de trabajo (y en equipo se reparten las tareas).</li>
+          <li><b>Construcción.</b></li>
+          <li><b>Evaluación:</b> ¿resuelve el problema? Si no, se vuelve atrás.</li>
+          <li><b>Memoria:</b> informe con todos los pasos.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="tip"><b>En nuestro proyecto</b>La <b>Semana 8</b> cubre las fases 1 a 4 (hasta el diseño). La <b>Semana 9</b>: construcción y evaluación en Tinkercad. La <b>Semana 10</b>: presentación.</div>
+    <div class="qq-group" data-set="video" data-task="t-qvid"></div>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="t-video"><label for="t-video"><b>Vi el video completo</b></label></div>
+      <div class="task auto"><input type="checkbox" id="t-qvid"><label for="t-qvid"><b>Respondí bien la pregunta del video</b></label></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Los 5 pasos del diseño">
+  <div class="card">
+    <div class="eyebrow">Tema 2 · Actividad interactiva</div>
+    <h2>Del problema al diseño: los 5 pasos</h2>
+    <p>Para llenar la ficha van a seguir <b>5 pasos</b>. Haz clic en cada uno para ver qué significa y un ejemplo.</p>
+    <div class="steps5" id="steps5"></div>
+    <div class="step-box" id="steps5Box"></div>
+    <div class="tasks"><div class="task auto"><input type="checkbox" id="t-steps"><label for="t-steps"><b>Abrí los 5 pasos</b></label></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 1: elige el problema">
+  <div class="card">
+    <div class="eyebrow">Paso 1 · Lista de problemas</div>
+    <h2>🧩 Elijan un problema de la lista</h2>
+    <p>Cada pareja escoge <b>uno</b>. <b>Varias parejas pueden escoger el mismo</b>: lo interesante es ver que cada una llega a una solución distinta. Haz clic en un problema para ver la pista.</p>
+    <div class="probgrid" id="probGrid"></div>
+    <div class="step-box" id="probBox">Haz clic en un problema.</div>
+    <div class="tip"><b>En la ficha escriben con sus palabras</b>¿<b>Dónde</b> ocurre? ¿A <b>quién</b> afecta? ¿<b>Por qué</b> vale la pena resolverlo?</div>
+    <div class="tasks"><div class="task"><input type="checkbox" id="t-prob"><label for="t-prob"><b>Con mi pareja elegimos el problema</b><span>Escríbanlo en la parte 1 de la ficha.</span></label></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Pasos 2 y 3: restricciones y especificaciones">
+  <div class="card">
+    <div class="eyebrow">Pasos 2 y 3 · Actividad interactiva</div>
+    <h2>¿Restricción o especificación?</h2>
+    <div class="grid2">
+      <div class="sub-card ele"><h3>🚧 Restricción</h3><p>Un <b>límite</b> que la solución debe respetar y que <b>no podemos cambiar</b> (tiempo, materiales, seguridad).</p><p class="muted">Ej.: "Se construye en una semana".</p></div>
+      <div class="sub-card mec"><h3>✅ Especificación</h3><p>Lo que la solución <b>debe hacer</b>, de forma <b>clara</b> y <b>comprobable</b>.</p><p class="muted">Ej.: "Al presionar A, el servo gira a 90°".</p></div>
+    </div>
+    <h3>Las 5 restricciones del profesor (iguales para todos)</h3>
+    <table class="simple">
+      <tr><td><b>R1</b></td><td>Lo controla una <b>micro:bit</b>, programada con <b>bloques</b>.</td></tr>
+      <tr><td><b>R2</b></td><td>Se debe poder <b>armar y simular en Tinkercad Circuits</b>.</td></tr>
+      <tr><td><b>R3</b></td><td><b>Al menos una entrada</b> (botón o sensor) y <b>al menos una salida</b> (LED o actuador: piezo, servomotor o motor).</td></tr>
+      <tr><td><b>R4</b></td><td>Se <b>construye y programa en la Semana 9</b> (una semana), en pareja.</td></tr>
+      <tr><td><b>R5</b></td><td><b>Alimentación segura</b>: LED con resistencia; servo con 4 pilas AA (6 V) como máximo; motor con transistor, diodo, pila externa y GND común.</td></tr>
+    </table>
+    <p class="muted">Además, cada pareja escribe <b>2 restricciones propias</b> y <b>al menos 3 especificaciones</b>.</p>
+    <h3>Clasifica cada frase</h3>
+    <div id="sorter8" class="sorter"></div>
+    <div id="sorter8Log" class="sim-log"></div>
+    <div class="tasks"><div class="task auto"><input type="checkbox" id="t-sort"><label for="t-sort"><b>Clasifiqué bien las 8 frases</b></label></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Especificaciones comprobables">
+  <div class="card">
+    <div class="eyebrow">Paso 3 · Especificaciones</div>
+    <h2>✅ Especificaciones claras y comprobables</h2>
+    <p><b>Comprobable</b> quiere decir que en la Semana 9 la podrán <b>probar en Tinkercad</b> y responder <b>sí</b> o <b>no</b>.</p>
+    <table class="simple">
+      <tr><th>❌ Confusa (no se puede comprobar)</th><th>✅ Clara (sí se puede comprobar)</th></tr>
+      <tr><td>"La barrera funciona bien."</td><td>"Al presionar el botón A, el servo de la barrera gira a 90°."</td></tr>
+      <tr><td>"La luz es inteligente."</td><td>"Cuando la fotorresistencia está en poca luz, el LED se enciende; con mucha luz, se apaga."</td></tr>
+      <tr><td>"El ventilador ayuda con el calor."</td><td>"Si la temperatura es mayor que 25 °C, el motor gira; si no, se detiene."</td></tr>
+    </table>
+    <div class="tip"><b>Truco</b>Usa la forma <b>"Cuando (entrada), (salida) hace (acción)"</b> y piensa: ¿cómo lo voy a probar en Tinkercad? (presionar un botón, mover el control de la fotorresistencia, subir el termómetro de la micro:bit…).</div>
+    <div class="qq-group" data-set="espec" data-task="t-espec"></div>
+    <div class="tasks"><div class="task auto"><input type="checkbox" id="t-espec"><label for="t-espec"><b>Respondí bien las preguntas rápidas</b></label></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 4: dos alternativas">
+  <div class="card">
+    <div class="eyebrow">Paso 4 · Alternativas · Ejemplo</div>
+    <h2>💡 Dos formas distintas de resolver el problema</h2>
+    <p>Las dos alternativas deben ser <b>realmente diferentes</b>: cambien la <b>entrada</b>, el <b>actuador</b> o la <b>forma de funcionar</b>.</p>
+    <div class="warn"><b>Ejemplo (no está en la lista: no lo copien)</b>En la biblioteca no se sabe cuándo hay demasiadas personas adentro (aforo máximo: 20).</div>
+    <table class="simple">
+      <tr><th></th><th>A. Contador con pulsador</th><th>B. Contador con fotorresistencia</th></tr>
+      <tr><td><b>¿Cómo funciona?</b></td><td>Cada persona que entra presiona el pulsador: suma 1. Si llega a 20, suena el piezo y se enciende el LED rojo.</td><td>Al pasar, la persona tapa la luz de la fotorresistencia: suma 1. Si llega a 20, suena el piezo y se enciende el LED rojo.</td></tr>
+      <tr><td><b>Entrada</b></td><td>Pulsador</td><td>Fotorresistencia</td></tr>
+      <tr><td><b>Salidas</b></td><td>Pantalla, piezo, LED rojo</td><td>Pantalla, piezo, LED rojo</td></tr>
+      <tr><td><b>Ventaja</b></td><td>Muy fácil de armar (semanas 5 y 6).</td><td>Cuenta <b>sola</b>.</td></tr>
+      <tr><td><b>Desventaja</b></td><td>Alguien puede olvidar presionar el botón.</td><td>Más difícil de programar.</td></tr>
+    </table>
+    <p class="muted">En la ficha, cada alternativa también lleva la <b>energía</b> y la <b>lista de componentes</b> (cantidad y valor).</p>
+    <div class="qq-group" data-set="alt" data-task="t-alt"></div>
+    <div class="tasks"><div class="task auto"><input type="checkbox" id="t-alt"><label for="t-alt"><b>Respondí bien la pregunta rápida</b></label></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 5: criterios ponderados">
+  <div class="card">
+    <div class="eyebrow">Paso 5 · Calculadora interactiva</div>
+    <h2>⚖️ La tabla de criterios ponderados</h2>
+    <p>Califica cada alternativa de <b>1 a 3</b> (1 = poco · 2 = regular · 3 = mucho). Cada calificación se <b>multiplica por el peso</b> y se <b>suma</b>. Máximo: <b>30</b>.</p>
+    <div style="overflow-x:auto">
+    <table class="simple mtx" id="mtx">
+      <tr><th>Criterio</th><th>Peso</th><th>A: calificación</th><th>A: puntaje</th><th>B: calificación</th><th>B: puntaje</th></tr>
+    </table>
+    </div>
+    <div class="mtx-res" id="mtxRes"></div>
+    <div class="btn-row">
+      <button class="btn small" type="button" id="mtxEx">Cargar el ejemplo del contador de aforo</button>
+      <button class="btn small secondary" type="button" id="mtxClr">Borrar</button>
+    </div>
+    <details class="more"><summary>¿Por qué esos pesos?</summary>
+      <p class="muted" style="margin:8px 0 0">Lo <b>más importante</b> es que <b>resuelva el problema</b> (× 4). Después, que la <b>podamos construir</b> en la Semana 9 (× 3). Luego, que sea <b>sencilla y barata</b> (× 2). La <b>seguridad</b> pesa × 1 porque todas las alternativas <b>ya deben cumplir</b> la restricción R5: este criterio solo desempata.</p>
+    </details>
+    <div class="note"><b class="h">Usa esta calculadora con tu pareja</b>Pongan sus propias calificaciones y copien los resultados en la parte 5 de la ficha. (Lo que pongas aquí no se guarda.)</div>
+    <div class="tasks"><div class="task auto"><input type="checkbox" id="t-mtx"><label for="t-mtx"><b>Llené las 8 calificaciones de la calculadora</b></label></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="No hay soluciones perfectas">
+  <div class="card">
+    <div class="eyebrow">Tema 3 · Actividad interactiva</div>
+    <h2>🤔 No hay soluciones perfectas</h2>
+    <p>En el ejemplo ganó la <b>A</b> por <b>1 punto</b> (26 contra 25). Pero <b>la que gana depende de los pesos</b>. Mueve el peso del criterio <b>"Resuelve el problema"</b> y mira qué pasa:</p>
+    <div class="sensor" style="max-width:520px">
+      Peso de <b>C1. Resuelve el problema</b>: <span class="val" id="wVal">× 4</span>
+      <input type="range" min="1" max="6" step="1" value="4" id="wRange" aria-label="Peso del criterio resuelve el problema">
+    </div>
+    <div class="rpm-cmp" style="max-width:520px">
+      <div class="rpm-card g" id="wA"><span>A. Contador con pulsador</span><b>26</b></div>
+      <div class="rpm-card" id="wB"><span>B. Contador con fotorresistencia</span><b>25</b></div>
+    </div>
+    <div class="sim-log" id="wLog"></div>
+    <div class="tip"><b>La idea clave (MEN)</b><i>"Pueden existir varias soluciones a un mismo problema según los criterios utilizados y su ponderación."</i> Al elegir, <b>ganamos algo</b> y <b>sacrificamos algo</b>.</div>
+    <p><b>Por eso, en la ficha escriben:</b></p>
+    <ul class="clean">
+      <li><b>Cuál</b> eligieron y <b>por qué</b> (con los puntajes).</li>
+      <li><b>Qué desventaja aceptan</b> al elegirla.</li>
+      <li><b>Por qué descartaron</b> la otra.</li>
+    </ul>
+    <div class="tasks"><div class="task auto"><input type="checkbox" id="t-w"><label for="t-w"><b>Encontré el peso con el que gana la B</b></label></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="El diseño de la solución">
+  <div class="card">
+    <div class="eyebrow">Paso 5 · Diseño de la solución elegida</div>
+    <h2>✏️ El boceto o diagrama y la lista de componentes</h2>
+    <p>La última parte de la ficha es el <b>diseño</b> de la solución elegida: un <b>diagrama</b> (entrada → proceso → salida, o los tres subsistemas de la Semana 7) y la <b>lista de componentes</b> con cantidad y valor.</p>
+    <img class="wide" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3NjAgMzMwIiB3aWR0aD0iNzYwIiBoZWlnaHQ9IjMzMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJEaWFncmFtYSBlbnRyYWRhLCBwcm9jZXNvIHkgc2FsaWRhIGRlbCBjb250YWRvciBkZSBhZm9ybyBjb24gcHVsc2Fkb3IiPgogIDxzdHlsZT4KICAgIHRleHR7Zm9udC1mYW1pbHk6LWFwcGxlLXN5c3RlbSwiU2Vnb2UgVUkiLFJvYm90byxIZWx2ZXRpY2EsQXJpYWwsc2Fucy1zZXJpZjt9CiAgICAuaHtmb250LXNpemU6MTVweDtmb250LXdlaWdodDo4MDA7dGV4dC1hbmNob3I6bWlkZGxlO30KICAgIC5ie2ZvbnQtc2l6ZToxM3B4O2ZpbGw6IzIyMjUyQTt0ZXh0LWFuY2hvcjptaWRkbGU7fQogICAgLnN7Zm9udC1zaXplOjExLjVweDtmaWxsOiM1NjVCNjM7dGV4dC1hbmNob3I6bWlkZGxlO30KICA8L3N0eWxlPgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI3NjAiIGhlaWdodD0iMzMwIiByeD0iMTYiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iI0UxRTRFOCIvPgogIDx0ZXh0IHg9IjM4MCIgeT0iMzIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIHN0eWxlPSJmb250LXNpemU6MTdweDtmb250LXdlaWdodDo4MDA7ZmlsbDojMTIzQTYxIj5Db250YWRvciBkZSBhZm9ybyBjb24gcHVsc2Fkb3IgKGFsdGVybmF0aXZhIEEpPC90ZXh0PgogIDxkZWZzPjxtYXJrZXIgaWQ9ImFyIiBtYXJrZXJXaWR0aD0iMTAiIG1hcmtlckhlaWdodD0iMTAiIHJlZlg9IjgiIHJlZlk9IjUiIG9yaWVudD0iYXV0byI+PHBhdGggZD0iTTAsMCBMMTAsNSBMMCwxMCB6IiBmaWxsPSIjMjIyNTJBIi8+PC9tYXJrZXI+PC9kZWZzPgogIDxyZWN0IHg9IjI0IiB5PSI2MCIgd2lkdGg9IjE5MCIgaGVpZ2h0PSIyMDAiIHJ4PSIxNCIgZmlsbD0iI0YzRjBGRiIgc3Ryb2tlPSIjOTk2NkZGIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8dGV4dCBjbGFzcz0iaCIgeD0iMTE5IiB5PSI4OCIgZmlsbD0iIzVCM0NDNCI+RU5UUkFEQTwvdGV4dD4KICA8dGV4dCBjbGFzcz0iYiIgeD0iMTE5IiB5PSIxMjIiPlB1bHNhZG9yIGVuIGxhIHB1ZXJ0YTwvdGV4dD4KICA8dGV4dCBjbGFzcz0icyIgeD0iMTE5IiB5PSIxNDAiPihjb24gcmVzaXN0ZW5jaWEgZGUgMTAga86pKTwvdGV4dD4KICA8dGV4dCBjbGFzcz0iYiIgeD0iMTE5IiB5PSIxNzYiPkJvdMOzbiBCIGRlIGxhIG1pY3JvOmJpdDwvdGV4dD4KICA8dGV4dCBjbGFzcz0icyIgeD0iMTE5IiB5PSIxOTQiPihwb25lIGVsIGNvbnRlbyBlbiAwKTwvdGV4dD4KICA8dGV4dCBjbGFzcz0icyIgeD0iMTE5IiB5PSIyNDAiPnN1YnNpc3RlbWEgZWxlY3Ryw7NuaWNvPC90ZXh0PgogIDxsaW5lIHgxPSIyMTgiIHkxPSIxNjAiIHgyPSIyNzIiIHkyPSIxNjAiIHN0cm9rZT0iIzIyMjUyQSIgc3Ryb2tlLXdpZHRoPSIyLjUiIG1hcmtlci1lbmQ9InVybCgjYXIpIi8+CiAgPHRleHQgeD0iMjQ1IiB5PSIxNTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIHN0eWxlPSJmb250LXNpemU6MTFweDtmaWxsOiM1NjVCNjMiPnNlw7FhbDwvdGV4dD4KICA8cmVjdCB4PSIyNzYiIHk9IjYwIiB3aWR0aD0iMjA4IiBoZWlnaHQ9IjIwMCIgcng9IjE0IiBmaWxsPSIjRkZGNEUwIiBzdHJva2U9IiNGRkFCMTkiIHN0cm9rZS13aWR0aD0iMiIvPgogIDx0ZXh0IGNsYXNzPSJoIiB4PSIzODAiIHk9Ijg4IiBmaWxsPSIjQTM1RjAwIj5QUk9DRVNPIChtaWNybzpiaXQpPC90ZXh0PgogIDx0ZXh0IGNsYXNzPSJiIiB4PSIzODAiIHk9IjExOCI+YWwgcHJlc2lvbmFyIGVsIHB1bHNhZG9yOjwvdGV4dD4KICA8dGV4dCBjbGFzcz0iYiIgeD0iMzgwIiB5PSIxMzYiPmNvbnRlbyA9IGNvbnRlbyArIDE8L3RleHQ+CiAgPHRleHQgY2xhc3M9ImIiIHg9IjM4MCIgeT0iMTYwIj5zaSBjb250ZW8g4omlIDIwIGVudG9uY2VzPC90ZXh0PgogIDx0ZXh0IGNsYXNzPSJiIiB4PSIzODAiIHk9IjE3OCI+TEVEIHJvam8geSBwaWV6bzwvdGV4dD4KICA8dGV4dCBjbGFzcz0iYiIgeD0iMzgwIiB5PSIyMDIiPmFsIHByZXNpb25hciBCOiBjb250ZW8gPSAwPC90ZXh0PgogIDx0ZXh0IGNsYXNzPSJzIiB4PSIzODAiIHk9IjI0MCI+c29mdHdhcmU8L3RleHQ+CiAgPGxpbmUgeDE9IjQ4OCIgeTE9IjE2MCIgeDI9IjU0MiIgeTI9IjE2MCIgc3Ryb2tlPSIjMjIyNTJBIiBzdHJva2Utd2lkdGg9IjIuNSIgbWFya2VyLWVuZD0idXJsKCNhcikiLz4KICA8dGV4dCB4PSI1MTUiIHk9IjE1MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgc3R5bGU9ImZvbnQtc2l6ZToxMXB4O2ZpbGw6IzU2NUI2MyI+b3JkZW48L3RleHQ+CiAgPHJlY3QgeD0iNTQ2IiB5PSI2MCIgd2lkdGg9IjE5MCIgaGVpZ2h0PSIyMDAiIHJ4PSIxNCIgZmlsbD0iI0U3RjBGRiIgc3Ryb2tlPSIjNEM5N0ZGIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8dGV4dCBjbGFzcz0iaCIgeD0iNjQxIiB5PSI4OCIgZmlsbD0iIzFGNEZCNSI+U0FMSURBPC90ZXh0PgogIDx0ZXh0IGNsYXNzPSJiIiB4PSI2NDEiIHk9IjEyMiI+UGFudGFsbGEgZGUgbGEgbWljcm86Yml0PC90ZXh0PgogIDx0ZXh0IGNsYXNzPSJzIiB4PSI2NDEiIHk9IjE0MCI+KG11ZXN0cmEgZWwgY29udGVvKTwvdGV4dD4KICA8dGV4dCBjbGFzcz0iYiIgeD0iNjQxIiB5PSIxNzAiPkxFRCByb2pvPC90ZXh0PgogIDx0ZXh0IGNsYXNzPSJzIiB4PSI2NDEiIHk9IjE4OCI+KGNvbiByZXNpc3RlbmNpYSBkZSAyMjAgzqkpPC90ZXh0PgogIDx0ZXh0IGNsYXNzPSJiIiB4PSI2NDEiIHk9IjIxNCI+UGllem8gKGF2aXNvKTwvdGV4dD4KICA8dGV4dCBjbGFzcz0icyIgeD0iNjQxIiB5PSIyNDAiPnN1YnNpc3RlbWEgZWxlY3Ryw7NuaWNvPC90ZXh0PgogIDx0ZXh0IHg9IjM4MCIgeT0iMjk4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBzdHlsZT0iZm9udC1zaXplOjEyLjVweDtmaWxsOiM1NjVCNjMiPkVuZXJnw61hOiBsYSBtaWNybzpiaXQgKDMgVikuIERpc2XDsW8gZW4gcGFwZWw6IHNlIGNvbnN0cnV5ZSB5IHNlIGNvbXBydWViYSBlbiBsYSBTZW1hbmEgOS48L3RleHQ+Cjwvc3ZnPgo=" alt="Diagrama entrada, proceso y salida del contador de aforo con pulsador">
+    <h3>Componentes que ya usaron en Tinkercad</h3>
+    <table class="simple">
+      <tr><th>Componente</th><th>Para qué</th><th>Semana</th></tr>
+      <tr><td><b>micro:bit</b></td><td>Controlador: botones A y B, pantalla, sensor de temperatura y de nivel de luz adentro</td><td>1 a 7</td></tr>
+      <tr><td><b>LED</b> + resistencia de 220 Ω</td><td>Salida de luz</td><td>3, 4, 5</td></tr>
+      <tr><td><b>Pulsador</b> / <b>Fotorresistencia</b> + resistencia de 10 kΩ</td><td>Entradas: botón y sensor de luz externos</td><td>5, 6</td></tr>
+      <tr><td><b>Piezo</b></td><td>Actuador: sonido</td><td>6</td></tr>
+      <tr><td><b>Microservomotor</b> + 4 pilas AA (6 V)</td><td>Actuador: gira a un ángulo (0° a 180°)</td><td>6</td></tr>
+      <tr><td><b>Motor de CC</b> + transistor NPN + 1 kΩ + diodo + pila de 9 V</td><td>Actuador: gira sin parar</td><td>6</td></tr>
+      <tr><td><b>Motor de aficionado</b></td><td>Actuador: mueve las ruedas de un carro robot</td><td>7</td></tr>
+    </table>
+    <div class="warn"><b>¿Un componente que no vimos?</b>Se puede si <b>existe en Tinkercad Circuits</b> y en la ficha explican <b>cuál</b> es, <b>para qué</b> lo usan y <b>cómo se conecta</b>. Ojo: puede ser más difícil de construir (criterio C2).</div>
+    <div class="tasks"><div class="task"><input type="checkbox" id="t-diag"><label for="t-diag"><b>Hicimos el boceto o diagrama de nuestra solución elegida</b></label></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="La ficha de diseño">
+  <div class="card">
+    <div class="eyebrow">Taller · Ficha de diseño · Google Docs</div>
+    <h2>📄 La ficha de diseño, paso a paso</h2>
+    <div class="grid2">
+      <div>
+        <h3 style="margin-top:0">Saquen su copia</h3>
+        <ol class="steps-list">
+          <li><b>Uno</b> de los dos abre la plantilla <b>"Semana 8 – Ficha de diseño"</b> que comparte el profesor (con la <b>cuenta institucional</b>).</li>
+          <li><span class="ui g">Archivo</span> → <span class="ui g">Hacer una copia</span>. Nombre: <i>Ficha S8 – Apellido1 – Apellido2 – Curso</i>.</li>
+          <li>En la copia: <span class="ui">Compartir</span> → correo institucional de la pareja → <b>Editor</b>.</li>
+        </ol>
+        <div class="warn"><b>No escriban en la plantilla original</b>Siempre trabajen en <b>su copia</b>.</div>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Llenen las 7 partes</h3>
+        <ol class="steps-list">
+          <li><b>Problema</b> (dónde, a quién, por qué)</li>
+          <li><b>Restricciones</b>: 5 del profesor + 2 propias</li>
+          <li><b>Especificaciones</b>: al menos 3, con cómo comprobarlas</li>
+          <li><b>Alternativas</b> A y B</li>
+          <li><b>Tabla de criterios ponderados</b></li>
+          <li><b>Solución elegida</b> y justificación</li>
+          <li><b>Diseño</b>: boceto o diagrama + lista de componentes</li>
+        </ol>
+        <p class="muted">Boceto: dibújenlo en una hoja y peguen la foto con <span class="ui g">Insertar</span> → <span class="ui g">Imagen</span>, o háganlo con <span class="ui g">Insertar</span> → <span class="ui g">Dibujo</span> → <span class="ui g">Nuevo</span>.</p>
+      </div>
+    </div>
+    <h3>Lista de chequeo</h3>
+    <div class="tasks">
+      <div class="task"><input type="checkbox" id="c1"><label for="c1">Nombres completos de los <b>dos</b> integrantes y el <b>curso</b></label></div>
+      <div class="task"><input type="checkbox" id="c2"><label for="c2">Problema <b>de la lista</b>: dónde, a quién y por qué</label></div>
+      <div class="task"><input type="checkbox" id="c3"><label for="c3"><b>5 restricciones</b> marcadas y <b>2 propias</b></label></div>
+      <div class="task"><input type="checkbox" id="c4"><label for="c4"><b>3 especificaciones</b> o más, cada una con cómo comprobarla</label></div>
+      <div class="task"><input type="checkbox" id="c5"><label for="c5"><b>Dos alternativas</b> realmente diferentes, con todas sus casillas</label></div>
+      <div class="task"><input type="checkbox" id="c6"><label for="c6"><b>Tabla</b> llena; revisamos multiplicaciones y sumas</label></div>
+      <div class="task"><input type="checkbox" id="c7"><label for="c7"><b>Cuál</b> elegimos, <b>por qué</b>, <b>qué desventaja</b> aceptamos y <b>por qué descartamos</b> la otra</label></div>
+      <div class="task"><input type="checkbox" id="c8"><label for="c8"><b>Boceto o diagrama</b> y <b>lista de componentes</b></label></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Entrega">
+  <div class="card">
+    <div class="eyebrow">Entrega · Formulario</div>
+    <h2>📝 Cómo entregar</h2>
+    <div class="grid2">
+      <div>
+        <ol class="steps-list">
+          <li>En la ficha: <span class="ui g">Archivo</span> → <span class="ui g">Descargar</span> → <span class="ui g">Documento PDF (.pdf)</span>.</li>
+          <li><b>Solo uno</b> de los dos abre el formulario <b>"Semana 8 – Ficha de diseño del proyecto"</b> con la <b>cuenta institucional</b>.</li>
+          <li>Escribe los <b>nombres de los dos</b>, el <b>curso</b> y el <b>problema</b> elegido.</li>
+          <li><b>Sube el PDF</b> de la ficha.</li>
+          <li>Revisa y presiona <b>Enviar</b>.</li>
+        </ol>
+      </div>
+      <div>
+        <div class="formbox">
+          <div class="fld">👤 Integrante 1</div>
+          <div class="fld">👤 Integrante 2</div>
+          <div class="fld">🏫 Curso: 9A · 9B · 9C</div>
+          <div class="fld">🧩 Problema elegido (lista de 8)</div>
+          <div class="fld">📄 Ficha de diseño en PDF</div>
+        </div>
+        <p class="muted">Si entregan dos veces, el profesor revisa la <b>última</b>. La nota es la <b>misma</b> para los dos.</p>
+      </div>
+    </div>
+    <h3>Lo que revisa la rúbrica (100 puntos)</h3>
+    <table class="simple">
+      <tr><th>Criterio</th><th>Puntos</th></tr>
+      <tr><td>R-1. Problema de la lista: dónde, a quién, por qué</td><td>10</td></tr>
+      <tr><td>R-2. 5 restricciones del profesor + 2 propias</td><td>15</td></tr>
+      <tr><td>R-3. Al menos 3 especificaciones comprobables, con cómo comprobarlas</td><td>20</td></tr>
+      <tr><td>R-4. Dos alternativas realmente diferentes, completas</td><td>20</td></tr>
+      <tr><td>R-5. Tabla de criterios ponderados bien calculada</td><td>15</td></tr>
+      <tr><td>R-6. Solución elegida y justificación</td><td>10</td></tr>
+      <tr><td>R-7. Boceto o diagrama + lista de componentes</td><td>10</td></tr>
+    </table>
+    <div class="warn"><b>Si el PDF no abre o está vacío</b>el profesor no podrá revisar la ficha. ¡Ábranlo antes de enviarlo! Y <b>guarden su ficha</b>: la usarán en la Semana 9.</div>
+    <div class="tasks"><div class="task"><input type="checkbox" id="t-sent"><label for="t-sent"><b>Descargamos el PDF, lo revisamos y lo enviamos</b></label></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Repaso final">
+  <div class="card">
+    <div class="eyebrow">Repaso final · No tiene nota</div>
+    <h2>¿Qué aprendiste?</h2>
+    <div class="qq-group" data-set="final" data-task="t-qqf"></div>
+    <div class="tasks"><div class="task auto"><input type="checkbox" id="t-qqf"><label for="t-qqf"><b>Respondí bien todo el repaso final</b></label></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="¿Y ahora qué sigue?">
+  <div class="card">
+    <div class="eyebrow">Cierre de la semana</div>
+    <h2>¿Y ahora qué sigue?</h2>
+    <p id="finalSummary" class="lead"></p>
+    <div class="grid2">
+      <div class="box"><h3>📖 1. Documento de lectura</h3><p class="muted">Repasa los 5 pasos y <b>copia en tu cuaderno</b> las partes marcadas con 📓.</p></div>
+      <div class="box"><h3>👥 2. Ficha en pareja</h3><p class="muted">Llenen las <b>7 partes</b> de la ficha de diseño en Google Docs.</p></div>
+      <div class="box" style="grid-column:1/-1;border-color:var(--accent);background:var(--accent-light)">
+        <h3>📝 3. El formulario</h3>
+        <p style="margin:0">Descarguen la ficha en <b>PDF</b> y <b>uno</b> de los dos la sube al formulario.</p>
+      </div>
+    </div>
+    <div class="tip"><b>La próxima semana</b>Con la misma pareja, van a <b>construir</b> en Tinkercad y <b>programar</b> la solución que diseñaron, la van a <b>probar</b> con sus especificaciones y la van a <b>mejorar</b>.</div>
+    <div class="dots" id="dots"></div>
+  </div>
+  <footer class="close">Semana 8 · Plan de 10 semanas — Pensamiento Computacional, Electrónica, Mecatrónica y Programación Física · Grado 9°</footer>
+</section>
+
+</main>
+
+<nav class="nav" aria-label="Navegación de diapositivas">
+  <div class="nav-inner">
+    <button class="btn secondary" type="button" id="prevBtn">← Anterior</button>
+    <select id="jump" aria-label="Ir a la diapositiva"></select>
+    <button class="btn" type="button" id="nextBtn">Siguiente →</button>
+  </div>
+</nav>
+
+<script>
+(function(){
+"use strict";
+/* ================= NAVEGACIÓN Y PROGRESO (igual que las semanas 5, 6 y 7) ================= */
+const slides = Array.from(document.querySelectorAll('.slide'));
+const jump = document.getElementById('jump');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const seen = new Set();
+let current = 0;
+slides.forEach((s,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=(i+1)+'. '+s.dataset.title; jump.appendChild(o); });
+function go(i){
+  if(i<0 || i>=slides.length) return;
+  slides[current].classList.remove('active');
+  current=i; slides[current].classList.add('active'); seen.add(i);
+  jump.value=i; prevBtn.disabled=i===0; nextBtn.disabled=i===slides.length-1;
+  document.getElementById('slideLabel').textContent='Diapositiva '+(i+1)+' de '+slides.length;
+  window.scrollTo({top:0,behavior:'smooth'}); renderDots(); updateProgress();
+}
+prevBtn.addEventListener('click',()=>go(current-1));
+nextBtn.addEventListener('click',()=>go(current+1));
+jump.addEventListener('change',()=>go(+jump.value));
+document.addEventListener('keydown',e=>{
+  const tag=(e.target.tagName||'').toLowerCase();
+  if(['input','select','textarea'].includes(tag)) return;
+  if(tag==='button' && e.key!=='ArrowRight' && e.key!=='ArrowLeft') return;
+  if(e.key==='ArrowRight') go(current+1);
+  if(e.key==='ArrowLeft') go(current-1);
+});
+function renderDots(){ const d=document.getElementById('dots'); if(!d) return; d.innerHTML='';
+  slides.forEach((_,i)=>{ const s=document.createElement('span'); if(seen.has(i)) s.className='seen'; if(i===current) s.className='cur'; d.appendChild(s); }); }
+const taskBoxes=Array.from(document.querySelectorAll('.task input[type=checkbox]'));
+taskBoxes.forEach(cb=>cb.addEventListener('change',updateProgress));
+function updateProgress(){
+  const done=taskBoxes.filter(c=>c.checked).length, total=taskBoxes.length;
+  document.getElementById('barFill').style.width=Math.round(done/total*100)+'%';
+  document.getElementById('progressLabel').textContent=done+' de '+total+' tareas completadas';
+  const fs=document.getElementById('finalSummary');
+  if(fs){ fs.textContent = done===total
+    ? '¡Excelente! Completaron las '+total+' tareas de la presentación. Revisen que el PDF de la ficha quedó bien enviado.'
+    : 'Llevas '+done+' de '+total+' tareas de la presentación. Puedes volver a cualquier diapositiva con el menú de abajo antes de entregar la ficha.'; }
+}
+function autoCheck(id){ const c=document.getElementById(id); if(c && !c.checked){ c.checked=true; updateProgress(); } }
+
+/* ================= PREGUNTAS RÁPIDAS ================= */
+const QQ = {
+ "video": [
+  {"q":"Según el video, ¿con qué comienza todo proyecto tecnológico?","o":["Con la construcción del objeto","Con un problema que necesitamos resolver o una necesidad","Con la memoria o informe final"],"a":1,"e":"Todo proyecto empieza con un problema o una necesidad. La construcción viene después de planificar, y la memoria va al final."}
+ ],
+ "espec": [
+  {"q":"¿Cuál de estas es una especificación clara y comprobable?","o":["La alarma es muy buena","Cuando se presiona el pulsador, el piezo suena","La alarma es moderna"],"a":1,"e":"Se puede probar en Tinkercad: presionas el pulsador y ves si suena o no."},
+  {"q":"\"El comedero se debe construir en una semana\". ¿Qué es?","o":["Una especificación","Una restricción","Una alternativa"],"a":1,"e":"Es un límite de tiempo que no podemos cambiar: una restricción (R4)."},
+  {"q":"¿Cómo comprobarías en Tinkercad: \"si la temperatura es mayor que 25 °C, el motor gira\"?","o":["Subiendo el termómetro de la micro:bit a 26 °C o más y mirando si el motor gira","Cambiando el color de los cables","Mirando el video del proceso tecnológico"],"a":0,"e":"En la Semana 6 aprendiste a subir la temperatura con el termómetro que aparece debajo de la micro:bit."}
+ ],
+ "alt": [
+  {"q":"Para la barrera del parqueadero, ¿cuál par de alternativas es realmente diferente?","o":["A: servo con botón A · B: el mismo servo con botón A, pero con cables de otro color","A: servo que sube con un botón · B: servo que sube solo cuando un sensor detecta el carro","A: barrera roja · B: barrera azul"],"a":1,"e":"Cambia la entrada y la forma de funcionar (manual o automática). El color no cambia la solución."}
+ ],
+ "final": [
+  {"q":"¿Qué es una restricción?","o":["Lo que la solución debe hacer","Un límite que la solución debe respetar y que no podemos cambiar","Una de las ideas de solución"],"a":1,"e":"Ejemplos: el tiempo, los materiales, la seguridad."},
+  {"q":"En la tabla, una alternativa saca calificación 3 en \"Se puede construir en Tinkercad\" (× 3). ¿Cuál es su puntaje?","o":["3","6","9"],"a":2,"e":"Puntaje = calificación × peso = 3 × 3 = 9."},
+  {"q":"Si cambiamos los pesos de los criterios, ¿puede ganar la otra alternativa?","o":["Sí: la que gana depende de los criterios y sus pesos","No: siempre gana la misma","Solo si cambiamos el problema"],"a":0,"e":"Por eso no hay soluciones perfectas y hay que justificar la decisión."},
+  {"q":"¿Qué van a hacer en la Semana 9 con la ficha de diseño?","o":["Nada, ya se entregó","Construir y programar en Tinkercad la solución elegida y comprobar sus especificaciones","Elegir otro problema"],"a":1,"e":"Por eso deben guardar su ficha de Google Docs."}
+ ]
+};
+document.querySelectorAll('.qq-group').forEach(g=>{
+  const set=QQ[g.dataset.set]; if(!set) return; const okSet=new Set();
+  set.forEach((it,qi)=>{
+    const box=document.createElement('div'); box.className='qq';
+    const q=document.createElement('div'); q.className='q'; q.textContent=(set.length>1?(qi+1)+'. ':'')+it.q; box.appendChild(q);
+    const opts=document.createElement('div'); opts.className='opts';
+    const fb=document.createElement('div'); fb.className='fb';
+    it.o.forEach((t,oi)=>{
+      const b=document.createElement('button'); b.type='button'; b.className='opt'; b.textContent=t;
+      b.addEventListener('click',()=>{
+        opts.querySelectorAll('.opt').forEach(x=>x.classList.remove('right','wrong'));
+        if(oi===it.a){ b.classList.add('right'); fb.className='fb show ok'; fb.textContent='✔ Correcto. '+it.e; okSet.add(qi); }
+        else { b.classList.add('wrong'); fb.className='fb show no'; fb.textContent='✘ No es esa. Vuelve a intentarlo.'; }
+        if(okSet.size===set.length && g.dataset.task) autoCheck(g.dataset.task);
+      });
+      opts.appendChild(b);
+    });
+    box.appendChild(opts); box.appendChild(fb); g.appendChild(box);
+  });
+});
+
+/* ================= LOS 5 PASOS ================= */
+(function(){
+  const wrap=document.getElementById('steps5'); if(!wrap) return; const box=document.getElementById('steps5Box');
+  const S=[
+   ['Problema','#B42318','<b>¿Qué queremos resolver, dónde y para quién?</b> Escogen un problema de la lista y explican dónde ocurre, a quién afecta y por qué vale la pena resolverlo.<br><i>Ejemplo: en la biblioteca no se sabe cuándo hay demasiadas personas.</i>'],
+   ['Restricciones','#B5560B','<b>¿Qué límites no podemos cambiar?</b> Las 5 del profesor (R1 a R5) + 2 propias.<br><i>Ejemplo: el aviso no debe sonar más de 2 segundos, para no molestar a los que leen.</i>'],
+   ['Especificaciones','#1E8E5A','<b>¿Qué debe hacer la solución y cómo lo comprobamos?</b> Al menos 3.<br><i>Ejemplo: cuando el conteo llega a 20, el LED rojo se enciende y el piezo suena.</i>'],
+   ['Alternativas','#1F5C99','<b>¿De qué formas distintas se podría resolver?</b> Dos ideas: A y B.<br><i>Ejemplo: A cuenta con un pulsador; B cuenta con una fotorresistencia.</i>'],
+   ['Selección','#6B3FA0','<b>¿Cuál es mejor según nuestros criterios?</b> Tabla de criterios ponderados, la elegida con su justificación, y su diseño.<br><i>Ejemplo: ganó la A, 26 contra 25.</i>']];
+  const opened=new Set(); const btns=[];
+  S.forEach(([t,c,txt],i)=>{ const b=document.createElement('button'); b.type='button'; b.className='st5';
+    b.innerHTML='<span class="nn" style="background:'+c+'">'+(i+1)+'</span><b>'+t+'</b>';
+    b.addEventListener('click',()=>{ btns.forEach(x=>x.classList.remove('cur')); b.classList.add('cur','seen'); opened.add(i);
+      box.innerHTML='<span class="n" style="background:'+c+'">Paso '+(i+1)+'</span>'+txt; if(opened.size===S.length) autoCheck('t-steps'); });
+    wrap.appendChild(b); btns.push(b); });
+  box.innerHTML='Haz clic en el <b>paso 1</b> para empezar.';
+})();
+
+/* ================= LISTA DE PROBLEMAS ================= */
+(function(){
+  const g=document.getElementById('probGrid'); if(!g) return; const box=document.getElementById('probBox');
+  const P=[
+   ['🚧','Barrera del parqueadero del colegio','Alguien tiene que levantar y bajar la barrera a mano cada vez que entra o sale un vehículo.','Servomotor (Semana 6)'],
+   ['💡','Luz automática para un pasillo o una escalera','Cuando oscurece, alguien tiene que acordarse de prender la luz, o la luz se queda prendida de día.','Fotorresistencia + LED (Semana 5)'],
+   ['🌀','Ventilador automático para el salón','En los días de calor el salón se pone caluroso y nadie prende el ventilador a tiempo (o se queda prendido cuando ya no hace falta).','Motor + sensor de temperatura (Semana 6)'],
+   ['🪟','Cortina o persiana automática','Hay que abrir y cerrar la cortina a mano según haya luz o esté oscuro.','Fotorresistencia + servomotor (Semana 6)'],
+   ['🐶','Comedero de mascotas','La mascota necesita comida y no siempre hay alguien para servírsela.','Servomotor (Semana 6)'],
+   ['🔔','Alarma para un casillero o una puerta','No hay forma de saber si alguien abrió el casillero o la puerta sin permiso.','Pulsador + piezo (Semana 6)'],
+   ['🚗','Carrito transportador para la biblioteca o el salón','Hay que llevar libros u objetos de un lugar a otro a mano.','Carro-robot con dos motores (Semana 7)'],
+   ['⏰','Aviso de cambio de clase','Nadie se da cuenta de que se acabó el tiempo de la clase o del descanso.','Bucles y pausas (Semana 3) + piezo (Semana 6)']];
+  const bs=[];
+  P.forEach(([ic,t,q,h],i)=>{ const b=document.createElement('button'); b.type='button'; b.className='pc';
+    b.innerHTML='<b>'+ic+' '+(i+1)+'. '+t+'</b>';
+    b.addEventListener('click',()=>{ bs.forEach(x=>x.classList.remove('cur')); b.classList.add('cur');
+      box.innerHTML='<span class="n">Problema '+(i+1)+'</span><b>'+t+'</b><br><b>¿Qué pasa hoy?</b> '+q+'<br><b>Pista:</b> lo viste en… '+h+'. <span class="muted">(Pueden resolverlo de otra forma, si cumple las restricciones.)</span>'; });
+    g.appendChild(b); bs.push(b); });
+})();
+
+/* ================= CLASIFICADOR RESTRICCIÓN / ESPECIFICACIÓN ================= */
+(function(){
+  const box=document.getElementById('sorter8'); if(!box) return; const log=document.getElementById('sorter8Log');
+  const ITEMS=[['Lo controla una micro:bit programada con bloques',0],['Al presionar el botón A, el servo gira a 90°',1],['Se construye en una semana',0],['Cuando hay poca luz, el LED se enciende',1],['El servo se alimenta con 4 pilas AA (6 V) como máximo',0],['Si la temperatura es mayor que 25 °C, el motor gira',1],['La alarma no debe sonar más de 5 segundos seguidos',0],['Cuando se presiona el pulsador, el piezo suena',1]];
+  const NAMES=['Restricción','Especificación']; const HINT=['Pista: ¿es un límite que no podemos cambiar?','Pista: ¿dice qué hace la solución y se puede probar?'];
+  const ok=new Set();
+  ITEMS.forEach(([name,ans],i)=>{ const row=document.createElement('div'); row.className='srow';
+    const lab=document.createElement('div'); lab.className='sname'; lab.textContent=name; row.appendChild(lab);
+    const bs=document.createElement('div'); bs.className='sbtns';
+    NAMES.forEach((n,k)=>{ const b=document.createElement('button'); b.type='button'; b.textContent=n; b.className='sb';
+      b.addEventListener('click',()=>{ bs.querySelectorAll('button').forEach(x=>x.classList.remove('right','wrong'));
+        if(k===ans){ b.classList.add('right'); ok.add(i); log.innerHTML='✔ <b>'+name+'</b> es una <b>'+n.toLowerCase()+'</b>.'; }
+        else { b.classList.add('wrong'); ok.delete(i); log.innerHTML='✘ No es '+n.toLowerCase()+'. '+HINT[ans]; }
+        if(ok.size===ITEMS.length){ autoCheck('t-sort'); log.innerHTML='🎉 ¡Muy bien! Clasificaste las 8 frases.'; } });
+      bs.appendChild(b); });
+    row.appendChild(bs); box.appendChild(row); });
+})();
+
+/* ================= CALCULADORA DE CRITERIOS PONDERADOS ================= */
+(function(){
+  const t=document.getElementById('mtx'); if(!t) return; const res=document.getElementById('mtxRes');
+  const C=[['C1. Resuelve el problema',4],['C2. Se puede construir en Tinkercad',3],['C3. Pocos componentes',2],['C4. Segura',1]];
+  const EX=[[2,3],[3,2],[3,2],[3,3]];
+  const sel=[];
+  function mk(){ const s=document.createElement('select'); s.setAttribute('aria-label','calificación'); ['—','1','2','3'].forEach((v,i)=>{ const o=document.createElement('option'); o.value=i?v:''; o.textContent=v; s.appendChild(o); }); s.addEventListener('change',calc); return s; }
+  C.forEach(([n,w],i)=>{ const tr=document.createElement('tr'); tr.innerHTML='<td>'+n+'</td><td class="w">× '+w+'</td>';
+    const a=mk(), b=mk(); const tdA=document.createElement('td'); tdA.appendChild(a); const pA=document.createElement('td'); pA.className='pt';
+    const tdB=document.createElement('td'); tdB.appendChild(b); const pB=document.createElement('td'); pB.className='pt';
+    tr.append(tdA,pA,tdB,pB); t.appendChild(tr); sel.push([a,b,pA,pB,w]); });
+  const tot=document.createElement('tr'); tot.className='tot'; tot.innerHTML='<td>TOTAL (máximo 30)</td><td></td><td></td><td id="tA" class="pt">0</td><td></td><td id="tB" class="pt">0</td>'; t.appendChild(tot);
+  function calc(){ let A=0,B=0,full=true;
+    sel.forEach(([a,b,pA,pB,w])=>{ const va=+a.value||0, vb=+b.value||0; if(!a.value||!b.value) full=false;
+      pA.textContent=a.value?va+' × '+w+' = '+va*w:''; pB.textContent=b.value?vb+' × '+w+' = '+vb*w:''; A+=va*w; B+=vb*w; });
+    document.getElementById('tA').textContent=A; document.getElementById('tB').textContent=B;
+    if(full){ autoCheck('t-mtx'); res.innerHTML = A>B ? '🏆 Gana la <b>alternativa A</b> ('+A+' contra '+B+').' : B>A ? '🏆 Gana la <b>alternativa B</b> ('+B+' contra '+A+').' : '🤝 <b>Empate</b> ('+A+' a '+B+'): decidan entre los dos y expliquen por qué en la ficha.'; }
+    else res.innerHTML='<span class="muted">Completa las 8 calificaciones para ver cuál gana.</span>'; }
+  document.getElementById('mtxEx').addEventListener('click',()=>{ sel.forEach(([a,b],i)=>{ a.value=String(EX[i][0]); b.value=String(EX[i][1]); }); calc(); });
+  document.getElementById('mtxClr').addEventListener('click',()=>{ sel.forEach(([a,b])=>{ a.value=''; b.value=''; }); calc(); });
+  calc();
+})();
+
+/* ================= CAMBIAR EL PESO ================= */
+(function(){
+  const r=document.getElementById('wRange'); if(!r) return;
+  const cA=document.getElementById('wA'), cB=document.getElementById('wB'), log=document.getElementById('wLog'), v=document.getElementById('wVal');
+  function draw(){ const w=+r.value; const A=2*w+9+6+3, B=3*w+6+4+3; v.textContent='× '+w;
+    cA.querySelector('b').textContent=A; cB.querySelector('b').textContent=B;
+    cA.className='rpm-card'+(A>=B?' g':''); cB.className='rpm-card'+(B>=A?' g':'');
+    log.innerHTML = A>B ? 'Con peso × '+w+' gana la <b>A</b> ('+A+' contra '+B+').' : B>A ? '¡Con peso × '+w+' gana la <b>B</b> ('+B+' contra '+A+')! Cambiamos lo que más nos importa y cambió la solución.' : 'Con peso × '+w+' hay <b>empate</b> ('+A+' a '+B+').';
+    if(B>A) autoCheck('t-w'); }
+  r.addEventListener('input',draw); draw();
+})();
+
+go(0);
+})();
+
+</script>
+</body>
+</html>
